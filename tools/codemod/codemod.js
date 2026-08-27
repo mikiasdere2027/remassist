@@ -28,6 +28,10 @@ const { parse } = require('node-html-parser');
 const ROOT = path.resolve(__dirname, '..', '..');
 
 /* Per-page source → output config */
+/** Everything from this marker to the end of an existing page.module.css is
+ *  hand-written and survives regeneration. */
+const HAND_SENTINEL = '/* === hand-additions (preserved by codemod) === */';
+
 const PAGES = [
   // Fully-static content pages (Phase 01 · Task 1)
   { src: 'Privacy Policy.dc.html', route: 'privacy-policy', title: 'Privacy Policy' },
@@ -65,7 +69,9 @@ const LINK_MAP = {
   'How it Works.dc.html': '/how-it-works',
   'Pricing.dc.html': '/pricing',
   'Blog.dc.html': '/blog',
-  'Blog Post.dc.html': '/blog/post', // DB-driven in Phase 03; placeholder slug now
+  // The one written article; its body lives in app/blog/[slug]/ArticleBody.tsx
+  // and lib/blog/posts.ts owns the slug. Phase 03 moves both into Postgres.
+  'Blog Post.dc.html': '/blog/hiring-offshore-without-losing-quality-control',
   'Case Studies.dc.html': '/case-studies',
   'Qualify.dc.html': '/qualify',
   'Customer Service Agents.dc.html': '/services/customer-service-agents',
@@ -161,8 +167,12 @@ function styleAttrToJsx(raw) {
    files are served at /images/... — so rewrite the leading path segment. */
 function rewriteAssetPath(url, page) {
   if (page.assetOverrides && url in page.assetOverrides) return page.assetOverrides[url];
-  if (url.startsWith('assets/images/')) return '/' + url.slice('assets/images/'.length);
-  if (url.startsWith('assets/')) return '/' + url.slice('assets/'.length);
+  // The artboards' assets/ tree was copied to public/images/, so the public
+  // URL keeps the /images prefix. Dropping it (as this used to) produced
+  // /teams/x.jpg and /Agents/x.jpg — every image on every ported page 404'd,
+  // which went unnoticed while the pages were also rendering unstyled.
+  if (url.startsWith('assets/images/')) return '/images/' + url.slice('assets/images/'.length);
+  if (url.startsWith('assets/')) return '/images/' + url.slice('assets/'.length);
   if (url.startsWith('./support.js')) return null; // drop loader script
   if (url.startsWith('assets/ask-remassist.js')) return null; // drop widget (Phase 02)
   return url;
@@ -187,6 +197,24 @@ function extractStyle(src) {
   css = css.replace(/html,\s*body\s*\{[\s\S]*?\}/g, '');
   css = css.replace(/^\s*a\s*\{[\s\S]*?\}\s*$/gm, '');
   css = css.replace(/^\s*a:\s*hover\s*\{[\s\S]*?\}\s*$/gm, '');
+
+  // A surviving bare element selector fails the CSS-module "pure selector"
+  // check and breaks the build outright — and :global(html) does not satisfy
+  // it either, since a pure selector needs a local class or id. The strips
+  // above only catch the top-level reset; a document-level rule nested in a
+  // media query (the blog post's `html { scroll-behavior: auto }` under
+  // prefers-reduced-motion) gets through. Drop those and report them: they
+  // belong in styles/globals.css, where they apply site-wide, not in one
+  // page's module.
+  const dropped = [];
+  css = css.replace(/(^|[\s{};])(html|body|:root)(\s*\{[^}]*\})/g, (_all, pre, sel, rule) => {
+    dropped.push((sel + rule).replace(/\s+/g, ' ').trim());
+    return pre;
+  });
+  if (dropped.length) {
+    console.warn(`  ! dropped ${dropped.length} document-level rule(s) — move to styles/globals.css if still wanted:`);
+    for (const d of dropped) console.warn(`      ${d}`);
+  }
   return css.trim();
 }
 
@@ -347,7 +375,13 @@ function nodeToJsx(node, ctx) {
     if (value == null) continue;
     if (name === 'style') {
       parts.push(` style={{ ${styleAttrToJsx(value)} }}`);
-    } else if (name === 'className') {
+    } else if (name === 'class') {
+      // NB: the key here comes from parseAttrs on the raw HTML, so it is
+      // `class` — the rename to `className` happens in attrToJsx below. This
+      // branch used to test for 'className', which never matched, so every
+      // class fell through to the generic string branch and shipped as a
+      // literal `className='pr-wrap'` that no hashed module selector could
+      // ever match. That is what left 20 routes rendering unstyled.
       const expr = jsxClassesExpr(value, ctx);
       if (expr) parts.push(` className=${expr}`);
     } else if (/^on/i.test(name)) {
@@ -459,7 +493,17 @@ function convertPage(page) {
 
   // 3. Emit the CSS module (style rules + hover rules).
   const hoverCss = ctx.hoverRules.length ? '\n' + ctx.hoverRules.join('\n') : '';
-  const css = `/* Auto-generated from ${page.src} by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit directly. */\n${styleCss}${hoverCss}\n`;
+  // Anything below the sentinel in an existing module is hand-written and is
+  // carried across. Without this, a rule added after the port (e.g. the blog's
+  // unlinked-card overrides) silently disappears the next time this runs.
+  const existingCssPath = path.join(ROOT, 'app', page.route, 'page.module.css');
+  let kept = '';
+  if (fs.existsSync(existingCssPath)) {
+    const prev = fs.readFileSync(existingCssPath, 'utf8');
+    const at = prev.indexOf(HAND_SENTINEL);
+    if (at !== -1) kept = '\n' + prev.slice(at).trimEnd() + '\n';
+  }
+  const css = `/* Auto-generated from ${page.src} by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit above the hand-additions sentinel. */\n${styleCss}${hoverCss}\n${kept}`;
 
   // 4. (Internal href rewriting is handled in nodeToJsx via LINK_MAP.)
   const jsxLinks = jsxBody;

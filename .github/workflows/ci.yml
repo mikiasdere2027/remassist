@@ -31,6 +31,13 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Test
+        # 460 cases: the 432-combination quiz parity gate (§8), the lead
+        # validation boundary, the rate limiter, and the redirect map §13.3
+        # requires be asserted here. This step was missing, so none of them
+        # had ever run in CI.
+        run: npm test
+
       - name: Build
         run: npm run build
 
