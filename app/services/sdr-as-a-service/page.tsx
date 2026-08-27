@@ -3,7 +3,10 @@ import styles from './page.module.css';
 
 export const metadata: Metadata = {
   title: 'SDR as a Service',
-  description: '',
+  description:
+    'Niche-trained SDRs who build lists, run multi-channel sequences, and book qualified meetings — a full outbound engine without the hiring cycle.',
+  alternates: { canonical: '/services/sdr-as-a-service' },
+  openGraph: { url: '/services/sdr-as-a-service' },
 };
 
 export default function Page() {
@@ -20,8 +23,8 @@ export default function Page() {
         <h1 style={{ margin: "0 auto 20px", fontFamily: "var(--font-display)", fontSize: "50px", lineHeight: 1.15, fontWeight: 700, color: "var(--brand-navy)", maxWidth: "22ch", textWrap: "balance" }}>Meetings on your calendar, not activity in a dashboard.</h1>
         <p style={{ margin: "0 auto 32px", fontSize: "18px", lineHeight: 1.6, color: "var(--ink-600)", maxWidth: "60ch" }}>Niche-trained SDRs who build lists, run multi-channel sequences, and book qualified meetings — a full outbound engine without the hiring cycle.</p>
         <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "center" }}>
-          <a href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener' style={{ background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 28px", borderRadius: "6px", transition: "background 150ms" }} className='hv-1'>Book a Call</a>
-          <a href='/pricing' style={{ color: "var(--brand-navy)", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 20px", borderRadius: "6px", border: "1px solid var(--border-strong)" }} className='hv-2'>See pricing</a>
+          <a href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener' style={{ background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 28px", borderRadius: "6px", transition: "background 150ms" }} className={styles['hv-1']}>Book a Call</a>
+          <a href='/pricing' style={{ color: "var(--brand-navy)", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 20px", borderRadius: "6px", border: "1px solid var(--border-strong)" }} className={styles['hv-2']}>See pricing</a>
         </div>
       </div>
     </section>
@@ -31,7 +34,7 @@ export default function Page() {
   
     
   <section style={{ background: "#fff", borderTop: "1px solid var(--border-default)", borderBottom: "1px solid var(--border-default)" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "36px 24px", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "24px", textAlign: "center" }}>
+ <div className={styles['rgrid-1']} style={{ maxWidth: "1200px", margin: "0 auto", padding: "36px 24px", textAlign: "center" }}>
         <div>
           <div style={{ fontSize: "30px", fontWeight: 700, color: "var(--brand-navy)" }}>2 wks</div>
           <div style={{ fontSize: "14px", color: "var(--ink-500)" }}>From kickoff to first sequences</div>
@@ -59,7 +62,7 @@ export default function Page() {
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px" }}>
         <h2 style={{ margin: "0 0 12px", fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 700, color: "var(--brand-navy)" }}>The outbound engine, end to end</h2>
         <p style={{ margin: "0 0 48px", fontSize: "16px", lineHeight: 1.6, color: "var(--ink-600)", maxWidth: "64ch" }}>Your SDRs don’t just dial. Each seat owns the full loop from targeting to handoff.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "24px" }}>
+ <div className={styles['rgrid-1']}>
           <div style={{ background: "#fff", border: "1px solid var(--border-default)", borderRadius: "10px", padding: "28px", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: "14px", fontWeight: 700, color: "var(--brand-blue)", marginBottom: "14px" }}>01</div>
             <h3 style={{ margin: "0 0 8px", fontSize: "17px", fontWeight: 700, color: "var(--brand-navy)" }}>List building</h3>
@@ -89,7 +92,7 @@ export default function Page() {
   
     
   <section style={{ background: "var(--brand-navy)" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "56px", alignItems: "center" }}>
+ <div className={styles['rgrid-2']} style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px", alignItems: "center" }}>
         <div>
           <p style={{ margin: "0 0 12px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--blue-300)" }}>Why our SDRs ramp fast</p>
           <h2 style={{ margin: "0 0 16px", fontFamily: "var(--font-display)", fontSize: "34px", fontWeight: 700, color: "#fff" }}>Trained in the tools before they touch your pipeline</h2>
@@ -112,7 +115,7 @@ export default function Page() {
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
         <h2 style={{ margin: "0 auto 16px", fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 700, color: "var(--brand-navy)" }}>Put an SDR on trial — literally</h2>
         <p style={{ margin: "0 auto 32px", fontSize: "16px", lineHeight: 1.6, color: "var(--ink-600)", maxWidth: "52ch" }}>Free consultation, free trial period. Judge us on meetings held.</p>
-        <a href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener' style={{ display: "inline-block", background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "15px 32px", borderRadius: "6px", transition: "background 150ms" }} className='hv-3'>Book a Call</a>
+        <a href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener' style={{ display: "inline-block", background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "15px 32px", borderRadius: "6px", transition: "background 150ms" }} className={styles['hv-3']}>Book a Call</a>
       </div>
     </section>
   

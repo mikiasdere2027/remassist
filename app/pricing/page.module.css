@@ -1,4 +1,4 @@
-/* Auto-generated from Pricing.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit directly. */
+/* Auto-generated from Pricing.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit above the hand-additions sentinel. */
 .pr-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
   .pr-narrow { max-width: 900px; margin: 0 auto; }
   .pr-kicker { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;

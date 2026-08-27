@@ -3,14 +3,17 @@ import QuizLogic from '@/components/quiz/QuizLogic';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
-  title: 'Qualify — 2-Minute Price Estimate | Rem Assist',
+  // The root layout appends ' | Rem Assist'; carrying it here doubled it.
+  title: 'Qualify — 2-Minute Price Estimate',
   description:
     'Five questions. Get the service line, the tier, and a monthly estimate with the arithmetic shown — not a range, and not a form wall.',
+  alternates: { canonical: '/qualify' },
+  openGraph: { url: '/qualify' },
 };
 
 export default function Qualify() {
   return (
-    <>
+    <main>
       <section style={{ background: 'linear-gradient(180deg,#f7faff 0%,var(--bg-marketing-paper) 58%)' }}>
         <div className={`${styles.wrap} ${styles.hero}`}>
           <span className={styles.kicker}>Qualify</span>
@@ -31,6 +34,6 @@ export default function Qualify() {
           <QuizLogic />
         </div>
       </section>
-    </>
+    </main>
   );
 }

@@ -3,7 +3,10 @@ import styles from './page.module.css';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: '',
+  description:
+    'How Rem Assistance Inc. collects, uses, shares, and protects your information — written plainly, and kept current with the privacy laws that apply to you.',
+  alternates: { canonical: '/privacy-policy' },
+  openGraph: { url: '/privacy-policy' },
 };
 
 export default function Page() {
@@ -28,25 +31,25 @@ export default function Page() {
   
     
   <section style={{ background: "var(--bg-marketing-paper)" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "64px 24px 96px", display: "grid", gridTemplateColumns: "260px 1fr", gap: "56px", alignItems: "start" }}>
+      <div className={styles['legal-layout']}>
   
         <nav aria-label='Contents' style={{ position: "sticky", top: "104px", display: "flex", flexDirection: "column", gap: "2px", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "10px", boxShadow: "var(--shadow-sm)", padding: "22px 18px" }}>
           <div style={{ fontSize: "11.5px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-500)", padding: "0 8px 12px" }}>Contents</div>
-          <a href='#summary' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-1'>The short version</a>
-          <a href='#collect' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-2'>1. What we collect</a>
-          <a href='#use' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-3'>2. How we use it</a>
-          <a href='#legal' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-4'>3. Legal bases</a>
-          <a href='#share' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-5'>4. Who we share with</a>
-          <a href='#cookies' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-6'>5. Cookies and tracking</a>
-          <a href='#retention' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-7'>6. How long we keep it</a>
-          <a href='#security' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-8'>7. How we protect it</a>
-          <a href='#clientdata' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-9'>8. Client data we handle</a>
-          <a href='#minors' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-10'>9. Minors</a>
-          <a href='#rights' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-11'>10. Your rights</a>
-          <a href='#regions' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-12'>11. Region-specific rights</a>
-          <a href='#sms' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-13'>12. SMS and mobile data</a>
-          <a href='#changes' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-14'>13. Changes</a>
-          <a href='#contact' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className='hv-15'>14. Contact us</a>
+          <a href='#summary' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-1']}>The short version</a>
+          <a href='#collect' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-2']}>1. What we collect</a>
+          <a href='#use' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-3']}>2. How we use it</a>
+          <a href='#legal' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-4']}>3. Legal bases</a>
+          <a href='#share' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-5']}>4. Who we share with</a>
+          <a href='#cookies' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-6']}>5. Cookies and tracking</a>
+          <a href='#retention' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-7']}>6. How long we keep it</a>
+          <a href='#security' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-8']}>7. How we protect it</a>
+          <a href='#clientdata' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-9']}>8. Client data we handle</a>
+          <a href='#minors' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-10']}>9. Minors</a>
+          <a href='#rights' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-11']}>10. Your rights</a>
+          <a href='#regions' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-12']}>11. Region-specific rights</a>
+          <a href='#sms' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-13']}>12. SMS and mobile data</a>
+          <a href='#changes' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-14']}>13. Changes</a>
+          <a href='#contact' style={{ fontSize: "14px", lineHeight: 1.45, color: "var(--ink-700)", textDecoration: "none", padding: "8px", borderRadius: "6px", transition: "all 150ms cubic-bezier(0.2,0.8,0.2,1)" }} className={styles['hv-15']}>14. Contact us</a>
         </nav>
   
         <div style={{ display: "flex", flexDirection: "column", gap: "44px", minWidth: 0 }}>

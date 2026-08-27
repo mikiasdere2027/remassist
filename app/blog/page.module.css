@@ -1,4 +1,4 @@
-/* Auto-generated from Blog.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit directly. */
+/* Auto-generated from Blog.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit above the hand-additions sentinel. */
 /* ================= BLOG / RESOURCES — design ported from blog.html ================= */
   .bk-wrap { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
 
@@ -119,3 +119,12 @@
     .bk-grid { grid-template-columns: 1fr; }
     .bk-newsletter { padding: 30px 24px; }
   }
+
+/* === hand-additions (preserved by codemod) === */
+/* Cards for posts that have no article body yet render as <div>, not <a> (see
+   lib/blog/posts.ts). Strip the hover affordances so they do not advertise a
+   click that goes nowhere. Drop this block when every card links again. */
+div.bk-card { cursor: default; }
+div.bk-card:hover { transform: none; border-color: var(--border-default); box-shadow: none; }
+div.bk-card:hover .bk-card-body h3 { color: inherit; }
+div.bk-card:hover .bk-meta .read svg { transform: none; }

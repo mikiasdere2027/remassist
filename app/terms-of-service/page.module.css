@@ -1,4 +1,4 @@
-/* Auto-generated from Terms of Service.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit directly. */
+/* Auto-generated from Terms of Service.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit above the hand-additions sentinel. */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 .hv-1{background:var(--blue-50);color:var(--brand-blue)}
 .hv-2{background:var(--blue-50);color:var(--brand-blue)}
@@ -28,3 +28,15 @@
 .hv-26{background:var(--blue-50);color:var(--brand-blue)}
 .hv-27{background:var(--blue-50);color:var(--brand-blue)}
 .hv-28{background:var(--blue-50);color:var(--brand-blue)}
+
+/* === hand-additions (preserved by codemod) === */
+/* The legal pages were authored desktop-only: a fixed 260px contents sidebar
+   beside the prose. On a 390px phone the sidebar took 260 of the 342 available,
+   leaving a 26px content column that every paragraph then overflowed. Stack
+   them below the tablet break; the sidebar becomes a contents list above the
+   text, which is how it reads on a phone anyway. */
+.legal-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 56px;
+  align-items: start; max-width: 1200px; margin: 0 auto; padding: 64px 24px 96px; }
+@media (max-width: 900px) {
+  .legal-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 40px 24px 72px; }
+}

@@ -3,7 +3,10 @@ import styles from './page.module.css';
 
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions',
-  description: '',
+  description:
+    'The questions from every service page, collected and answered in one place — including the ones with awkward answers.',
+  alternates: { canonical: '/faq' },
+  openGraph: { url: '/faq' },
 };
 
 export default function Page() {
@@ -12,12 +15,12 @@ export default function Page() {
   
     
   <section style={{ background: "linear-gradient(180deg,#f7faff 0%,var(--bg-marketing-paper) 72%)" }}>
-      <div className='rs-wrap' style={{ paddingTop: "76px", paddingBottom: "52px" }}>
-        <p className='rs-eyebrow'>FAQ</p>
-        <h1 className='rs-h1'>Everything we get <span>asked, in one place.</span></h1>
-        <p className='rs-lede'>The questions from every service page, collected and answered here —
+      <div className={styles['rs-wrap']} style={{ paddingTop: "76px", paddingBottom: "52px" }}>
+        <p className={styles['rs-eyebrow']}>FAQ</p>
+        <h1 className={styles['rs-h1']}>Everything we get <span>asked, in one place.</span></h1>
+        <p className={styles['rs-lede']}>The questions from every service page, collected and answered here —
           including the ones with awkward answers. Each group links back to the page it came from.</p>
-        <nav className='rs-jump' aria-label='Question groups'>
+        <nav className={styles['rs-jump']} aria-label='Question groups'>
           <a href='#pricing'>Pricing and terms</a>
           <a href='#starting'>Getting started</a>
           <a href='#people'>The agents</a>
@@ -30,16 +33,16 @@ export default function Page() {
   
   
     
-  <section id='pricing' className='rs-group'>
-      <div className='rs-wrap rs-narrow'>
-        <div className='rs-group-head'>
+  <section id='pricing' className={styles['rs-group']}>
+      <div className={`${styles['rs-wrap']} ${styles['rs-narrow']}`}>
+        <div className={styles['rs-group-head']}>
           <div>
-            <h2 className='rs-h2'>Pricing and terms</h2>
+            <h2 className={styles['rs-h2']}>Pricing and terms</h2>
             <p>What a seat costs, what moves the number, and what is quoted separately.</p>
           </div>
-          <a className='rs-source' href='/pricing'>Pricing page →</a>
+          <a className={styles['rs-source']} href='/pricing'>Pricing page →</a>
         </div>
-        <div className='rs-faq'>
+        <div className={styles['rs-faq']}>
             <details>
               <summary>Why publish rates when nobody else does?</summary>
               <p>Because the alternative wastes both our time. If $8 or $11 an hour is outside your range you should find that out in two minutes rather than after a discovery call. What genuinely needs a conversation is the shape — how many seats, what coverage, which tier.</p>
@@ -66,16 +69,16 @@ export default function Page() {
   
   
     
-  <section id='starting' className='rs-group'>
-      <div className='rs-wrap rs-narrow'>
-        <div className='rs-group-head'>
+  <section id='starting' className={styles['rs-group']}>
+      <div className={`${styles['rs-wrap']} ${styles['rs-narrow']}`}>
+        <div className={styles['rs-group-head']}>
           <div>
-            <h2 className='rs-h2'>Getting started</h2>
+            <h2 className={styles['rs-h2']}>Getting started</h2>
             <p>What the two weeks actually involve, and how much of your time it takes.</p>
           </div>
-          <a className='rs-source' href='/how-it-works'>How it Works page →</a>
+          <a className={styles['rs-source']} href='/how-it-works'>How it Works page →</a>
         </div>
-        <div className='rs-faq'>
+        <div className={styles['rs-faq']}>
             <details>
               <summary>What if we have nothing documented?</summary>
               <p>The most common starting point, and it does not block anything — it changes who we send first. We build the process with you during onboarding, write the SOP, and hand it back. That work is included rather than billed as a setup project.</p>
@@ -102,16 +105,16 @@ export default function Page() {
   
   
     
-  <section id='people' className='rs-group'>
-      <div className='rs-wrap rs-narrow'>
-        <div className='rs-group-head'>
+  <section id='people' className={styles['rs-group']}>
+      <div className={`${styles['rs-wrap']} ${styles['rs-narrow']}`}>
+        <div className={styles['rs-group-head']}>
           <div>
-            <h2 className='rs-h2'>The agents</h2>
+            <h2 className={styles['rs-h2']}>The agents</h2>
             <p>Who they are, how they are trained, and what happens when one is not right.</p>
           </div>
-          <a className='rs-source' href='/services/virtual-back-office-team'>Virtual Back Office Team page →</a>
+          <a className={styles['rs-source']} href='/services/virtual-back-office-team'>Virtual Back Office Team page →</a>
         </div>
-        <div className='rs-faq'>
+        <div className={styles['rs-faq']}>
             <details>
               <summary>Do we have to interview the agents?</summary>
               <p>No, but you always get the option. Some clients interview every candidate, others approve a shortlist, a few leave selection to us. What does not happen is someone being assigned to your account without your sign-off.</p>
@@ -138,16 +141,16 @@ export default function Page() {
   
   
     
-  <section id='tools-data' className='rs-group'>
-      <div className='rs-wrap rs-narrow'>
-        <div className='rs-group-head'>
+  <section id='tools-data' className={styles['rs-group']}>
+      <div className={`${styles['rs-wrap']} ${styles['rs-narrow']}`}>
+        <div className={styles['rs-group-head']}>
           <div>
-            <h2 className='rs-h2'>Tools and data</h2>
+            <h2 className={styles['rs-h2']}>Tools and data</h2>
             <p>Whose systems the work happens in, and how access is controlled.</p>
           </div>
-          <a className='rs-source' href='/services/customer-service-agents'>Customer Experience page →</a>
+          <a className={styles['rs-source']} href='/services/customer-service-agents'>Customer Experience page →</a>
         </div>
-        <div className='rs-faq'>
+        <div className={styles['rs-faq']}>
             <details>
               <summary>Do we have to use your software?</summary>
               <p>No. Agents work in whatever you already run and the audit trail stays in your system, so nothing has to be migrated back if the engagement ends. The time-tracking client we can provide is on request only.</p>
@@ -174,16 +177,16 @@ export default function Page() {
   
   
     
-  <section id='scope' className='rs-group'>
-      <div className='rs-wrap rs-narrow'>
-        <div className='rs-group-head'>
+  <section id='scope' className={styles['rs-group']}>
+      <div className={`${styles['rs-wrap']} ${styles['rs-narrow']}`}>
+        <div className={styles['rs-group-head']}>
           <div>
-            <h2 className='rs-h2'>Services and scope</h2>
+            <h2 className={styles['rs-h2']}>Services and scope</h2>
             <p>What one seat can realistically cover, and what we will turn down.</p>
           </div>
-          <a className='rs-source' href='/services/extra-services'>All services page →</a>
+          <a className={styles['rs-source']} href='/services/extra-services'>All services page →</a>
         </div>
-        <div className='rs-faq'>
+        <div className={styles['rs-faq']}>
             <details>
               <summary>Can one person really cover several services?</summary>
               <p>Within reason, and that is usually the point — a part-time seat covering inbox triage, order entry and returns is one person doing three things that were each too small to hire for. What does not work is stretching one seat across functions needing different training, and we will say so rather than sell you the seat.</p>
@@ -210,16 +213,16 @@ export default function Page() {
   
   
     
-  <section id='oversight' className='rs-group'>
-      <div className='rs-wrap rs-narrow'>
-        <div className='rs-group-head'>
+  <section id='oversight' className={styles['rs-group']}>
+      <div className={`${styles['rs-wrap']} ${styles['rs-narrow']}`}>
+        <div className={styles['rs-group-head']}>
           <div>
-            <h2 className='rs-h2'>Oversight and reporting</h2>
+            <h2 className={styles['rs-h2']}>Oversight and reporting</h2>
             <p>What arrives without you chasing anyone for it.</p>
           </div>
-          <a className='rs-source' href='/how-it-works'>How it Works page →</a>
+          <a className={styles['rs-source']} href='/how-it-works'>How it Works page →</a>
         </div>
-        <div className='rs-faq'>
+        <div className={styles['rs-faq']}>
             <details>
               <summary>What does "QA-reviewed" actually mean?</summary>
               <p>Work is scored against criteria you agree, not a generic rubric, by a person who owns the account. You get a daily work report and a weekly quality summary, and the scoring is visible to you rather than averaged into a single number.</p>
@@ -242,14 +245,14 @@ export default function Page() {
   
   
     
-  <section className='rs-close'>
-      <div className='rs-wrap'>
+  <section className={styles['rs-close']}>
+      <div className={styles['rs-wrap']}>
         <h2>Still not answered?</h2>
         <p>Ask it on the consult. It is free, and if the answer is that we are not the right fit we
           will say so on the call rather than three weeks later.</p>
         <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "13px", marginTop: "28px" }}>
-          <a className='rs-btn' href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>Book a free consult <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
-          <a className='rs-ghost-dark' href='/qualify'>Qualify in two minutes</a>
+          <a className={styles['rs-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>Book a free consult <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
+          <a className={styles['rs-ghost-dark']} href='/qualify'>Qualify in two minutes</a>
         </div>
       </div>
     </section>

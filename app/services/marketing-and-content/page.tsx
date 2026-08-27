@@ -3,7 +3,10 @@ import styles from './page.module.css';
 
 export const metadata: Metadata = {
   title: 'Marketing & Content',
-  description: '',
+  description:
+    'A go-to-market pod — lead, outbound, content and RevOps — hired as one unit with one owner, built into the stack you already run.',
+  alternates: { canonical: '/services/marketing-and-content' },
+  openGraph: { url: '/services/marketing-and-content' },
 };
 
 export default function Page() {
@@ -15,32 +18,32 @@ export default function Page() {
   
     
   <section style={{ background: "linear-gradient(180deg,#f7faff 0%,var(--bg-marketing-paper) 62%)", borderBottom: "1px solid var(--border-default)" }}>
-      <div className='mc-wrap mc-hero'>
+      <div className={`${styles['mc-wrap']} ${styles['mc-hero']}`}>
   
         <div>
-          <span className='mc-kicker'>Marketing &amp; Content</span>
-          <h1 className='mc-h1'>Marketing that ships,<br /><span>not marketing that's planned.</span></h1>
-          <p className='mc-lede'>A go-to-market pod — lead, outbound, content and RevOps — hired as
+          <span className={styles['mc-kicker']}>Marketing &amp; Content</span>
+          <h1 className={styles['mc-h1']}>Marketing that ships,<br /><span>not marketing that's planned.</span></h1>
+          <p className={styles['mc-lede']}>A go-to-market pod — lead, outbound, content and RevOps — hired as
             one unit with one owner. Two to six seats, built into the stack you already run.</p>
   
-          <ul className='mc-checks'>
-            <li><span className='mc-tick'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
+          <ul className={styles['mc-checks']}>
+            <li><span className={styles['mc-tick']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
               One named lead owns the output. <b>You have one conversation, not four.</b></li>
-            <li><span className='mc-tick'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
+            <li><span className={styles['mc-tick']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
               The pod works inside your GoHighLevel or HubSpot — funnels, sequences and attribution stay yours.</li>
-            <li><span className='mc-tick'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
+            <li><span className={styles['mc-tick']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
               We do not sell you a strategy you then have to execute. <b>The pod does the shipping.</b></li>
           </ul>
   
-          <div className='mc-cta-row'>
-            <a className='mc-btn hv-1' href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+          <div className={styles['mc-cta-row']}>
+            <a className={`${styles['mc-btn']} ${styles['hv-1']}`} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
               Scope your pod, free
               <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
             </a>
-            <a className='mc-btn mc-btn--ghost hv-2' href='/services/gtm-teams'>See what's in a pod</a>
+            <a className={`${styles['mc-btn']} ${styles['mc-btn--ghost']} ${styles['hv-2']}`} href='/services/gtm-teams'>See what's in a pod</a>
           </div>
   
-          <div className='mc-proof'>
+          <div className={styles['mc-proof']}>
             <div><b>2–6 seats</b><span>Sized to your motion</span></div>
             <div><b>Weekly</b><span>Pipeline report and a standup</span></div>
             <div><b>Daily</b><span>Work logs on every seat</span></div>
@@ -49,8 +52,8 @@ export default function Page() {
         </div>
   
         
-        <div className='mc-seam' aria-hidden='true'>
-          <div className='mc-seam-head'>
+        <div className={styles['mc-seam']} aria-hidden='true'>
+          <div className={styles['mc-seam-head']}>
             <i><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 12h5M15 12h5' /><path d='M9 8.5v7M15 8.5v7' /></svg></i>
             <span>
               <b>The same five steps</b>
@@ -58,31 +61,31 @@ export default function Page() {
             </span>
           </div>
   
-          <div className='mc-state mc-state--split'>
-            <p className='mc-state-label'>Four suppliers</p>
-            <div className='mc-blocks'>
-              <span className='mc-blk'><b>SEO</b><em>Agency</em></span>
-              <span className='mc-gap'><i className='mc-stuck'></i></span>
-              <span className='mc-blk'><b>Social</b><em>Freelance</em></span>
-              <span className='mc-gap'></span>
-              <span className='mc-blk'><b>Ads</b><em>Agency</em></span>
-              <span className='mc-gap'></span>
-              <span className='mc-blk'><b>Content</b><em>Writer</em></span>
+          <div className={`${styles['mc-state']} ${styles['mc-state--split']}`}>
+            <p className={styles['mc-state-label']}>Four suppliers</p>
+            <div className={styles['mc-blocks']}>
+              <span className={styles['mc-blk']}><b>SEO</b><em>Agency</em></span>
+              <span className={styles['mc-gap']}><i className={styles['mc-stuck']}></i></span>
+              <span className={styles['mc-blk']}><b>Social</b><em>Freelance</em></span>
+              <span className={styles['mc-gap']}></span>
+              <span className={styles['mc-blk']}><b>Ads</b><em>Agency</em></span>
+              <span className={styles['mc-gap']}></span>
+              <span className={styles['mc-blk']}><b>Content</b><em>Writer</em></span>
             </div>
-            <p className='mc-state-note'>Nothing owns the gaps, so you do. You are the integration layer.</p>
+            <p className={styles['mc-state-note']}>Nothing owns the gaps, so you do. You are the integration layer.</p>
           </div>
   
-          <div className='mc-state mc-state--joined'>
-            <p className='mc-state-label'>One pod</p>
-            <div className='mc-track'>
-              <span className='mc-seg'>Research</span>
-              <span className='mc-seg'>Strategy</span>
-              <span className='mc-seg'>Content</span>
-              <span className='mc-seg'>Campaign</span>
-              <span className='mc-seg'>Analysis</span>
-              <i className='mc-item'></i>
+          <div className={`${styles['mc-state']} ${styles['mc-state--joined']}`}>
+            <p className={styles['mc-state-label']}>One pod</p>
+            <div className={styles['mc-track']}>
+              <span className={styles['mc-seg']}>Research</span>
+              <span className={styles['mc-seg']}>Strategy</span>
+              <span className={styles['mc-seg']}>Content</span>
+              <span className={styles['mc-seg']}>Campaign</span>
+              <span className={styles['mc-seg']}>Analysis</span>
+              <i className={styles['mc-item']}></i>
             </div>
-            <div className='mc-owner'>One named lead owns all five</div>
+            <div className={styles['mc-owner']}>One named lead owns all five</div>
           </div>
         </div>
   
@@ -93,34 +96,34 @@ export default function Page() {
     
   
     
-  <section className='mc-section' style={{ background: "var(--bg-marketing-paper)" }}>
-      <div className='mc-wrap'>
-        <span className='mc-kicker'>Why this keeps happening</span>
-        <h2 className='mc-h2' style={{ marginTop: "14px" }}>Every fix for a marketing gap <span>quietly creates another one.</span></h2>
-        <p className='mc-lede'>Not because any of these suppliers are bad at their job. Because none of them owns
+  <section className={styles['mc-section']} style={{ background: "var(--bg-marketing-paper)" }}>
+      <div className={styles['mc-wrap']}>
+        <span className={styles['mc-kicker']}>Why this keeps happening</span>
+        <h2 className={styles['mc-h2']} style={{ marginTop: "14px" }}>Every fix for a marketing gap <span>quietly creates another one.</span></h2>
+        <p className={styles['mc-lede']}>Not because any of these suppliers are bad at their job. Because none of them owns
           the space between their job and the next one.</p>
   
-        <div className='mc-versus'>
-          <div className='mc-vrow mc-vrow--head'>
+        <div className={styles['mc-versus']}>
+          <div className={`${styles['mc-vrow']} ${styles['mc-vrow--head']}`}>
             <span>What it promises</span>
             <span>What it actually produces</span>
           </div>
-          <div className='mc-vrow'>
+          <div className={styles['mc-vrow']}>
             <p>A fractional CMO</p>
             <p>A strategy, a deck, and a roadmap — with the <b>execution still sitting on your desk</b>.
               The plan was never the missing piece.</p>
           </div>
-          <div className='mc-vrow'>
+          <div className={styles['mc-vrow']}>
             <p>An agency for each channel</p>
             <p>Four roadmaps, four reporting formats and four opinions about your positioning. The brand
               drifts apart at the seams nobody is watching.</p>
           </div>
-          <div className='mc-vrow'>
+          <div className={styles['mc-vrow']}>
             <p>A freelancer to fill the gap</p>
             <p>The gap moves. Now there is a fifth person to brief, and <b>you are the project manager</b>
               for all of them.</p>
           </div>
-          <div className='mc-vrow'>
+          <div className={styles['mc-vrow']}>
             <p>Six months to find out</p>
             <p>The real constraint was conversion and you spent two quarters buying awareness. That is the
               most expensive way to learn what your bottleneck was.</p>
@@ -133,20 +136,20 @@ export default function Page() {
     
   
     
-  <section className='mc-band'>
-      <div className='mc-wrap'>
-        <span className='mc-kicker'>How a pod holds together</span>
-        <h2 className='mc-h2' style={{ marginTop: "14px" }}>A team you hire once, not a roster you manage.</h2>
-        <p className='mc-lede'>A pod is two to six seats filled from our bench and pointed at one motion. What
+  <section className={styles['mc-band']}>
+      <div className={styles['mc-wrap']}>
+        <span className={styles['mc-kicker']}>How a pod holds together</span>
+        <h2 className={styles['mc-h2']} style={{ marginTop: "14px" }}>A team you hire once, not a roster you manage.</h2>
+        <p className={styles['mc-lede']}>A pod is two to six seats filled from our bench and pointed at one motion. What
           makes it a team rather than a group is on the right: one owner, and the same three things arriving
           whether or not you chase them.</p>
   
-        <div className='mc-pod'>
-          <div className='mc-pod-side'>
+        <div className={styles['mc-pod']}>
+          <div className={styles['mc-pod-side']}>
             <em>Who is in it</em>
-            <ul className='mc-roles'>
+            <ul className={styles['mc-roles']}>
               <li>
-                <b>GTM Lead <span className='mc-lead-tag'>the owner</span></b>
+                <b>GTM Lead <span className={styles['mc-lead-tag']}>the owner</span></b>
                 <span>Owns the plan, the weekly report and the result. Your single point of contact for
                   everything the pod does.</span>
               </li>
@@ -166,9 +169,9 @@ export default function Page() {
               </li>
             </ul>
           </div>
-          <div className='mc-pod-side'>
+          <div className={styles['mc-pod-side']}>
             <em>What arrives every week</em>
-            <ul className='mc-week'>
+            <ul className={styles['mc-week']}>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 20V10M10 20V4M16 20v-7M22 20H2' /></svg>
                 <span><b>A pipeline report</b><span>Meetings booked, opportunities created and campaign
                 performance, against the KPIs you set — not the ones that flatter us.</span></span></li>
@@ -182,10 +185,10 @@ export default function Page() {
           </div>
         </div>
   
-        <p className='mc-band-note'>The pod lives in your GoHighLevel or HubSpot — funnels, workflows,
+        <p className={styles['mc-band-note']}>The pod lives in your GoHighLevel or HubSpot — funnels, workflows,
           sequences and attribution all built in your instance. If the engagement ends, the machine stays
           with you rather than leaving with us.</p>
-        <a className='mc-inline-cta' href='/services/gtm-teams'>See the pod in detail
+        <a className={styles['mc-inline-cta']} href='/services/gtm-teams'>See the pod in detail
           <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
       </div>
     </section>
@@ -194,61 +197,61 @@ export default function Page() {
     
   
     
-  <section className='mc-section'>
-      <div className='mc-wrap'>
-        <span className='mc-kicker'>What you can staff</span>
-        <h2 className='mc-h2' style={{ marginTop: "14px" }}>Four functions, <span>one motion.</span></h2>
-        <p className='mc-lede'>Take the whole pod, or the single function that is currently the bottleneck. Both
+  <section className={styles['mc-section']}>
+      <div className={styles['mc-wrap']}>
+        <span className={styles['mc-kicker']}>What you can staff</span>
+        <h2 className={styles['mc-h2']} style={{ marginTop: "14px" }}>Four functions, <span>one motion.</span></h2>
+        <p className={styles['mc-lede']}>Take the whole pod, or the single function that is currently the bottleneck. Both
           start the same way — with a conversation about which one it actually is.</p>
   
-        <div className='mc-fns'>
+        <div className={styles['mc-fns']}>
   
-          <div className='mc-fn'>
-            <span className='mc-fn-ico'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M15.5 20.5v-1.8a3.7 3.7 0 0 0-3.7-3.7H6.2a3.7 3.7 0 0 0-3.7 3.7v1.8' /><circle cx='9' cy='7.2' r='3.7' /><path d='M21.5 20.5v-1.8a3.7 3.7 0 0 0-2.8-3.6' /></svg></span>
+          <div className={styles['mc-fn']}>
+            <span className={styles['mc-fn-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M15.5 20.5v-1.8a3.7 3.7 0 0 0-3.7-3.7H6.2a3.7 3.7 0 0 0-3.7 3.7v1.8' /><circle cx='9' cy='7.2' r='3.7' /><path d='M21.5 20.5v-1.8a3.7 3.7 0 0 0-2.8-3.6' /></svg></span>
             <div>
               <h3><a href='/services/gtm-teams'>GTM Teams</a></h3>
               <p>The whole motion staffed as one unit: lead, outbound, content and RevOps working to a single
                 plan with a single owner. Sized at two to six seats depending on how you sell.</p>
-              <a className='mc-fn-more' href='/services/gtm-teams'>See the full page
+              <a className={styles['mc-fn-more']} href='/services/gtm-teams'>See the full page
                 <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
             </div>
-            <div className='mc-fn-get'><b>What you get</b>A marketing function that runs without you convening
+            <div className={styles['mc-fn-get']}><b>What you get</b>A marketing function that runs without you convening
               it, and one person answerable for the number.</div>
           </div>
   
-          <div className='mc-fn'>
-            <span className='mc-fn-ico'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 6h16v12H4z' /><path d='m4 7 8 6 8-6' /></svg></span>
+          <div className={styles['mc-fn']}>
+            <span className={styles['mc-fn-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 6h16v12H4z' /><path d='m4 7 8 6 8-6' /></svg></span>
             <div>
               <h3>Marketing Support</h3>
               <p>The execution layer: campaign assembly, email and social scheduling, SEO support, landing
                 pages, print and collateral. The work that is not hard, but does not happen unless somebody
                 owns the calendar.</p>
             </div>
-            <div className='mc-fn-get'><b>What you get</b>Things go out on the day they were meant to, without a
+            <div className={styles['mc-fn-get']}><b>What you get</b>Things go out on the day they were meant to, without a
               reminder from you.</div>
           </div>
   
-          <div className='mc-fn'>
-            <span className='mc-fn-ico'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M6 3h9l4 4v14H6z' /><path d='M15 3v4h4' /><path d='M9 12h7M9 16h5' /></svg></span>
+          <div className={styles['mc-fn']}>
+            <span className={styles['mc-fn-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M6 3h9l4 4v14H6z' /><path d='M15 3v4h4' /><path d='M9 12h7M9 16h5' /></svg></span>
             <div>
               <h3>Content &amp; Brand Management</h3>
               <p>One voice across every channel, held to a written brand guide rather than to whoever wrote
                 the last post. Production, scheduling, repurposing and the review step that keeps it
                 consistent.</p>
             </div>
-            <div className='mc-fn-get'><b>What you get</b>A publishing rhythm you can rely on, and a brand that
+            <div className={styles['mc-fn-get']}><b>What you get</b>A publishing rhythm you can rely on, and a brand that
               still sounds like itself in six months.</div>
           </div>
   
-          <div className='mc-fn'>
-            <span className='mc-fn-ico'><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='11' cy='11' r='7' /><path d='m16.5 16.5 4 4' /></svg></span>
+          <div className={styles['mc-fn']}>
+            <span className={styles['mc-fn-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='11' cy='11' r='7' /><path d='m16.5 16.5 4 4' /></svg></span>
             <div>
               <h3>Research &amp; Analysis</h3>
               <p>Market, competitor and ICP research, plus the analysis that says which constraint is
                 actually binding. This is the cheapest work on the page and skipping it is what makes the
                 rest expensive.</p>
             </div>
-            <div className='mc-fn-get'><b>What you get</b>A defensible answer to "where should the next dollar
+            <div className={styles['mc-fn-get']}><b>What you get</b>A defensible answer to "where should the next dollar
               go", before you spend it.</div>
           </div>
   
@@ -260,11 +263,11 @@ export default function Page() {
     
   
     
-  <section className='mc-section' style={{ background: "var(--bg-marketing-paper)" }}>
-      <div className='mc-wrap'>
-        <span className='mc-kicker'>Before you ask</span>
-        <h2 className='mc-h2' style={{ marginTop: "14px" }}>The questions worth asking <span>before anyone touches your brand.</span></h2>
-        <div className='mc-faq'>
+  <section className={styles['mc-section']} style={{ background: "var(--bg-marketing-paper)" }}>
+      <div className={styles['mc-wrap']}>
+        <span className={styles['mc-kicker']}>Before you ask</span>
+        <h2 className={styles['mc-h2']} style={{ marginTop: "14px" }}>The questions worth asking <span>before anyone touches your brand.</span></h2>
+        <div className={styles['mc-faq']}>
           <details>
             <summary>Is a "pod" just freelancers with better branding?</summary>
             <p>The difference is who absorbs the coordination. A group of freelancers reports to you
@@ -320,17 +323,17 @@ export default function Page() {
     
   
     
-  <section className='mc-close'>
-      <div className='mc-wrap'>
+  <section className={styles['mc-close']}>
+      <div className={styles['mc-wrap']}>
         <h2>Tell us how you sell. We will scope the pod on the call.</h2>
         <p>Bring your motion, your targets and the thing that is currently stuck. You get a proposed seat
           mix, a timeline and a price — and the trial is free before any of it is signed.</p>
-        <div className='mc-cta-row'>
-          <a className='mc-btn hv-3' href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+        <div className={styles['mc-cta-row']}>
+          <a className={`${styles['mc-btn']} ${styles['hv-3']}`} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
             Scope your pod, free
             <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
           </a>
-          <a className='mc-btn mc-btn--ghost hv-4' href='/pricing'>See pricing</a>
+          <a className={`${styles['mc-btn']} ${styles['mc-btn--ghost']} ${styles['hv-4']}`} href='/pricing'>See pricing</a>
         </div>
       </div>
     </section>

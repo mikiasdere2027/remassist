@@ -1,6 +1,23 @@
-/* Auto-generated from GTM Teams.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit directly. */
+/* Auto-generated from GTM Teams.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit above the hand-additions sentinel. */
 
 .hv-1{color:var(--blue-700)}
 .hv-2{background:var(--blue-700);color:#fff}
 .hv-3{border-color:var(--blue-300);color:var(--blue-300)}
 .hv-4{background:var(--blue-700);color:#fff}
+
+/* === hand-additions (preserved by codemod) === */
+/* These grids came through as inline styles from the artboard, so no media
+   query could reach them and they held 3 and 4 columns on a 390px phone.
+   Same desktop layout, collapsed below the tablet break. */
+.rgrid-1 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 64px; }
+.rgrid-2 { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
+.rgrid-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+.rgrid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rgrid-5 { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+@media (max-width: 860px) {
+  .rgrid-1 { grid-template-columns: minmax(0, 1fr); }
+  .rgrid-2 { grid-template-columns: minmax(0, 1fr); }
+  .rgrid-3 { grid-template-columns: minmax(0, 1fr); }
+  .rgrid-4 { grid-template-columns: minmax(0, 1fr); }
+  .rgrid-5 { grid-template-columns: minmax(0, 1fr); }
+}

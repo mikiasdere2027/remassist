@@ -3,7 +3,10 @@ import styles from './page.module.css';
 
 export const metadata: Metadata = {
   title: 'HR & Recruiting',
-  description: '',
+  description:
+    'Sourcing, screening, interview coordination and onboarding administration, run inside your ATS and HRIS by a seat you interviewed.',
+  alternates: { canonical: '/services/hr-and-recruiting' },
+  openGraph: { url: '/services/hr-and-recruiting' },
 };
 
 export default function Page() {
@@ -15,33 +18,33 @@ export default function Page() {
   
     
   <section style={{ background: "linear-gradient(180deg,#f7faff 0%,var(--bg-marketing-paper) 62%)", borderBottom: "1px solid var(--border-default)" }}>
-      <div className='hr-wrap hr-hero'>
+      <div className={`${styles['hr-wrap']} ${styles['hr-hero']}`}>
   
         <div>
-          <span className='hr-kicker'>HR &amp; Recruiting</span>
-          <h1 className='hr-h1'>Open roles move<br /><span>without the chase.</span></h1>
-          <p className='hr-lede'>Sourcing, screening, interview coordination and onboarding administration —
+          <span className={styles['hr-kicker']}>HR &amp; Recruiting</span>
+          <h1 className={styles['hr-h1']}>Open roles move<br /><span>without the chase.</span></h1>
+          <p className={styles['hr-lede']}>Sourcing, screening, interview coordination and onboarding administration —
             run inside your ATS and HRIS by a seat you interviewed. Every hiring decision still lands
             with you.</p>
   
-          <ul className='hr-checks'>
-            <li><span className='hr-tick'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
+          <ul className={styles['hr-checks']}>
+            <li><span className={styles['hr-tick']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
               We advance and reject against <b>your written scorecard</b>, and show the reasoning on every candidate.</li>
-            <li><span className='hr-tick'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
+            <li><span className={styles['hr-tick']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
               Work happens in your systems — Greenhouse, Lever, Workable, BambooHR or in-house. Nothing to migrate back.</li>
-            <li><span className='hr-tick'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
+            <li><span className={styles['hr-tick']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg></span>
               We never make a hiring decision or attest to anyone's eligibility. <b>Those stay yours by design.</b></li>
           </ul>
   
-          <div className='hr-cta-row'>
-            <a className='hr-btn hv-1' href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+          <div className={styles['hr-cta-row']}>
+            <a className={`${styles['hr-btn']} ${styles['hv-1']}`} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
               Talk to a talent specialist
               <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
             </a>
-            <a className='hr-btn hr-btn--ghost hv-2' href='/qualify'>Qualify in two minutes</a>
+            <a className={`${styles['hr-btn']} ${styles['hr-btn--ghost']} ${styles['hv-2']}`} href='/qualify'>Qualify in two minutes</a>
           </div>
   
-          <div className='hr-proof'>
+          <div className={styles['hr-proof']}>
             <div><b>Your ATS</b><span>Where the pipeline lives</span></div>
             <div><b>2 wks</b><span>Consult to a working pipeline</span></div>
             <div><b>You</b><span>Approve shortlist and hire</span></div>
@@ -50,43 +53,43 @@ export default function Page() {
         </div>
   
         
-        <div className='hr-relay' aria-hidden='true'>
-          <div className='hr-relay-head'>
+        <div className={styles['hr-relay']} aria-hidden='true'>
+          <div className={styles['hr-relay-head']}>
             <span>Rem Assist runs it</span>
             <span>You decide it</span>
           </div>
   
-          <div className='hr-relay-body'>
-            <span className='hr-relay-spine'></span>
-            <span className='hr-relay-beam'></span>
+          <div className={styles['hr-relay-body']}>
+            <span className={styles['hr-relay-spine']}></span>
+            <span className={styles['hr-relay-beam']}></span>
   
-            <ol className='hr-relay-list'>
-              <li className='hr-relay-step hr-relay-step--both'>
-                <span className='hr-relay-chip'><b>01</b><i>Intake &amp; scorecard</i></span>
+            <ol className={styles['hr-relay-list']}>
+              <li className={`${styles['hr-relay-step']} ${styles['hr-relay-step--both']}`}>
+                <span className={styles['hr-relay-chip']}><b>01</b><i>Intake &amp; scorecard</i></span>
               </li>
-              <li className='hr-relay-step hr-relay-step--us'>
-                <span className='hr-relay-chip'><b>02</b><i>Sourcing</i></span>
+              <li className={`${styles['hr-relay-step']} ${styles['hr-relay-step--us']}`}>
+                <span className={styles['hr-relay-chip']}><b>02</b><i>Sourcing</i></span>
               </li>
-              <li className='hr-relay-step hr-relay-step--us'>
-                <span className='hr-relay-chip'><b>03</b><i>Screening</i></span>
+              <li className={`${styles['hr-relay-step']} ${styles['hr-relay-step--us']}`}>
+                <span className={styles['hr-relay-chip']}><b>03</b><i>Screening</i></span>
               </li>
-              <li className='hr-relay-step hr-relay-step--you'>
-                <span className='hr-relay-chip'><b>04</b><i>Shortlist review</i></span>
+              <li className={`${styles['hr-relay-step']} ${styles['hr-relay-step--you']}`}>
+                <span className={styles['hr-relay-chip']}><b>04</b><i>Shortlist review</i></span>
               </li>
-              <li className='hr-relay-step hr-relay-step--us'>
-                <span className='hr-relay-chip'><b>05</b><i>Coordination</i></span>
+              <li className={`${styles['hr-relay-step']} ${styles['hr-relay-step--us']}`}>
+                <span className={styles['hr-relay-chip']}><b>05</b><i>Coordination</i></span>
               </li>
-              <li className='hr-relay-step hr-relay-step--you hr-relay-step--gate'>
-                <span className='hr-relay-chip'><b>06</b><i>Hiring decision</i></span>
+              <li className={`${styles['hr-relay-step']} ${styles['hr-relay-step--you']} ${styles['hr-relay-step--gate']}`}>
+                <span className={styles['hr-relay-chip']}><b>06</b><i>Hiring decision</i></span>
               </li>
-              <li className='hr-relay-step hr-relay-step--us'>
-                <span className='hr-relay-chip'><b>07</b><i>Onboarding</i></span>
+              <li className={`${styles['hr-relay-step']} ${styles['hr-relay-step--us']}`}>
+                <span className={styles['hr-relay-chip']}><b>07</b><i>Onboarding</i></span>
               </li>
             </ol>
           </div>
   
-          <div className='hr-relay-foot'>
-            <span className='hr-relay-out'>
+          <div className={styles['hr-relay-foot']}>
+            <span className={styles['hr-relay-out']}>
               <svg viewBox='0 0 24 24'><path d='m5 13 4 4L19 7' /></svg>
               <b>Started, not just hired</b><em>day one ready</em>
             </span>
@@ -100,35 +103,35 @@ export default function Page() {
     
   
     
-  <section className='hr-section hr-section--paper' style={{ background: "var(--bg-marketing-paper)" }}>
-      <div className='hr-wrap'>
-        <span className='hr-kicker'>Where it breaks</span>
-        <h2 className='hr-h2' style={{ marginTop: "14px" }}>The hiring plan was never the problem. <span>The operations were.</span></h2>
-        <p className='hr-lede'>Nothing below is a strategy failure. It is the volume of coordination sitting
+  <section className={`${styles['hr-section']} ${styles['hr-section--paper']}`} style={{ background: "var(--bg-marketing-paper)" }}>
+      <div className={styles['hr-wrap']}>
+        <span className={styles['hr-kicker']}>Where it breaks</span>
+        <h2 className={styles['hr-h2']} style={{ marginTop: "14px" }}>The hiring plan was never the problem. <span>The operations were.</span></h2>
+        <p className={styles['hr-lede']}>Nothing below is a strategy failure. It is the volume of coordination sitting
           between a decision and the thing actually happening.</p>
   
-        <div className='hr-grid'>
-          <div className='hr-card'>
-            <span className='hr-card-ico'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 20V10M10 20V4M16 20v-7M22 20H2' /></svg></span>
+        <div className={styles['hr-grid']}>
+          <div className={styles['hr-card']}>
+            <span className={styles['hr-card-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 20V10M10 20V4M16 20v-7M22 20H2' /></svg></span>
             <h3>The requisition list outgrew the recruiter</h3>
             <p>One person cannot source, screen, schedule and chase feedback across a dozen open roles and
               still have a thought left over for how you hire.</p>
           </div>
-          <div className='hr-card'>
-            <span className='hr-card-ico'><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='3' y='5' width='18' height='16' rx='2' /><path d='M8 3v4M16 3v4M3 10h18' /><path d='m9.5 15.5 1.8 1.8 3.6-3.8' /></svg></span>
+          <div className={styles['hr-card']}>
+            <span className={styles['hr-card-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='3' y='5' width='18' height='16' rx='2' /><path d='M8 3v4M16 3v4M3 10h18' /><path d='m9.5 15.5 1.8 1.8 3.6-3.8' /></svg></span>
             <h3>Coordination quietly eats the week</h3>
             <p>A four-person panel across two time zones, one reschedule, and a follow-up nobody sent.
               Hiring managers end up administering the process instead of assessing people.</p>
           </div>
-          <div className='hr-card'>
-            <span className='hr-card-ico'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M12 3 4 6.5V12c0 4.4 3.2 8 8 9 4.8-1 8-4.6 8-9V6.5z' /><path d='M12 8.5v4M12 15.5h.01' /></svg></span>
+          <div className={styles['hr-card']}>
+            <span className={styles['hr-card-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M12 3 4 6.5V12c0 4.4 3.2 8 8 9 4.8-1 8-4.6 8-9V6.5z' /><path d='M12 8.5v4M12 15.5h.01' /></svg></span>
             <h3>The offer is not the finish line</h3>
             <p>Paperwork, accounts, equipment, a day-one schedule, records that have to be complete and
               correct. It lands on whoever is least busy, which is nobody.</p>
           </div>
         </div>
   
-        <p className='hr-note'>Candidates feel all three. <b>A week of silence is a week they spend answering
+        <p className={styles['hr-note']}>Candidates feel all three. <b>A week of silence is a week they spend answering
           somebody else's email</b> — and that cost only shows up later, as a declined offer nobody
           can quite explain.</p>
       </div>
@@ -138,17 +141,17 @@ export default function Page() {
     
   
     
-  <section className='hr-section'>
-      <div className='hr-wrap'>
-        <span className='hr-kicker'>What you can staff</span>
-        <h2 className='hr-h2' style={{ marginTop: "14px" }}>Two systems, <span>one people operation.</span></h2>
-        <p className='hr-lede'>Recruiting operations and HR administration run on different clocks. We staff
+  <section className={styles['hr-section']}>
+      <div className={styles['hr-wrap']}>
+        <span className={styles['hr-kicker']}>What you can staff</span>
+        <h2 className={styles['hr-h2']} style={{ marginTop: "14px" }}>Two systems, <span>one people operation.</span></h2>
+        <p className={styles['hr-lede']}>Recruiting operations and HR administration run on different clocks. We staff
           them separately, and you can take either one on its own.</p>
   
-        <div className='hr-systems'>
+        <div className={styles['hr-systems']}>
   
-          <div className='hr-sys'>
-            <div className='hr-sys-head'>
+          <div className={styles['hr-sys']}>
+            <div className={styles['hr-sys-head']}>
               <i><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='11' cy='11' r='7' /><path d='m16.5 16.5 4 4' /></svg></i>
               <span>
                 <h3>Recruiting Support</h3>
@@ -158,7 +161,7 @@ export default function Page() {
             <p>Everything that has to happen before a hiring manager has a real decision in front of
               them.</p>
   
-            <ul className='hr-caps'>
+            <ul className={styles['hr-caps']}>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg>
                 <span><b>Candidate sourcing</b><span>Boolean and profile-led search against your scorecard
                 — not one posting pushed to more boards.</span></span></li>
@@ -179,10 +182,10 @@ export default function Page() {
                 list rather than a blank search.</span></span></li>
             </ul>
   
-            <p className='hr-off'><b>Off your desk</b>The sourcing hours, the screening volume, the scheduling
+            <p className={styles['hr-off']}><b>Off your desk</b>The sourcing hours, the screening volume, the scheduling
               thread, and the follow-up nobody sent.</p>
   
-            <details className='hr-tasks'>
+            <details className={styles['hr-tasks']}>
               <summary>See a week of this seat's tasks</summary>
               <ul>
                 <li>Build and run search strings for the open roles</li>
@@ -199,8 +202,8 @@ export default function Page() {
             </details>
           </div>
   
-          <div className='hr-sys'>
-            <div className='hr-sys-head'>
+          <div className={styles['hr-sys']}>
+            <div className={styles['hr-sys-head']}>
               <i><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M6 3h9l4 4v14H6z' /><path d='M15 3v4h4' /><path d='m9.4 13.6 1.8 1.8 3.6-3.8' /></svg></i>
               <span>
                 <h3>HR Administration &amp; Onboarding</h3>
@@ -210,7 +213,7 @@ export default function Page() {
             <p>The lifecycle administration that has to be complete and correct, and that lands on
               whoever happens to be free.</p>
   
-            <ul className='hr-caps'>
+            <ul className={styles['hr-caps']}>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg>
                 <span><b>Onboarding administration</b><span>Offer paperwork prepared, accounts and kit
                 requested, day one built and confirmed.</span></span></li>
@@ -231,10 +234,10 @@ export default function Page() {
                 on the day, exit paperwork filed.</span></span></li>
             </ul>
   
-            <p className='hr-off'><b>Off your desk</b>The checklist, the chasing, and the file that turns out to
+            <p className={styles['hr-off']}><b>Off your desk</b>The checklist, the chasing, and the file that turns out to
               be incomplete at exactly the wrong moment.</p>
   
-            <details className='hr-tasks'>
+            <details className={styles['hr-tasks']}>
               <summary>See a week of this seat's tasks</summary>
               <ul>
                 <li>Prepare and issue the week's offer packets</li>
@@ -253,7 +256,7 @@ export default function Page() {
   
         </div>
   
-        <p className='hr-note'><b>Where we stop, on purpose.</b> We prepare I-9 and E-Verify paperwork and keep
+        <p className={styles['hr-note']}><b>Where we stop, on purpose.</b> We prepare I-9 and E-Verify paperwork and keep
           the workflow moving; the employer completes and attests. Payroll runs and filings sit with the
           <a href='/services/finance-and-accounting'>finance desk</a>, not this one. And we do not make hiring
           decisions. Anyone offering you all three is offering to hand you their liability.</p>
@@ -264,24 +267,24 @@ export default function Page() {
     
   
     
-  <section className='hr-band'>
-      <div className='hr-wrap'>
-        <span className='hr-kicker'>The lifecycle</span>
-        <h2 className='hr-h2' style={{ marginTop: "14px" }}>Seven stages. Two of them are yours.</h2>
-        <p className='hr-lede'>This is the actual sequence a requisition runs through. Every stage has one
+  <section className={styles['hr-band']}>
+      <div className={styles['hr-wrap']}>
+        <span className={styles['hr-kicker']}>The lifecycle</span>
+        <h2 className={styles['hr-h2']} style={{ marginTop: "14px" }}>Seven stages. Two of them are yours.</h2>
+        <p className={styles['hr-lede']}>This is the actual sequence a requisition runs through. Every stage has one
           owner, agreed in writing before anybody starts work. Open any of them.</p>
   
-        <ol className='hr-ladder'>
+        <ol className={styles['hr-ladder']}>
   
           <li>
-            <details className='hr-stage'>
+            <details className={styles['hr-stage']}>
               <summary>
-                <span className='hr-stage-n'>01</span>
-                <h3 className='hr-stage-name'>Intake &amp; scorecard</h3>
-                <span className='hr-stage-own'>Together</span>
-                <span className='hr-stage-plus' aria-hidden='true'></span>
+                <span className={styles['hr-stage-n']}>01</span>
+                <h3 className={styles['hr-stage-name']}>Intake &amp; scorecard</h3>
+                <span className={styles['hr-stage-own']}>Together</span>
+                <span className={styles['hr-stage-plus']} aria-hidden='true'></span>
               </summary>
-              <div className='hr-stage-body'>
+              <div className={styles['hr-stage-body']}>
                 <div><em>We run</em><p>The session and the write-up. Must-haves, deal-breakers, the profile
                   that has actually lasted on this team, and the criteria every later decision gets measured
                   against.</p></div>
@@ -294,14 +297,14 @@ export default function Page() {
           </li>
   
           <li>
-            <details className='hr-stage'>
+            <details className={styles['hr-stage']}>
               <summary>
-                <span className='hr-stage-n'>02</span>
-                <h3 className='hr-stage-name'>Sourcing</h3>
-                <span className='hr-stage-own'>Rem Assist</span>
-                <span className='hr-stage-plus' aria-hidden='true'></span>
+                <span className={styles['hr-stage-n']}>02</span>
+                <h3 className={styles['hr-stage-name']}>Sourcing</h3>
+                <span className={styles['hr-stage-own']}>Rem Assist</span>
+                <span className={styles['hr-stage-plus']} aria-hidden='true'></span>
               </summary>
-              <div className='hr-stage-body'>
+              <div className={styles['hr-stage-body']}>
                 <div><em>We run</em><p>Search strings, profile-led outreach, referral mining and the inbound
                   queue — all of it logged into your ATS as it happens, under your employer
                   brand.</p></div>
@@ -314,14 +317,14 @@ export default function Page() {
           </li>
   
           <li>
-            <details className='hr-stage'>
+            <details className={styles['hr-stage']}>
               <summary>
-                <span className='hr-stage-n'>03</span>
-                <h3 className='hr-stage-name'>Screening</h3>
-                <span className='hr-stage-own'>Rem Assist</span>
-                <span className='hr-stage-plus' aria-hidden='true'></span>
+                <span className={styles['hr-stage-n']}>03</span>
+                <h3 className={styles['hr-stage-name']}>Screening</h3>
+                <span className={styles['hr-stage-own']}>Rem Assist</span>
+                <span className={styles['hr-stage-plus']} aria-hidden='true'></span>
               </summary>
-              <div className='hr-stage-body'>
+              <div className={styles['hr-stage-body']}>
                 <div><em>We run</em><p>Every applicant read against the scorecard, structured screening calls
                   to your question set, and a written summary saying what matched and what did not.</p></div>
                 <div><em>You own</em><p>The bar. If we are advancing the wrong people, that is a scorecard
@@ -333,14 +336,14 @@ export default function Page() {
           </li>
   
           <li>
-            <details className='hr-stage'>
+            <details className={styles['hr-stage']}>
               <summary>
-                <span className='hr-stage-n'>04</span>
-                <h3 className='hr-stage-name'>Shortlist review</h3>
-                <span className='hr-stage-own hr-stage-own--you'>You</span>
-                <span className='hr-stage-plus' aria-hidden='true'></span>
+                <span className={styles['hr-stage-n']}>04</span>
+                <h3 className={styles['hr-stage-name']}>Shortlist review</h3>
+                <span className={`${styles['hr-stage-own']} ${styles['hr-stage-own--you']}`}>You</span>
+                <span className={styles['hr-stage-plus']} aria-hidden='true'></span>
               </summary>
-              <div className='hr-stage-body'>
+              <div className={styles['hr-stage-body']}>
                 <div><em>We run</em><p>The pack: candidates, summaries, the scorecard mapping, and the open
                   questions worth putting to each of them. Assembled, not narrated at you on a call.</p></div>
                 <div><em>You own</em><p>Who moves forward. We recommend and we show our reasoning; the
@@ -352,14 +355,14 @@ export default function Page() {
           </li>
   
           <li>
-            <details className='hr-stage'>
+            <details className={styles['hr-stage']}>
               <summary>
-                <span className='hr-stage-n'>05</span>
-                <h3 className='hr-stage-name'>Interview coordination</h3>
-                <span className='hr-stage-own'>Rem Assist</span>
-                <span className='hr-stage-plus' aria-hidden='true'></span>
+                <span className={styles['hr-stage-n']}>05</span>
+                <h3 className={styles['hr-stage-name']}>Interview coordination</h3>
+                <span className={styles['hr-stage-own']}>Rem Assist</span>
+                <span className={styles['hr-stage-plus']} aria-hidden='true'></span>
               </summary>
-              <div className='hr-stage-body'>
+              <div className={styles['hr-stage-body']}>
                 <div><em>We run</em><p>Scheduling across the panel and the time zones, confirmations,
                   reschedules, candidate prep notes, and the chase for feedback afterwards.</p></div>
                 <div><em>You own</em><p>The interviews themselves. Your people assess candidates; that is the
@@ -371,14 +374,14 @@ export default function Page() {
           </li>
   
           <li>
-            <details className='hr-stage'>
+            <details className={styles['hr-stage']}>
               <summary>
-                <span className='hr-stage-n'>06</span>
-                <h3 className='hr-stage-name'>Hiring decision</h3>
-                <span className='hr-stage-own hr-stage-own--you'>You, always</span>
-                <span className='hr-stage-plus' aria-hidden='true'></span>
+                <span className={styles['hr-stage-n']}>06</span>
+                <h3 className={styles['hr-stage-name']}>Hiring decision</h3>
+                <span className={`${styles['hr-stage-own']} ${styles['hr-stage-own--you']}`}>You, always</span>
+                <span className={styles['hr-stage-plus']} aria-hidden='true'></span>
               </summary>
-              <div className='hr-stage-body'>
+              <div className={styles['hr-stage-body']}>
                 <div><em>We run</em><p>Nothing. We assemble the debrief and the evidence, and then we get out
                   of the way.</p></div>
                 <div><em>You own</em><p>The hire. Fully, and with no exception we would ever ask you to make.
@@ -390,14 +393,14 @@ export default function Page() {
           </li>
   
           <li>
-            <details className='hr-stage'>
+            <details className={styles['hr-stage']}>
               <summary>
-                <span className='hr-stage-n'>07</span>
-                <h3 className='hr-stage-name'>Offer &amp; onboarding</h3>
-                <span className='hr-stage-own'>Rem Assist</span>
-                <span className='hr-stage-plus' aria-hidden='true'></span>
+                <span className={styles['hr-stage-n']}>07</span>
+                <h3 className={styles['hr-stage-name']}>Offer &amp; onboarding</h3>
+                <span className={styles['hr-stage-own']}>Rem Assist</span>
+                <span className={styles['hr-stage-plus']} aria-hidden='true'></span>
               </summary>
-              <div className='hr-stage-body'>
+              <div className={styles['hr-stage-body']}>
                 <div><em>We run</em><p>Offer paperwork prepared, documents collected and filed, accounts and
                   equipment requested, day-one schedule built and confirmed with everyone in it.</p></div>
                 <div><em>You own</em><p>The offer terms, the signature, the I-9 attestation, and the welcome
@@ -410,7 +413,7 @@ export default function Page() {
   
         </ol>
   
-        <p className='hr-band-note'>Stage one is the one everybody wants to skip. We do not, because every other
+        <p className={styles['hr-band-note']}>Stage one is the one everybody wants to skip. We do not, because every other
           stage is measured against what comes out of it — and where nothing is written down yet, we
           document it as we go and hand you the SOP either way. It is the same
           <a href='/how-it-works'>onboarding process</a> every Rem Assist seat runs.</p>
@@ -421,15 +424,15 @@ export default function Page() {
     
   
     
-  <section className='hr-section'>
-      <div className='hr-wrap'>
-        <span className='hr-kicker'>Control</span>
-        <h2 className='hr-h2' style={{ marginTop: "14px" }}>The final call is yours. <span>Everything before it is ours.</span></h2>
-        <p className='hr-lede'>An operational extension is not a softer phrase for handing the function over.
+  <section className={styles['hr-section']}>
+      <div className={styles['hr-wrap']}>
+        <span className={styles['hr-kicker']}>Control</span>
+        <h2 className={styles['hr-h2']} style={{ marginTop: "14px" }}>The final call is yours. <span>Everything before it is ours.</span></h2>
+        <p className={styles['hr-lede']}>An operational extension is not a softer phrase for handing the function over.
           The judgment stays exactly where it is; the workload does not.</p>
   
-        <div className='hr-split'>
-          <div className='hr-col hr-col--us'>
+        <div className={styles['hr-split']}>
+          <div className={`${styles['hr-col']} ${styles['hr-col--us']}`}>
             <h3>Runs on our side</h3>
             <ul>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='8.5' /><path d='M8.5 12h7' /></svg><span>Sourcing, outreach and the inbound queue</span></li>
@@ -441,7 +444,7 @@ export default function Page() {
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='8.5' /><path d='M8.5 12h7' /></svg><span>Records, documentation and the trackers</span></li>
             </ul>
           </div>
-          <div className='hr-col hr-col--you'>
+          <div className={`${styles['hr-col']} ${styles['hr-col--you']}`}>
             <h3>Stays with you</h3>
             <ul>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>The hiring decision, without exception</span></li>
@@ -455,12 +458,12 @@ export default function Page() {
           </div>
         </div>
   
-        <p className='hr-rule'><b>The rule we do not bend:</b> we do not decide who gets hired, and we do not
+        <p className={styles['hr-rule']}><b>The rule we do not bend:</b> we do not decide who gets hired, and we do not
           attest to anyone's eligibility. We prepare the work so you can do both quickly, and the record
           stays in your systems — which is what makes ending the engagement a decision rather than a
           migration.</p>
   
-        <a className='hr-inline-cta' href='/how-it-works'>See how a requisition would run with us
+        <a className={styles['hr-inline-cta']} href='/how-it-works'>See how a requisition would run with us
           <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
       </div>
     </section>
@@ -469,17 +472,17 @@ export default function Page() {
     
   
     
-  <section className='hr-section' style={{ background: "var(--bg-marketing-paper)" }}>
-      <div className='hr-wrap'>
-        <span className='hr-kicker'>Trust</span>
-        <h2 className='hr-h2' style={{ marginTop: "14px" }}>What we can show you, <span>and what we will not claim.</span></h2>
-        <p className='hr-lede'>This work touches your employer brand, your candidates' data and your team's
+  <section className={styles['hr-section']} style={{ background: "var(--bg-marketing-paper)" }}>
+      <div className={styles['hr-wrap']}>
+        <span className={styles['hr-kicker']}>Trust</span>
+        <h2 className={styles['hr-h2']} style={{ marginTop: "14px" }}>What we can show you, <span>and what we will not claim.</span></h2>
+        <p className={styles['hr-lede']}>This work touches your employer brand, your candidates' data and your team's
           judgment. Here is what underwrites it.</p>
   
-        <div className='hr-trust'>
+        <div className={styles['hr-trust']}>
   
-          <div className='hr-tcard'>
-            <div className='hr-tcard-head'>
+          <div className={styles['hr-tcard']}>
+            <div className={styles['hr-tcard-head']}>
               <i><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M6 3h9l4 4v14H6z' /><path d='M15 3v4h4' /><path d='m9.4 13.6 1.8 1.8 3.6-3.8' /></svg></i>
               <h3>Calibration, not guesswork</h3>
             </div>
@@ -488,8 +491,8 @@ export default function Page() {
               against that document — in writing, where you can see it and correct it.</p>
           </div>
   
-          <div className='hr-tcard'>
-            <div className='hr-tcard-head'>
+          <div className={styles['hr-tcard']}>
+            <div className={styles['hr-tcard-head']}>
               <i><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='M12 7.5V12l3 2' /></svg></i>
               <h3>Visibility without asking</h3>
             </div>
@@ -498,23 +501,23 @@ export default function Page() {
               named supervisor who is not the person doing the work.</p>
           </div>
   
-          <div className='hr-tcard'>
-            <div className='hr-tcard-head'>
+          <div className={styles['hr-tcard']}>
+            <div className={styles['hr-tcard-head']}>
               <i><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M12 3 4 6.5V12c0 4.4 3.2 8 8 9 4.8-1 8-4.6 8-9V6.5z' /><path d='m8.7 12.2 2.3 2.3 4.4-4.7' /></svg></i>
               <h3>Security you can audit</h3>
             </div>
             <p>Applicant and employee records are among the most sensitive data a company holds. Access is
               least-privilege and scoped per client, the data stays in your systems, and the controls are
               independently audited rather than self-declared.</p>
-            <div className='hr-iso'>
-              <img src='/ISO_9001-2015.svg' alt='ISO 9001:2015 certified' loading='lazy' decoding='async' />
-              <img src='/ISO_27001-2022.svg' alt='ISO 27001:2022 certified' loading='lazy' decoding='async' />
+            <div className={styles['hr-iso']}>
+              <img src='/images/ISO_9001-2015.svg' alt='ISO 9001:2015 certified' loading='lazy' decoding='async' />
+              <img src='/images/ISO_27001-2022.svg' alt='ISO 27001:2022 certified' loading='lazy' decoding='async' />
             </div>
           </div>
   
           
-          <div className='hr-tcard hr-tcard--open'>
-            <div className='hr-tcard-head'>
+          <div className={`${styles['hr-tcard']} ${styles['hr-tcard--open']}`}>
+            <div className={styles['hr-tcard-head']}>
               <i><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='M9.6 9.2a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .9-1 1.6v.4' /><path d='M12 17h.01' /></svg></i>
               <h3>The proof we do not have yet</h3>
             </div>
@@ -532,18 +535,18 @@ export default function Page() {
     
   
     
-  <section className='hr-section'>
-      <div className='hr-wrap'>
-        <span className='hr-kicker'>Rates</span>
-        <h2 className='hr-h2' style={{ marginTop: "14px" }}>Two tiers, <span>same controls.</span></h2>
-        <p className='hr-lede'>Published, hourly, per seat — the same two tiers as every other service
+  <section className={styles['hr-section']}>
+      <div className={styles['hr-wrap']}>
+        <span className={styles['hr-kicker']}>Rates</span>
+        <h2 className={styles['hr-h2']} style={{ marginTop: "14px" }}>Two tiers, <span>same controls.</span></h2>
+        <p className={styles['hr-lede']}>Published, hourly, per seat — the same two tiers as every other service
           line. What differs here is the training, not the price.</p>
   
-        <div className='hr-tiers'>
-          <div className='hr-tier'>
-            <div className='hr-tier-head'>
+        <div className={styles['hr-tiers']}>
+          <div className={styles['hr-tier']}>
+            <div className={styles['hr-tier-head']}>
               <h3>Pro</h3>
-              <span className='hr-tier-price'><small>from</small><b>$8</b><em>/hr</em></span>
+              <span className={styles['hr-tier-price']}><small>from</small><b>$8</b><em>/hr</em></span>
             </div>
             <p>Cleared the core programme and works in your ATS and HRIS from day one.</p>
             <ul>
@@ -552,10 +555,10 @@ export default function Page() {
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Best value per seat</span></li>
             </ul>
           </div>
-          <div className='hr-tier hr-tier--expert'>
-            <div className='hr-tier-head'>
+          <div className={`${styles['hr-tier']} ${styles['hr-tier--expert']}`}>
+            <div className={styles['hr-tier-head']}>
               <h3>Expert</h3>
-              <span className='hr-tier-price'><small>from</small><b>$11</b><em>/hr</em></span>
+              <span className={styles['hr-tier-price']}><small>from</small><b>$11</b><em>/hr</em></span>
             </div>
             <p>More years in recruiting or people operations, and a harder assessment path.</p>
             <ul>
@@ -565,7 +568,7 @@ export default function Page() {
             </ul>
           </div>
         </div>
-        <p className='hr-tier-note'>Volume drives the cost far more than seniority does — two open roles
+        <p className={styles['hr-tier-note']}>Volume drives the cost far more than seniority does — two open roles
           and twenty are different engagements. See the <a href='/pricing'>full monthly grid</a>, and
           note that a free trial comes before any of it.</p>
       </div>
@@ -575,11 +578,11 @@ export default function Page() {
     
   
     
-  <section className='hr-section' style={{ background: "var(--bg-marketing-paper)" }}>
-      <div className='hr-wrap'>
-        <span className='hr-kicker'>Before you ask</span>
-        <h2 className='hr-h2' style={{ marginTop: "14px" }}>The questions worth asking <span>before anyone near your pipeline.</span></h2>
-        <div className='hr-faq'>
+  <section className={styles['hr-section']} style={{ background: "var(--bg-marketing-paper)" }}>
+      <div className={styles['hr-wrap']}>
+        <span className={styles['hr-kicker']}>Before you ask</span>
+        <h2 className={styles['hr-h2']} style={{ marginTop: "14px" }}>The questions worth asking <span>before anyone near your pipeline.</span></h2>
+        <div className={styles['hr-faq']}>
           <details>
             <summary>Who makes the final hiring decision?</summary>
             <p>You do. There is no version of this where we decide, recommend-then-proceed, or hold a
@@ -641,17 +644,17 @@ export default function Page() {
     
   
     
-  <section className='hr-close'>
-      <div className='hr-wrap'>
+  <section className={styles['hr-close']}>
+      <div className={styles['hr-wrap']}>
         <h2>Watch it run on one stuck role first.</h2>
         <p>The consult is free, the trial is free, and you interview the seat before it touches a
           requisition. Bring the two roles that have been open longest and we will scope it on the call.</p>
-        <div className='hr-cta-row'>
-          <a className='hr-btn hv-3' href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+        <div className={styles['hr-cta-row']}>
+          <a className={`${styles['hr-btn']} ${styles['hv-3']}`} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
             Talk to a talent specialist
             <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
           </a>
-          <a className='hr-btn hr-btn--ghost hv-4' href='/pricing'>See pricing</a>
+          <a className={`${styles['hr-btn']} ${styles['hr-btn--ghost']} ${styles['hv-4']}`} href='/pricing'>See pricing</a>
         </div>
       </div>
     </section>

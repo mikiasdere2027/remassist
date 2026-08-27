@@ -1,5 +1,16 @@
-/* Auto-generated from SDR as a Service.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit directly. */
+/* Auto-generated from SDR as a Service.dc.html by tools/codemod/codemod.js (Phase 01 §7.1). Do not hand-edit above the hand-additions sentinel. */
 @keyframes waveShift { from { background-position: 0 0, 0 30px, 0 0; } to { background-position: 240px 0, -240px 30px, 0 0; } }
 .hv-1{background:var(--blue-700);color:#fff}
 .hv-2{border-color:var(--brand-blue);color:var(--brand-blue)}
 .hv-3{background:var(--blue-700);color:#fff}
+
+/* === hand-additions (preserved by codemod) === */
+/* These grids came through as inline styles from the artboard, so no media
+   query could reach them and they held 3 and 4 columns on a 390px phone.
+   Same desktop layout, collapsed below the tablet break. */
+.rgrid-1 { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
+.rgrid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+@media (max-width: 860px) {
+  .rgrid-1 { grid-template-columns: minmax(0, 1fr); }
+  .rgrid-2 { grid-template-columns: minmax(0, 1fr); }
+}
