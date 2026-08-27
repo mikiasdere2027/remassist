@@ -1,0 +1,61 @@
+/* SeatTiers — the one shared seat-rate card, ported from /pricing's .pr-tier.
+   The heading rules are copied character-for-character from the service pages'
+   own .xx-kicker / .xx-h2 / .xx-lede, the same way InterviewRail does it, so
+   the section title reads identically to every other section on the page. */
+
+.section { padding: 88px 0; }
+.section--white { background-color: #fff; }
+.section--paper { background-color: var(--bg-marketing-paper); }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+.kicker { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--brand-blue); font-weight: 600; }
+.h2 { margin: 14px 0 0; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em;
+  line-height: 1.12; font-size: clamp(28px, 3.2vw, 42px); color: var(--brand-navy); }
+.h2 span { color: var(--brand-blue); }
+.lede { margin: 18px 0 0; font-size: 17px; line-height: 1.7; color: var(--ink-600); max-width: 60ch; }
+
+/* The cards themselves — /pricing's .pr-tier, unchanged. */
+.tiers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 44px;
+  text-align: left; }
+.tier { position: relative; background: #fff; border: 1px solid var(--border-default);
+  border-radius: 20px; padding: 32px 30px; box-shadow: var(--shadow-sm);
+  transition: transform 190ms var(--ease-out), box-shadow 190ms var(--ease-out), border-color 190ms; }
+.tier:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(81, 141, 224, 0.5); }
+.tier--expert { border-color: rgba(81, 141, 224, 0.55); box-shadow: 0 26px 48px -28px rgba(81, 141, 224, 0.5); }
+.tag { position: absolute; top: 18px; right: 18px; font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--brand-blue);
+  background: rgba(81, 141, 224, 0.11); border-radius: 999px; padding: 5px 11px; }
+.tier h3 { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700;
+  color: var(--brand-navy); }
+.price { display: flex; align-items: baseline; gap: 7px; margin-top: 12px; white-space: nowrap; }
+.price small { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-500); font-weight: 600; }
+.price b { font-family: var(--font-display); font-size: clamp(52px, 6vw, 82px); font-weight: 800;
+  line-height: 0.86; letter-spacing: -0.04em; color: var(--brand-blue); }
+.price em { font-style: normal; font-size: 19px; font-weight: 700; color: var(--brand-blue); }
+.tier > p { margin: 16px 0 0; font-size: 15.5px; line-height: 1.7; color: var(--ink-600); }
+.tier ul { list-style: none; margin: 20px 0 0; padding: 20px 0 0; display: grid; gap: 11px;
+  border-top: 1px solid var(--border-default); }
+.tier li { display: grid; grid-template-columns: 18px 1fr; gap: 11px; font-size: 14.5px;
+  line-height: 1.6; color: var(--ink-700); }
+.tier li svg { width: 18px; height: 18px; margin-top: 1px; fill: none; stroke: var(--brand-blue);
+  stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The closing line the service pages carried under their own tier blocks. */
+.note { margin: 26px 0 0; font-size: 15px; line-height: 1.7; color: var(--ink-600); max-width: 74ch; }
+.note a { color: var(--brand-blue); font-weight: 600; text-decoration: none;
+  border-bottom: 1px solid rgba(81, 141, 224, 0.4); }
+.note a:hover { border-bottom-color: var(--brand-blue); }
+
+/* The tag sits over the card's top-right corner, so a one-column card needs the
+   heading to clear it before the two stack up on a phone. */
+@media (max-width: 760px) {
+  .section { padding: 62px 0; }
+  .tiers { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tier { transition: none; }
+  .tier:hover { transform: none; }
+}
