@@ -106,14 +106,14 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--ink-50);
+  background: var(--brand-blue);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), background 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.q[aria-expanded='true'] .chev { background: var(--brand-blue); transform: rotate(180deg); }
+.q[aria-expanded='true'] .chev { background: var(--brand-navy); transform: rotate(180deg); }
 
 .panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .panelOpen { grid-template-rows: 1fr; }

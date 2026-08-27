@@ -87,8 +87,8 @@ function Seal({ id, standard }: { id: string; standard: string }) {
           <stop offset="0" stopColor="#fff" stopOpacity=".25" />
           <stop offset=".55" stopColor="#fff" stopOpacity="0" />
         </radialGradient>
-        <path id={`sealTop-${id}`} d="M 22 100 A 78 78 0 0 1 178 100" />
-        <path id={`sealBottom-${id}`} d="M 26 100 A 74 74 0 0 0 174 100" />
+        <path id={`sealTop-${id}`} d="M 27 100 A 73 73 0 0 1 173 100" />
+        <path id={`sealBottom-${id}`} d="M 18 100 A 82 82 0 0 0 182 100" />
       </defs>
       <circle cx="100" cy="100" r="96" fill={`url(#sealOuter-${id})`} />
       <circle cx="100" cy="100" r="96" fill={`url(#sealSheen-${id})`} />
@@ -111,11 +111,25 @@ function Seal({ id, standard }: { id: string; standard: string }) {
 }
 
 export default function FaqSection() {
-  const [open, setOpen] = useState<number | null>(0);
+  // index.html starts at faqOpen: -1 — every row closed.
+  const [open, setOpen] = useState<number | null>(null);
 
   return (
     // id is a link target: /case-studies links to /#faq, as index.html did.
     <section id="faq" className={styles.section}>
+      {/* Drifting dot field — same effect as the Our Services section (index.html).
+          Sits on the #f5f7fa ground; .inner is z-index 1 and stays above it. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: '-40px',
+          backgroundImage: 'radial-gradient(rgba(14,42,74,0.11) 1.6px, transparent 1.7px)',
+          backgroundSize: '22px 22px',
+          animation: 'dotDrift 34s linear infinite',
+          pointerEvents: 'none',
+        }}
+      />
       <div className={styles.inner}>
         <div className={styles.grid}>
           <div className={styles.certs}>
@@ -135,7 +149,7 @@ export default function FaqSection() {
           </div>
 
           <div className={styles.card}>
-            <span className={shared.eyebrow}>FAQ</span>
+            <span className={shared.eyebrow}>Help Center</span>
             <div className={`${shared.head} ${shared.headSolo}`}>
               <h2 className={shared.title}>Frequently Asked <span>Questions</span></h2>
             </div>

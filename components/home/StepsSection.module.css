@@ -8,9 +8,16 @@
    52px, so this section's heading was visibly smaller than the rest. */
 
 .stage { position: relative; margin-top: 60px; }
-.line { position: absolute; top: 57px; left: 8%; right: 8%; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22) 12%, rgba(255,255,255,0.22) 88%, transparent); }
-.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; z-index: 1; }
+/* The connector only paints in the gaps between cards, so it joins them
+   without a hairline crossing the glass. One repeating band whose period is
+   a column plus a gap lands a segment in each of the three gaps, and z-index
+   keeps it behind the cards. Aligned to the 60px icon centre. */
+.grid { --col: calc((100% - 60px) / 4);
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; z-index: 1; }
+.grid::before { content: ""; position: absolute; z-index: -1; top: 61px; left: 0; right: 0; height: 1px;
+  background: repeating-linear-gradient(90deg,
+    transparent 0, transparent var(--col),
+    rgba(255,255,255,0.38) var(--col), rgba(255,255,255,0.38) calc(var(--col) + 20px)); }
 .card { position: relative; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12);
   border-radius: 10px; padding: 34px 28px 30px; overflow: hidden;
   transition: all 150ms cubic-bezier(0.2,0.8,0.2,1); }
@@ -39,5 +46,6 @@
 .ctaNote { font-size: 14px; color: rgba(255,255,255,0.78); }
 .inlineLink { color: #fff; font-weight: 700; text-decoration: underline; }
 
-@media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); }
+  .grid::before { display: none; } }
 @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }

@@ -14,28 +14,28 @@ const STEPS = [
     title: 'Free consultation',
     desc: 'Tell us the services you need and expected interaction volume. Always free.',
     icon:
-      <path d="M8 10h8M8 14h5M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8Z"></path>,
+      /* lucide message-circle */ <><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></>,
   },
   {
     n: '02',
     step: 'Step 2',
     title: 'Team design',
     desc: 'We scope the personnel mix — generalists, specialists, or both — with pricing and terms.',
-    icon: <path d="M16 20v-1.8a3.7 3.7 0 0 0-3.7-3.7H6.7A3.7 3.7 0 0 0 3 18.2V20M12 7.5a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 0 0 0-7.4ZM21 20v-1.8a3.7 3.7 0 0 0-2.8-3.6"></path>,
+    icon: /* lucide users */ <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
   },
   {
     n: '03',
     step: 'Step 3',
     title: 'Pick your agents',
     desc: 'Review profiles and run quick interviews — or leave selection to our experts.',
-    icon: <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>,
+    icon: /* lucide user-check */ <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" /></>,
   },
   {
     n: '04',
     step: 'Step 4',
     title: 'Monitored delivery',
     desc: 'AI-assisted monitoring, hourly work logs, and daily email reports on every seat.',
-    icon: <path d="M9 19c-4.3 1.4-6.5-.4-6.5-.4C5 13 9 4.5 12 4.5s7 8.5 9.5 13.1c0 0-2.2 1.8-6.5.4M14 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"></path>,
+    icon: /* lucide activity */ <><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></>,
   },
 ];
 
@@ -66,7 +66,6 @@ export default function StepsSection() {
         </div>
 
         <div className={styles.stage}>
-          <div className={styles.line} />
           <div className={styles.grid}>
             {STEPS.map((s) => (
               <div key={s.n} className={styles.card}>
