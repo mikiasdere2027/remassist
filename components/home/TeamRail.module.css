@@ -1,0 +1,53 @@
+/* TeamRail — "Meet the minds behind Rem Assist", ported from index.html
+   (Phase 02). A snap-scrolling rail of cards with a progress bar and arrows. */
+
+.section { background: #fff; position: relative; overflow: hidden; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 88px 24px; position: relative; z-index: 1; }
+
+.rail { display: flex; gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding: 28px 0 24px; margin-top: 4px; cursor: grab;
+  scrollbar-width: none; -ms-overflow-style: none; }
+.rail::-webkit-scrollbar { display: none; }
+
+.card { flex: 0 0 320px; scroll-snap-align: start; background: #fff;
+  border: 1px solid rgba(0, 5, 67, 0.1); border-radius: 18px; overflow: hidden;
+  transition: transform 450ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 450ms; }
+.card:hover { transform: translateY(-6px); box-shadow: 0 26px 54px -26px rgba(0, 5, 67, 0.5); }
+
+/* The monogram sits under the photo, so a member with no headshot still gets
+   a finished card instead of an empty panel. */
+.photo { position: relative; height: 300px; overflow: hidden;
+  background:
+    radial-gradient(circle at 82% 10%, rgba(0, 5, 67, 0.4), transparent 58%),
+    radial-gradient(circle at 50% 74%, #8ec9ff 0%, #3ba0ff 34%, #518de0 62%, #0047b3 100%); }
+.initials { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 4rem; color: rgba(255, 255, 255, 0.3); letter-spacing: -0.02em;
+  font-family: var(--font-display); }
+.photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  object-position: 50% 18%; filter: grayscale(1); }
+
+.meta { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  padding: 20px 21px 18px; }
+.name { margin: 0; font-weight: 700; font-size: 18px; color: var(--brand-navy); line-height: 1.25; }
+.role { margin: 4px 0 0; font-size: 12px; font-weight: 500; color: var(--ink-600); }
+.linkedin { flex: none; width: 42px; height: 42px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; background: rgba(81, 141, 224, 0.1);
+  color: var(--brand-blue); transition: background 150ms, color 150ms; }
+.linkedin:hover { background: var(--brand-blue); color: #fff; }
+.blurbWrap { border-top: 1px solid rgba(0, 5, 67, 0.1); background: #fbfcfe; padding: 16px 20px 18px; }
+.blurb { margin: 0; font-size: 13px; color: var(--ink-600); line-height: 1.65; text-align: center; }
+
+.controls { display: flex; align-items: center; gap: 20px; margin-top: 12px; }
+.progress { flex: 1; height: 2px; border-radius: 2px; background: rgba(0, 5, 67, 0.08);
+  position: relative; overflow: hidden; }
+.progressFill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--brand-blue);
+  border-radius: 2px; transition: width 300ms var(--ease-out); }
+.arrow { width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--brand-blue);
+  color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 150ms, transform 150ms; }
+.arrow:hover { background: var(--blue-700); transform: translateY(-2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
+  .card:hover { transform: none; }
+}

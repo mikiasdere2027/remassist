@@ -1,0 +1,51 @@
+/* TrustedPartners — the drifting logo belt, ported from index.html (Phase 02).
+   Each plate breathes on its own delay and carries a sheen sweep; the belt
+   itself drifts left and the section edges fade it out. */
+
+.section { background: #fff; border-top: 1px solid var(--border-default); overflow: hidden; }
+.head { width: 100%; max-width: 1248px; box-sizing: border-box; margin: 0 auto; padding: 104px 24px 28px; }
+.belt { position: relative; padding: 44px 0 104px; }
+
+/* The artboard duplicated the plate list so the belt could loop. That only
+   reads correctly with enough distinct logos to fill the viewport — with two
+   partners the same mark would appear three times at once, which looks like a
+   bug rather than a marquee. `.row` centres them instead; `.rowDrift` is
+   applied only once PARTNERS is long enough (see TrustedPartners.tsx). */
+.row { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+.rowDrift { width: max-content; justify-content: flex-start; flex-wrap: nowrap;
+  animation: beltDrift 44s linear infinite; }
+.rowDrift:hover { animation-play-state: paused; }
+@keyframes beltDrift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.plateWrap { flex: 0 0 auto; animation: plateBreathe 7s var(--ease-out) var(--plate-delay, 0s) infinite; }
+@keyframes plateBreathe {
+  0%, 100% { transform: translateY(0) rotate(-0.4deg); }
+  50% { transform: translateY(-9px) rotate(0.4deg); }
+}
+
+.plate { position: relative; width: 214px; height: 126px; border-radius: 10px; background: #fff;
+  border: 1px solid var(--border-default); box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.sheen { position: absolute; top: 0; bottom: 0; width: 70px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(44, 123, 229, 0.13), transparent);
+  animation: sheen 6s var(--ease-out) var(--sheen-delay, 0s) infinite; }
+@keyframes sheen {
+  0% { transform: translateX(-120%) skewX(-18deg); }
+  55%, 100% { transform: translateX(320%) skewX(-18deg); }
+}
+
+.link { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+/* A definite box, not max-width + auto. next/image lazy-loads, and with auto
+   dimensions the element measures 0x0 until the file arrives — the plate was
+   empty and then jumped. `contain` letterboxes inside the box, so the logo
+   still renders at its own aspect ratio. */
+.logo { width: 150px; height: 78px; object-fit: contain; display: block; }
+
+/* Edge fades, so the belt dissolves rather than being cut off. */
+.fadeL, .fadeR { position: absolute; top: 0; bottom: 0; width: 180px; pointer-events: none; }
+.fadeL { left: 0; background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0)); }
+.fadeR { right: 0; background: linear-gradient(270deg, #fff, rgba(255, 255, 255, 0)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .rowDrift, .plateWrap, .sheen { animation: none !important; }
+}

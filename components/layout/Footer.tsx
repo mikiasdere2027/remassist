@@ -19,7 +19,7 @@ const linkStyle: CSSProperties = {
 
 function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   // Internal app routes use next/link (client-side nav); everything else
-  // (mailto:, tel:, .dc.html artboards) stays a plain anchor for now.
+  // (mailto:, tel:, external profiles) stays a plain anchor.
   if (href.startsWith('/') && !href.startsWith('//')) {
     return (
       <Link href={href} style={linkStyle} className="hover:text-white">
@@ -74,7 +74,7 @@ function SocialLink({
 
 export default function Footer() {
   return (
-    <footer style={{ background: 'var(--navy-900)', color: 'var(--ink-300)', position: 'relative', overflow: 'hidden' }}>
+    <footer style={{ background: 'var(--navy-900)', color: 'var(--fg-on-dark-muted)', position: 'relative', overflow: 'hidden' }}>
       <div
         aria-hidden="true"
         style={{
@@ -122,30 +122,30 @@ export default function Footer() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-400)', marginBottom: 4 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
               Services
             </div>
-            <FooterLink href="Customer Service Agents.dc.html">Customer Service Agents</FooterLink>
-            <FooterLink href="GTM Teams.dc.html">GTM Teams</FooterLink>
-            <FooterLink href="SDR as a Service.dc.html">SDR as a Service</FooterLink>
-            <FooterLink href="Extra Services.dc.html">Extra Services</FooterLink>
+            <FooterLink href="/services/customer-service-agents">Customer Service Agents</FooterLink>
+            <FooterLink href="/services/gtm-teams">GTM Teams</FooterLink>
+            <FooterLink href="/services/sdr-as-a-service">SDR as a Service</FooterLink>
+            <FooterLink href="/services/extra-services">Extra Services</FooterLink>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-400)', marginBottom: 4 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
               Company
             </div>
             <FooterLink href="/">Home</FooterLink>
-            <FooterLink href="Pricing.dc.html">Pricing</FooterLink>
-            <FooterLink href="Privacy Policy.dc.html">Privacy Policy</FooterLink>
+            <FooterLink href="/pricing">Pricing</FooterLink>
+            <FooterLink href="/privacy-policy">Privacy Policy</FooterLink>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-400)', marginBottom: 4 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
               Contact
             </div>
             <FooterLink href="tel:+18322302194">(832) 230-2194</FooterLink>
             <FooterLink href="mailto:support@remassistance.com">support@remassistance.com</FooterLink>
-            <span style={{ fontSize: 14, color: 'var(--ink-400)' }}>Support and sales available 24/7</span>
+            <span style={{ fontSize: 14, color: 'var(--fg-on-dark-muted)' }}>Support and sales available 24/7</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
               <SocialLink href="https://www.linkedin.com/company/rem-assistance/" label="Rem Assist on LinkedIn">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45Z" /></svg>
@@ -160,12 +160,12 @@ export default function Footer() {
           </div>
         </div>
       <div style={{ paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 13, color: 'var(--ink-500)' }}>Copyright © 2026 Rem Assist. All rights reserved.</span>
+          <span style={{ fontSize: 13, color: 'var(--fg-on-dark-muted)' }}>Copyright © 2026 Rem Assist. All rights reserved.</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-            <a href="Privacy Policy.dc.html" style={{ color: 'var(--ink-200)', fontSize: 13, textDecoration: 'none' }} className="hover:text-white">
+            <a href="/privacy-policy" style={{ color: 'var(--ink-200)', fontSize: 13, textDecoration: 'none' }} className="hover:text-white">
               Privacy Policy
             </a>
-            <a href="Terms of Service.dc.html" style={{ color: 'var(--ink-200)', fontSize: 13, textDecoration: 'none' }} className="hover:text-white">
+            <a href="/terms-of-service" style={{ color: 'var(--ink-200)', fontSize: 13, textDecoration: 'none' }} className="hover:text-white">
               Terms of Service
             </a>
           </span>

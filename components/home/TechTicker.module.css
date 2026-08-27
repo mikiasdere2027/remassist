@@ -1,0 +1,20 @@
+/* TechTicker — the "Our dedicated tech-stack" belt, ported from index.html
+   (Phase 02). Two identical groups translate left forever; the second is
+   aria-hidden so the tool names are announced once, not twice. */
+
+.section { background: #fff; border-bottom: 1px solid var(--border-default);
+  overflow: hidden; padding: 48px 0 44px; }
+.label { margin: 0 0 32px; text-align: center; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500); }
+.track { display: flex; width: max-content; animation: ticker 36s linear infinite; }
+.track:hover { animation-play-state: paused; }
+.group { display: flex; align-items: center; }
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.item { display: flex; align-items: center; gap: 16px; padding: 0 32px; }
+.icon { width: 48px; height: 48px; border-radius: 9999px; background-color: var(--ink-50);
+  border: 1px solid var(--border-default); background-size: 28px 28px; background-position: center;
+  background-repeat: no-repeat; flex: none; }
+.name { font-size: 20px; font-weight: 600; color: var(--brand-navy); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) { .track { animation: none !important; } }

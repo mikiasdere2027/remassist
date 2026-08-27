@@ -1,0 +1,81 @@
+/* RemAcronym — the REMOTE letter cards, ported from the .dc-rem-* rules in
+   index.html (Phase 02). Same anatomy as the artboard: letter, pinned icon,
+   title, rule, note, dotted connectors between cards, blue promise foot. The
+   cards stretch to content rather than a fixed min-height, which is where the
+   artboard's height saving came from — don't reintroduce a min-height. */
+
+/* 1248 = 1200 of content + 24px gutters. The other sections reach the same
+   edges by omitting box-sizing, which makes them overflow narrow screens;
+   this keeps border-box and widens the cap instead. */
+.wrap { width: 100%; max-width: 1248px; box-sizing: border-box; margin: 0 auto; padding: 88px 24px; }
+
+.grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; list-style: none;
+  margin: 36px 0 0; padding: 0; }
+.card { position: relative; display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+  background: #fff; border: 1px solid var(--border-default); border-radius: 14px; padding: 16px 16px 20px;
+  box-shadow: 0 4px 18px rgba(0, 5, 67, 0.05);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out), border-color 200ms var(--ease-out); }
+.card:hover { transform: translateY(-3px); border-color: rgba(81, 141, 224, 0.35);
+  box-shadow: 0 14px 32px rgba(0, 5, 67, 0.11); }
+/* dotted connector, drawn only in the gap. The icon's centre measures 34px
+   from the card's top edge (14px inset plus the 1px border, plus half of 38),
+   so the 3px rule starts at 34 - 1.5. */
+.card::after { content: ""; position: absolute; top: 32.5px; right: -19px; width: 20px; height: 3px;
+  background-image: radial-gradient(circle closest-side, var(--brand-blue) 100%, transparent 100%);
+  background-size: 5px 3px; background-repeat: repeat-x; opacity: 0.5; }
+.card:last-child::after { display: none; }
+
+/* The head is just the letter, and it keeps the card's left edge so letter,
+   title and note all line up. Reserved right padding keeps the glyph clear of
+   the pinned icon. */
+.cardHead { display: block; padding-right: 46px; }
+.letter { display: block; font-family: var(--font-display); font-size: clamp(38px, 3.4vw, 48px);
+  line-height: 0.95; font-weight: 800; color: var(--brand-blue); letter-spacing: -0.02em; }
+.icon { position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; flex: none;
+  display: grid; place-items: center; border-radius: 50%; background: rgba(81, 141, 224, 0.10);
+  color: var(--brand-blue); transition: background 200ms, color 200ms; }
+.card:hover .icon { background: var(--brand-blue); color: #fff; }
+.icon svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cardTitle { margin: 14px 0 0; font-size: 13.5px; font-weight: 700; line-height: 1.3; color: var(--brand-navy); }
+.tick { display: block; width: 24px; height: 3px; margin: 9px 0 0; border-radius: 2px;
+  background: rgba(81, 141, 224, 0.4); }
+.note { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--ink-600); }
+
+/* Full container width — its left and right edges line up with the card grid
+   above and with every other section on the page. */
+.promise { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  margin: 18px 0 0; padding: 18px 24px; background: linear-gradient(120deg, #326dda 0%, #000543 78%);
+  border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 16px;
+  box-shadow: 0 22px 46px -20px rgba(0, 5, 67, 0.55); }
+.promiseL { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.promiseI { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 50%;
+  background: #fff; color: var(--brand-blue); }
+.promiseI svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; }
+.promiseT { display: block; font-size: 15px; font-weight: 700; line-height: 1.35; color: #fff; }
+.promiseS { display: block; font-size: 13px; line-height: 1.4; color: rgba(255, 255, 255, 0.75); }
+.promiseCta { flex: none; display: inline-flex; align-items: center; gap: 8px; background: #fff;
+  color: var(--brand-navy); font-size: 15px; font-weight: 600; text-decoration: none;
+  padding: 12px 26px; border-radius: 8px;
+  transition: background 150ms, transform 150ms, box-shadow 150ms; }
+.promiseCta:hover { background: #eef4ff; color: var(--brand-navy); text-decoration: none;
+  transform: translateY(-1px); box-shadow: 0 6px 16px rgba(81, 141, 224, 0.32); }
+
+@media (max-width: 1024px) {
+  .grid { grid-template-columns: repeat(3, 1fr); }
+  .card::after { display: none; }   /* meaningless once the row wraps */
+}
+@media (max-width: 600px) {
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .cardHead { padding-right: 38px; }
+  .letter { font-size: 34px; }
+  .icon { top: 12px; right: 12px; width: 32px; height: 32px; }
+  .icon svg { width: 17px; height: 17px; }
+  .promise { flex-direction: column; text-align: center; }
+  .promiseL { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
+  .card:hover { transform: none; }
+}

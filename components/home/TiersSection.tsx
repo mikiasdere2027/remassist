@@ -54,7 +54,8 @@ export default function TiersSection() {
             <div className={styles.duo}>
               <img src="/images/agent-duo.svg" alt="Two Rem Assist support agents wearing headsets" />
             </div>
-            <div className={styles.isoCard}>
+            {/* id is a link target: the blog article links to /#certifications */}
+            <div className={styles.isoCard} id="certifications">
               <span className={styles.isoShield}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 4.5 6v6c0 4.6 3.2 8.4 7.5 9.4 4.3-1 7.5-4.8 7.5-9.4V6z" /><path d="m8.6 12.2 2.4 2.4 4.6-5" /></svg>
               </span>

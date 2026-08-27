@@ -1,114 +1,210 @@
 /* Home hero — ported from index.html (Phase 02). Scoped module so this can't
-   collide with the global layout. Reuses brand tokens for color/type. */
+   collide with the global layout. Reuses brand tokens for color/type.
 
-/* Eyebrow */
+   The hero was authored desktop-only: a fixed 1.15/0.85 grid feeding a 500px
+   orbit whose chips sit at hard pixel offsets inside it. Below ~1024px the
+   second column collapsed while its contents kept their size, so the media
+   queries at the bottom stack the hero, scale the orbit, and drop the chips
+   on phones — the same rules index.html carries. */
+
+/* ---- section shell ---------------------------------------------------- */
+.hero { position: relative; overflow: hidden; display: flex; flex-direction: column;
+  background: #518de0;
+  background-image:
+    radial-gradient(ellipse 1100px 650px at 78% 18%, rgba(190, 220, 255, 0.30), transparent 62%),
+    radial-gradient(ellipse 600px 300px at 45% 0%, rgba(255, 255, 255, 0.12), transparent 70%),
+    linear-gradient(160deg, #518de0, #0047b3 82%);
+  height: calc(100vh - 72px); height: calc(100svh - 72px); min-height: 520px; }
+/* flex:1 + min-height:0 is what makes the grid own the space above the
+   marquee; without it the columns sit at natural height and the rest of the
+   viewport is left as dead blue. */
+.grid { width: 100%; max-width: 1200px; box-sizing: border-box; margin: 0 auto;
+  padding: 26px 24px 14px; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 32px;
+  align-items: center; position: relative; flex: 1; min-height: 0; }
+
+/* ---- left column ------------------------------------------------------ */
 .eyebrow { display: inline-flex; align-items: center; gap: 11px; max-width: 100%;
   padding: 8px 18px 8px 14px; margin: 0 0 22px; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.3); }
-.eyebrow svg { flex: none; }
+  background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  animation: fadeUp 600ms var(--ease-out) 40ms both; }
+.eyebrow > svg { flex: none; opacity: 1; }
 .eyebrowText { font-size: 14px; font-weight: 600; line-height: 21px; color: #fff;
   letter-spacing: 0.01em; white-space: nowrap; }
 
-/* h1 + rotating word */
 .h1 { margin: 0 0 8px; font-family: var(--font-display); font-size: 56px; line-height: 1.08;
-  font-weight: 700; color: #fff; }
+  font-weight: 700; color: #fff; animation: fadeUp 600ms var(--ease-out) 80ms both; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
   clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
-.rot { height: 72px; overflow: hidden; margin-bottom: 24px; }
-.rotTrack { display: flex; flex-direction: column; animation: wordCycle 18s cubic-bezier(0.2,0.8,0.2,1) infinite; }
+
+/* The track holds 7 spans (6 words + the first repeated), so each step is
+   100/7 = 14.2857%. Percentages, not pixels — the word height is clamped on
+   small screens and a pixel track would drift out of register. */
+.rot { height: 72px; overflow: hidden; margin-bottom: 24px;
+  animation: fadeUp 600ms var(--ease-out) 120ms both; }
+.rotTrack { display: flex; flex-direction: column; animation: wordCycle 18s var(--ease-out) infinite; }
 .word { height: 72px; display: flex; align-items: center; font-family: var(--font-display);
   font-size: 56px; font-weight: 700; color: var(--brand-navy); line-height: 1; }
-@keyframes floatY { 0%, 100% { margin-top: 0; } 50% { margin-top: -14px; } }
-@keyframes wordCycle { 0%, 11% { transform: translateY(0); } 16%, 27% { transform: translateY(-72px); }
-  32%, 43% { transform: translateY(-144px); } 48%, 59% { transform: translateY(-216px); }
-  64%, 75% { transform: translateY(-288px); } 80%, 91% { transform: translateY(-360px); }
-  96%, 100% { transform: translateY(-432px); } }
+@keyframes wordCycle {
+  0%, 13% { transform: translateY(0); }
+  16.67%, 29.67% { transform: translateY(-14.2857%); }
+  33.33%, 46.33% { transform: translateY(-28.5714%); }
+  50%, 63% { transform: translateY(-42.8571%); }
+  66.67%, 79.67% { transform: translateY(-57.1429%); }
+  83.33%, 96.33% { transform: translateY(-71.4286%); }
+  100% { transform: translateY(-85.7143%); }
+}
 
-/* left column subhead + CTAs */
-.lead { margin: 0 0 36px; font-size: 19px; line-height: 1.6; color: #fff; max-width: 52ch; }
-.cta { display: flex; gap: 16px; align-items: center; }
+.lead { margin: 0 0 36px; font-size: 19px; line-height: 1.6; color: #fff; max-width: 52ch;
+  animation: fadeUp 600ms var(--ease-out) 160ms both; }
+.cta { display: flex; gap: 16px; align-items: center;
+  animation: fadeUp 600ms var(--ease-out) 240ms both; }
 .ctaPrimary { display: inline-flex; align-items: center; gap: 10px; background: #fff; color: #000543;
   font-size: 17px; font-weight: 600; text-decoration: none; padding: 15px 30px; border-radius: 6px;
   transition: all 150ms var(--ease-out); }
-.ctaPrimary:hover { background: var(--blue-50); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.ctaPrimary:hover { background: var(--blue-50); transform: translateY(-2px);
+  box-shadow: var(--shadow-md); text-decoration: none; }
+.ctaPrimary:active { transform: scale(0.98); }
 .ctaGhost { color: #fff; font-size: 17px; font-weight: 600; text-decoration: none; padding: 15px 22px;
   border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.5); transition: all 150ms var(--ease-out); }
-.ctaGhost:hover { border-color: #fff; color: #fff; }
+.ctaGhost:hover { border-color: #fff; color: #fff; text-decoration: none; }
 
-/* grid + orbit */
-.grid { width: 100%; max-width: 1200px; box-sizing: border-box; margin: 0 auto;
-  padding: 26px 24px 14px; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 32px;
-  align-items: center; position: relative; }
-@media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
+/* ---- right column: circular video with orbiting chips ------------------ */
+/* The visual column is deliberately pushed right so the orbit bleeds off the
+   edge on wide screens. .visual is the positioning parent for the video disc
+   and the sound pill; .stage only carries the orbit. */
+.visual { position: relative; margin-left: 0; margin-right: -84px; transform: translateX(44px); }
+/* Stacking: the video sits at z-index 20 and the sound pill at 45, while the
+   stage that holds the chips had z-index auto. The stage's animation makes it
+   a stacking context, so a chip's own z-index 60 was sealed inside it and the
+   video painted over the hover card. Lifting the whole stage frees it — and
+   pointer-events:none is required alongside the lift, since the stage is a
+   full 540px box that would otherwise swallow clicks on the play button and
+   the sound pill. The chips re-enable hit-testing on themselves. */
+.stage { position: relative; min-width: 0; display: flex; align-items: center; justify-content: center;
+  height: 540px; z-index: 50; pointer-events: none;
+  animation: fadeUp 600ms var(--ease-out) 200ms both; }
 
-/* orbit chip */
-.chip { position: absolute; width: 108px; z-index: 40; pointer-events: auto; }
-.stage { position: relative; height: 540px; min-width: 0; margin-right: -84px; transform: translateX(44px); }
-.orbit { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 500px; height: 500px;
-  border-radius: 9999px; z-index: 10; pointer-events: none; }
-.orbitRing { position: absolute; inset: 0; border-radius: 9999px; border: 1px dashed rgba(255, 255, 255, 0.35);
-  animation: orbitSpin 40s linear infinite; }
-@keyframes orbitSpin { to { transform: rotate(360deg); } }
+/* The chips are children of this 500px box — their left/top offsets are
+   measured from the orbit, not from the stage. */
+.orbit { position: absolute; width: 500px; height: 500px; border-radius: 9999px;
+  z-index: 10; pointer-events: none; }
+.orbitRing { position: absolute; inset: 0; border-radius: 9999px;
+  border: 1px dashed rgba(255, 255, 255, 0.35); animation: orbitSpin 40s linear infinite; }
+@keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.chip { position: absolute; width: 108px; z-index: 40; pointer-events: auto;
+  animation: floatY 5.5s var(--ease-out) var(--chip-delay, 0s) infinite;
+  animation-play-state: var(--chip-play, running); }
+.chip:hover { z-index: 70; }   /* hovered chip over its neighbours */
+@keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+/* orbit chip: white card, blue play disc, label underneath */
 .chipCard { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  /* fixed height, not min-height: "Watch Customer Service" runs to three lines
+     while the others take two, and a ragged orbit reads as a bug */
   width: 108px; height: 108px; box-sizing: border-box; padding: 12px 9px; background: #fff; border-radius: 12px;
   text-decoration: none; box-shadow: 0 14px 30px -10px rgba(0, 5, 67, 0.45);
   transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out); }
-.chipCard:hover { transform: translateY(-3px); box-shadow: 0 20px 38px -10px rgba(0, 5, 67, 0.55); }
+.chipCard:hover { transform: translateY(-3px); box-shadow: 0 20px 38px -10px rgba(0, 5, 67, 0.55);
+  text-decoration: none; }
 .chipPlay { width: 34px; height: 34px; flex: none; display: grid; place-items: center;
   border-radius: 50%; background: var(--brand-blue); }
 .chipPlay svg { width: 13px; height: 13px; margin-left: 2px; fill: #fff; }
 .chipLabel { font-size: 11.5px; font-weight: 700; line-height: 1.25; text-align: center; color: var(--brand-navy); }
 
-/* tip popover */
+/* ---- hover card on the orbit thumbnails -------------------------------- */
 .pop { position: absolute; top: 122px; left: 50%; transform: translateX(-50%); z-index: 60;
-  background: #fff; border-radius: 14px; box-shadow: var(--shadow-lg); padding: 16px 18px;
-  width: 260px; text-align: left; }
+  width: 244px; box-sizing: border-box; background: #fff; border-radius: 12px; padding: 14px 14px 12px;
+  box-shadow: 0 22px 48px -14px rgba(0, 5, 67, 0.45); text-align: left; }
+/* leader line + dot joining the chip to the card */
 .pop::before { content: ""; position: absolute; left: 50%; bottom: 100%; width: 2px; height: 14px;
-  background: rgba(0, 5, 67, 0.18); transform: translateX(-50%); }
+  transform: translateX(-50%); background: rgba(255, 255, 255, 0.8); }
 .pop::after { content: ""; position: absolute; left: 50%; bottom: calc(100% + 11px); width: 8px; height: 8px;
-  border-radius: 9999px; background: var(--brand-blue); transform: translateX(-50%); }
-/* chip on the right: popover opens to the right, arrow at right edge */
-.popRight { left: auto; right: -6px; transform: none; }
-.popRight::before { left: auto; right: 59px; transform: none; }
-.popRight::after { left: auto; right: 56px; transform: none; }
-/* chip on the right, opens upward: arrow flips to the bottom edge */
+  transform: translateX(-50%); border-radius: 50%; background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.28); }
+/* the card that opens upward carries its leader on the other edge */
 .popUp { top: auto; bottom: 122px; }
 .popUp::before { bottom: auto; top: 100%; }
 .popUp::after { bottom: auto; top: calc(100% + 11px); }
-.popUpRight { top: auto; bottom: 122px; left: auto; right: -6px; transform: none; }
-.popUpRight::before { left: auto; right: 59px; transform: none; bottom: auto; top: 100%; }
-.popUpRight::after { left: auto; right: 56px; transform: none; bottom: auto; top: calc(100% + 11px); }
-.popT { font-size: 14px; font-weight: 700; color: var(--brand-navy); }
-.popB { margin: 6px 0 12px; font-size: 13.5px; line-height: 1.6; color: var(--ink-600); }
-.popRow { display: flex; align-items: center; justify-content: space-between; }
-.popBtn { font-size: 13px; font-weight: 700; color: var(--brand-blue); text-decoration: none; }
-.popWave { display: flex; gap: 3px; align-items: center; }
-.popWave i { width: 4px; height: 8px; border-radius: 2px; background: var(--brand-blue); opacity: 0.5;
-  animation: wave 1.1s ease-in-out infinite; }
-.popWave i:nth-child(2) { animation-delay: 0.12s; }
-.popWave i:nth-child(3) { animation-delay: 0.24s; }
-.popWave i:nth-child(4) { animation-delay: 0.36s; }
-.popWave i:nth-child(5) { animation-delay: 0.48s; }
-@keyframes wave { 0%, 100% { height: 8px; } 50% { height: 16px; } }
+/* Chips on the right of the orbit sit close enough to the edge that a centred
+   244px card runs past the viewport and gets clipped by the hero. Anchor those
+   cards to the right and keep the leader over the chip. */
+.popRight { left: auto; right: -6px; transform: none; }
+.popRight::before { left: auto; right: 59px; transform: none; }
+.popRight::after { left: auto; right: 56px; transform: none; }
+.popT { font-size: 13.5px; font-weight: 700; line-height: 1.3; color: var(--brand-navy); }
+.popB { margin: 6px 0 12px; font-size: 12px; line-height: 1.5; color: var(--ink-600); }
+.popRow { display: flex; align-items: center; gap: 10px; }
+.popBtn { flex: 1; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--brand-blue); color: #fff; font-size: 13px; font-weight: 600; text-decoration: none;
+  padding: 9px 12px; border-radius: 7px; transition: background 150ms; }
+.popBtn:hover { background: var(--blue-700); color: #fff; text-decoration: none; }
+.popWave { flex: none; display: flex; align-items: center; gap: 2.5px; height: 20px; }
+.popWave i { display: block; width: 2.5px; border-radius: 2px; background: #c7d6ea;
+  animation: waveBar 1.1s ease-in-out infinite; }
+.popWave i:nth-child(1) { height: 7px;  animation-delay: 0s; }
+.popWave i:nth-child(2) { height: 13px; animation-delay: 0.12s; }
+.popWave i:nth-child(3) { height: 18px; animation-delay: 0.24s; }
+.popWave i:nth-child(4) { height: 11px; animation-delay: 0.36s; }
+.popWave i:nth-child(5) { height: 6px;  animation-delay: 0.48s; }
+@keyframes waveBar { 0%, 100% { transform: scaleY(0.55); } 50% { transform: scaleY(1); } }
 
-/* visual: video disc + sound pill */
-.visual { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+/* ---- video disc + sound pill ------------------------------------------ */
+.disc { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   width: 420px; height: 420px; border-radius: 9999px; overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.1); box-shadow: 0 0 0 20px rgba(255, 255, 255, 0.1), var(--shadow-xl);
-  z-index: 20; }
-.visual video { width: 420px; height: 420px; object-fit: cover; display: block; filter: grayscale(100%); }
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 20px rgba(255, 255, 255, 0.1), var(--shadow-xl); z-index: 20; }
+.disc video { width: 420px; height: 420px; object-fit: cover; display: block; filter: grayscale(100%); }
 .playBtn { position: absolute; inset: 0; width: 100%; height: 100%; border: none; background: transparent;
-  display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 200ms; }
-.playBtn:hover { opacity: 1; background: rgba(14, 42, 74, 0.25); }
+  display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0;
+  transition: opacity 200ms; }
+.playBtn:hover, .playBtn:focus-visible { opacity: 1; background: rgba(14, 42, 74, 0.25); }
 .playDisc { width: 64px; height: 64px; border-radius: 9999px; background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; }
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; }
+
 .sound { position: absolute; left: 50%; bottom: 2px; transform: translate(-50%, 0); z-index: 45;
   display: inline-flex; align-items: center; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.18);
   background: var(--brand-navy); box-shadow: 0 12px 26px -8px rgba(0, 5, 67, 0.55); border-radius: 9999px;
-  padding: 11px 22px; cursor: pointer; color: #fff; }
-.sound:hover { background: #0b1a5c; }
-.soundIcon { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; }
-.soundRing { position: absolute; width: 22px; height: 22px; border-radius: 9999px;
-  border: 2px solid rgba(255, 255, 255, 0.8); animation: soundPulse 2.2s cubic-bezier(0.2,0.8,0.2,1) infinite; }
-@keyframes soundPulse { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 0.3; transform: scale(1.6); } }
-@media (prefers-reduced-motion: reduce) { .rotTrack, .popWave i, .soundRing { animation: none !important; } }
+  padding: 11px 22px; cursor: pointer; color: #fff;
+  animation: cueNudge 2.6s var(--ease-out) infinite;
+  transition: background 150ms var(--ease-out), transform 150ms var(--ease-out); }
+.sound:hover { background: #0b1a5c; transform: translate(-50%, -6px); }
+.soundLabel { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: #fff; }
+.soundIcon { position: relative; display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; flex-shrink: 0; }
+.soundRing { position: absolute; inset: 0; border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.8); animation: soundPulse 2.2s var(--ease-out) infinite; }
+@keyframes soundPulse { 0% { transform: scale(1); opacity: 0.55; } 70%, 100% { transform: scale(1.9); opacity: 0; } }
+@keyframes cueNudge { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -6px); } }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* ---- responsive -------------------------------------------------------- */
+/* Between 1025 and 1439 the bleed swallows the two right-hand chips and their
+   hover cards, so pull the column back in that band. */
+@media (min-width: 1025px) and (max-width: 1439px) {
+  .visual { transform: none; margin-right: -40px; }
+}
+@media (max-width: 1024px) {
+  .hero { height: auto; min-height: 0; }
+  .grid { grid-template-columns: 1fr; gap: 8px; padding-bottom: 28px; }
+  .h1, .word { font-size: clamp(32px, 7.4vw, 50px); }
+  .rot, .word { height: clamp(42px, 9.6vw, 66px); }
+  /* The orbit ring and the video circle are siblings, so the scale goes on
+     their shared parent. !important is required: the fadeUp animation owns
+     `transform`, and animations outrank normal author declarations.
+     Transforms do not affect layout, so the negative margin reclaims the
+     540 - (540 x scale) that would otherwise be left as dead space. */
+  .visual { margin: 0 auto -151px; transform: scale(0.72) !important; transform-origin: top center; }
+  .stage { height: 540px; }
+}
+@media (max-width: 600px) {
+  .chip { display: none; }   /* fixed offsets, no room left */
+  .visual { margin: 0 auto -243px; transform: scale(0.55) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rotTrack, .chip, .orbitRing, .soundRing, .sound, .popWave i { animation: none !important; }
+  .hero, .hero * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+}

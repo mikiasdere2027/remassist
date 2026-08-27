@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './QuizLogic.module.css';
 import {
   QUIZ,
@@ -21,6 +21,9 @@ export default function QuizLogic() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<Answers>>({});
   const [copied, setCopied] = useState(false);
+  /* One POST per completion. A ref, not state: firing it must not re-render,
+     and a restored-from-hash result should not be counted as a new run. */
+  const reported = useRef(false);
 
   // Restore a shared result from the URL hash on first paint.
   useEffect(() => {
@@ -29,11 +32,29 @@ export default function QuizLogic() {
     if (decoded) {
       setAnswers(decoded);
       setStep(QUIZ.length);
+      // A shared link is someone reading a result, not completing the quiz.
+      reported.current = true;
     }
   }, []);
 
   const current = QUIZ[step];
   const done = step >= QUIZ.length;
+
+  /* Anonymous funnel capture (§6.2): answers and the quote shown, no personal
+     data. Fire-and-forget — the result screen never waits on it and never
+     shows an error if it fails. */
+  useEffect(() => {
+    if (!done || reported.current) return;
+    const a = answers as Answers;
+    if (!a.gap || !a.hours || !a.process || !a.judgment || !a.timing) return;
+    reported.current = true;
+    void fetch('/api/quiz', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ answers: a, result: score(a), completed: true }),
+      keepalive: true,
+    }).catch(() => {});
+  }, [done, answers]);
 
   // Live estimate once both cost drivers are known.
   const live = useMemo(() => {
@@ -44,7 +65,12 @@ export default function QuizLogic() {
   function choose(value: string) {
     const next = { ...answers, [current.id]: value } as Partial<Answers>;
     setAnswers(next);
-    if (step < QUIZ.length - 1) setStep(step + 1);
+    /* Unconditional, as the artboard's `quizStep: s.quizStep + 1` was. Guarding
+       this with `step < QUIZ.length - 1` left the last answer on the last
+       question forever, so `done` never flipped and the result screen — the
+       entire point of the page — was unreachable. The 432-case parity test
+       covers score() arithmetic, not the flow, so it stayed green throughout. */
+    setStep(step + 1);
   }
 
   function back() {
