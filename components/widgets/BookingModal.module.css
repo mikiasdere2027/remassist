@@ -1,11 +1,13 @@
 /* "Book a Call" modal — ported from assets/booking-modal.js (Phase 02). */
+/* Backdrop and panel size are deliberately the fit-finder result's — the two
+   popups sit in the same flow and should not look like different products. */
 .overlay { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center;
-  justify-content: center; padding: 24px; }
-.backdrop { position: absolute; inset: 0; background: rgba(0, 5, 67, 0.62); backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.28s ease; }
+  justify-content: center; padding: 20px; }
+.backdrop { position: absolute; inset: 0; background: rgba(0, 5, 67, 0.55); backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px); opacity: 0; transition: opacity 0.28s ease; }
 .visible .backdrop { opacity: 1; }
 .dialog { position: relative; display: grid; grid-template-columns: minmax(300px, 380px) 1fr;
-  width: min(1180px, 96vw); height: min(820px, 92vh); background: #fff; border-radius: 20px;
+  width: min(1180px, 100%); height: min(760px, calc(100vh - 40px)); background: #fff; border-radius: 20px;
   overflow: hidden; box-shadow: 0 60px 120px -40px rgba(0, 5, 67, 0.6); opacity: 0;
   transform: translateY(14px) scale(0.985); transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .visible .dialog { opacity: 1; transform: none; }
@@ -16,6 +18,20 @@
   background-image: radial-gradient(rgba(255,255,255,0.14) 1.3px, transparent 1.4px);
   background-size: 13px 13px; opacity: 0.45; }
 .brand > * { position: relative; z-index: 1; }
+.mark { position: absolute; left: -56px; bottom: -48px; width: 300px; z-index: 0;
+  pointer-events: none; opacity: 0.12; }
+.mark path { fill: #fff; stroke: #fff; stroke-width: 3; stroke-dasharray: 1; fill-opacity: 0;
+  animation: markDraw 6.4s ease-in-out infinite; }
+.mark path:nth-child(2) { animation-delay: 0.12s; }
+.mark path:nth-child(3) { animation-delay: 0.24s; }
+.mark path:nth-child(4) { animation-delay: 0.36s; }
+@keyframes markDraw {
+  0% { stroke-dashoffset: 1; fill-opacity: 0; stroke-opacity: 0.95; }
+  26% { stroke-dashoffset: 0; fill-opacity: 0; stroke-opacity: 0.95; }
+  46% { stroke-dashoffset: 0; fill-opacity: 1; stroke-opacity: 0.5; }
+  56%, 84% { stroke-dashoffset: 0; fill-opacity: 1; stroke-opacity: 0; }
+  100% { stroke-dashoffset: 0; fill-opacity: 0; stroke-opacity: 0; }
+}
 .logo { align-self: flex-start; height: 86px; width: auto; display: block; filter: brightness(0) invert(1); }
 .divider { width: 44px; height: 3px; border-radius: 3px; background: #34bdf0; margin: 30px 0 22px; }
 .host { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.2em;
@@ -28,8 +44,25 @@
   color: rgba(255, 255, 255, 0.6); }
 .isoBot { font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.85); }
 
-.body { position: relative; background: #fff; min-width: 0; }
-.frame { width: 100%; height: 100%; border: 0; display: block; }
+.body { position: relative; min-width: 0; background: #f5f7fa; padding: 14px; overflow: hidden; }
+/* The Our Services dot field, behind the scheduler. Local keyframes: a CSS
+   module scopes animation names, so the global dotDrift is not reachable here. */
+.body::before { content: ""; position: absolute; inset: -40px; pointer-events: none;
+  background-image: radial-gradient(rgba(14, 42, 74, 0.11) 1.6px, transparent 1.7px);
+  background-size: 22px 22px; animation: bookDotDrift 34s linear infinite; }
+@keyframes bookDotDrift {
+  from { background-position: 0 0; }
+  to { background-position: 44px 22px; }
+}
+.frame { position: relative; z-index: 1; width: 100%; height: 100%; border: 0; display: block;
+  border-radius: 12px; background: #fff; box-shadow: 0 18px 40px -28px rgba(0, 5, 67, 0.45); }
+
+.spin { position: absolute; inset: 14px; z-index: 1; display: grid; place-items: center;
+  align-content: center; gap: 14px; color: var(--ink-600); font-size: 14px;
+  background: #fff; border-radius: 12px; }
+.spin i { width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid #e6eaf2;
+  border-top-color: var(--brand-blue); animation: bookSpin 0.8s linear infinite; display: block; }
+@keyframes bookSpin { to { transform: rotate(360deg); } }
 
 .close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 38px; height: 38px;
   border-radius: 50%; border: 1px solid var(--border-default); background: #fff; color: var(--ink-600);
@@ -40,6 +73,13 @@
   .dialog { grid-template-columns: 1fr; grid-template-rows: auto 1fr; overflow-y: auto; }
   .brand { padding: 40px 28px 30px; }
   .brand img, .brand .logo { height: 56px; }
+  .mark { width: 190px; left: -40px; bottom: -64px; }
   .isoRow { padding-top: 24px; }
-  .iframe { min-height: 480px; }
+  .frame { min-height: 480px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark path { animation: none; fill-opacity: 1; stroke-opacity: 0; }
+  .spin i { animation: none; }
+  .body::before { animation: none; }
 }
