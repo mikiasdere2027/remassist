@@ -128,3 +128,10 @@ div.bk-card { cursor: default; }
 div.bk-card:hover { transform: none; border-color: var(--border-default); box-shadow: none; }
 div.bk-card:hover .bk-card-body h3 { color: inherit; }
 div.bk-card:hover .bk-meta .read svg { transform: none; }
+
+/* Cards whose article is not written yet: a quiet badge in place of the
+   "Read" affordance, so nothing on the page invites a click that does nothing. */
+.soon { margin-left: auto; display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-500); background: var(--ink-50); border-radius: 999px;
+  padding: 5px 10px; white-space: nowrap; }

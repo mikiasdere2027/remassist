@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   openGraph: { url: '/blog' },
 };
 
+/* The three cards below the featured post are the artboard's own copy. Their
+   articles are not written — lib/blog/posts.ts has them at published: false,
+   and only the featured slug has a body in app/blog/[slug]/ArticleBody.tsx —
+   so they carry a "Coming soon" badge rather than a Read affordance that
+   goes nowhere. Give a post a body and flip published, then swap the badge
+   back for a link to its slug. */
 export default function Page() {
   return (
     <main>
@@ -69,7 +75,7 @@ export default function Page() {
               <div className={styles['bk-meta']}>
                 <Image src='/images/teams/Kalkidan.jpg' alt='' width={96} height={96} sizes="36px" />
                 <div><div className={styles['who']}>Kalkidan T.</div><div className={styles['when']}>Aug 4, 2026 · 7 min</div></div>
-                <span className={styles['read']}>Read<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.4' strokeLinecap='round' strokeLinejoin='round'><path d='M5 12h14' /><path d='m13 6 6 6-6 6' /></svg></span>
+                <span className={styles['soon']}>Coming soon</span>
               </div>
             </div>
           </div>
@@ -83,7 +89,7 @@ export default function Page() {
               <div className={styles['bk-meta']}>
                 <Image src='/images/teams/Minassie.jpg' alt='' width={96} height={96} sizes="36px" />
                 <div><div className={styles['who']}>Minassie B.</div><div className={styles['when']}>Jul 30, 2026 · 6 min</div></div>
-                <span className={styles['read']}>Read<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.4' strokeLinecap='round' strokeLinejoin='round'><path d='M5 12h14' /><path d='m13 6 6 6-6 6' /></svg></span>
+                <span className={styles['soon']}>Coming soon</span>
               </div>
             </div>
           </div>
@@ -97,7 +103,7 @@ export default function Page() {
               <div className={styles['bk-meta']}>
                 <Image src='/images/teams/Yonas.jpg' alt='' width={96} height={96} sizes="36px" />
                 <div><div className={styles['who']}>Yonas B.</div><div className={styles['when']}>Jul 25, 2026 · 9 min</div></div>
-                <span className={styles['read']}>Read<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.4' strokeLinecap='round' strokeLinejoin='round'><path d='M5 12h14' /><path d='m13 6 6 6-6 6' /></svg></span>
+                <span className={styles['soon']}>Coming soon</span>
               </div>
             </div>
           </div>
