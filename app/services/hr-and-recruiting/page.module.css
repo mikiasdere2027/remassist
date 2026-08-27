@@ -16,7 +16,6 @@
                     runs what. Built from details/summary, so there is no imperative
                     JavaScript for support.js to re-render out from under.
      ============================================================ */
-
   .hr-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
   .hr-kicker { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--brand-blue); font-weight: 600; }

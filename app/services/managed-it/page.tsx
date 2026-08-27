@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
+import InterviewRail from '@/components/services/InterviewRail';
+import { interviewsFor } from '@/lib/interviews';
+import BlogRail from '@/components/services/BlogRail';
 
 export const metadata: Metadata = {
   title: 'Managed IT',
@@ -235,6 +238,15 @@ export default function Page() {
     
   
     
+
+    <InterviewRail
+      surface="white"
+      eyebrow="Meet the bench"
+      title={<>Hear who would <span>pick up the ticket.</span></>}
+      lede="Clips from our screening interviews — the same recordings that come with a shortlist, so you can judge how they explain a fix before anyone touches your systems."
+      seats={interviewsFor('managed-it')}
+    />
+
   <section className={styles['it-section']} style={{ background: "var(--bg-marketing-paper)" }}>
       <div className={styles['it-wrap']}>
         <span className={styles['it-kicker']}>Engagement</span>
@@ -328,6 +340,14 @@ export default function Page() {
     
   
     
+
+    <BlogRail
+      surface="paper"
+      eyebrow="From the blog"
+      title={<>Reading for whoever <span>owns the tickets.</span></>}
+      lede="Playbooks on scoping the seat, ramping it, and keeping response times honest — written by the people who source and manage these technicians."
+    />
+
   <section className={styles['it-close']}>
       <div className={styles['it-wrap']}>
         <h2>Ready for IT that runs quietly in the background?</h2>

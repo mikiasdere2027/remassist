@@ -119,8 +119,9 @@ export default function BookingModal() {
                 className={styles.frame}
               />
             </div>
+            {/* Same glyph as the fit-finder modal's close, not a stroked SVG. */}
             <button type="button" className={styles.close} aria-label="Close booking dialog" onClick={doClose}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              ×
             </button>
           </div>
         </div>

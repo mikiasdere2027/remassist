@@ -386,6 +386,15 @@ code, kbd, pre, samp {
   html { scroll-behavior: auto; }
 }
 
+/* Drifting dot field used as the decorative background of the home
+   "We extend your team!" (Our Services) section. Lives globally because
+   the layer is styled inline in ServiceGrid and references the keyframe
+   directly (ported from index.html's @keyframes dotDrift). */
+@keyframes dotDrift {
+  from { background-position: 0 0; }
+  to   { background-position: 44px 22px; }
+}
+
 /* ============================================================
    Skip link — the header mega-menu puts ~30 nav links ahead of
    the content, so a keyboard or screen-reader user otherwise

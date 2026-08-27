@@ -1,137 +1,376 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react';
+import Link from 'next/link';
 import styles from './AskRemAssist.module.css';
+import { KB, CONTACT, chipLabel, type KbEntry } from '@/lib/chat/kb';
+import { match, outsideScope } from '@/lib/chat/match';
 
 /**
- * "Ask RemAssist" concierge — ported from assets/ask-remassist.js (Phase 02).
- * A keyword-matching assistant over the question library the site already
- * answers, handing off to email/tel/Calendly for anything it can't. Pure client
- * component: no backend. The legacy assets/ask-remassist.js is left untouched.
+ * "Ask RemAssist" concierge.
+ *
+ * Chrome is a 1:1 port of the static widget in assets/ask-remassist.js — the
+ * gradient header with the presence dot, the grey transcript with avatared
+ * white bubbles, the full-width welcome card, the chip strip and the round
+ * composer. Answers come from the current knowledge base (lib/chat/kb.ts +
+ * lib/chat/match.ts).
+ *
+ * Where it deliberately differs from the static widget: far fewer buttons.
+ * The static one stacked up to four answer links, a three-button handoff row
+ * under *every* reply, and four chips — eleven targets per answer. Here the
+ * three contact actions (book / message / call) and the four topic shortcuts
+ * sit on the welcome card, where a visitor sees them on open; an ordinary
+ * reply carries at most two links and three chips, and only the newest reply
+ * keeps its chips.
  */
-const PHONE = '(832) 230-2194';
-const TEL = 'tel:+18322302194';
-const EMAIL = 'support@remassistance.com';
-const MAILTO = 'mailto:' + EMAIL;
+
+const MAX_LINKS = 2;
+const MAX_CHIPS = 3;
+const MAX_HERO_CHIPS = 4;
+const AVATAR = '/images/rem-loader-logo.svg';
+const MAILTO = CONTACT.mailto + '?subject=' + encodeURIComponent('Website enquiry');
 
 interface Msg {
   from: 'bot' | 'user';
-  text: string;
+  entry?: KbEntry;   // if present, render the rich answer
+  text?: string;     // plain-text fallback (user bubble, no-match, outside-scope)
+  alts?: KbEntry[];  // runner-up suggestions, offered as extra chips
 }
 
-const GREETING: Msg = {
-  from: 'bot',
-  text: 'Hi — I can answer questions on services, pricing, onboarding and security. Or tap a shortcut below.',
-};
+const GREETING: Msg = { from: 'bot', entry: KB.find((e) => e.id === 'greeting') };
 
-/** Short, high-signal answers keyed by topic (subset of the KB). */
-const QUICK: { label: string; answer: string }[] = [
-  { label: 'Your services', answer: '• Customer Service Agents — voice, chat & email inside your helpdesk\n• GTM Teams — a 2–6 seat go-to-market pod\n• SDR as a Service — list building, sequences, booked meetings\n• Extra Services — IT, AI, marketing, research.\nEvery seat is a dedicated remote hire trained on your stack.' },
-  { label: 'How it works', answer: 'Free consultation → team design → pick your agents → monitored delivery. Most clients go from first call to a fully onboarded pod in two weeks, with a free trial before you commit.' },
-  { label: 'Pricing', answer: 'Rates are published on the pricing page — Pro from $8/hr, Expert from $11/hr depending on coverage and judgment level. Use the 2-minute Qualify quiz for a personal estimate, or book a consult.' },
-  { label: 'Free trial', answer: 'No traditional trial — instead a 30–60 day pilot at smaller scale so you can measure our SLAs before a full rollout.' },
-  { label: 'Onboarding', answer: 'Roughly two weeks from first call to a fully onboarded pod, including your free trial. Documented SOPs make it faster.' },
-  { label: 'Security', answer: 'ISO 9001 and ISO 27001 certified. QA on every ticket; data handled per our privacy policy.' },
-  { label: 'Contact details', answer: `• Phone — ${PHONE}\n• Email — ${EMAIL}\nOr book a free consultation at a time that suits you.` },
+/** Entries by id, for the chips a plain-text reply offers instead of links. */
+function byId(...ids: string[]): KbEntry[] {
+  return ids.map((id) => KB.find((e) => e.id === id)).filter((e): e is KbEntry => !!e);
+}
+
+/* ---- icons -------------------------------------------------------------- */
+/* Same paths and 24-unit viewBox as the static widget's icon() helper. */
+function Icon({ d, size = 17 }: { d: string; size?: number }) {
+  return (
+    <svg
+      width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+    >
+      <path d={d} />
+    </svg>
+  );
+}
+const I_MAIL = 'M3.5 6.5h17v11h-17v-11Zm0 .5 8.5 6 8.5-6';
+const I_MIN = 'M6 12h12';
+const I_SEND = 'M4 12l16-8-6 8 6 8-16-8Z';
+const I_ARROW = 'M5 12h14m-6-6 6 6-6 6';
+const I_CAL = 'M8 2v4m8-4v4M3.5 9.5h17M5 5h14a1.5 1.5 0 0 1 1.5 1.5V19A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V6.5A1.5 1.5 0 0 1 5 5Z';
+const I_PHONE = 'M6.5 3.5h3l1.5 4-2 1.5a12 12 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.5 5.7a2 2 0 0 1 2-2.2Z';
+
+/**
+ * The three ways out of the chat, on the welcome card. "Leave a message" opens
+ * a prefilled mail rather than an in-chat form — there is no form endpoint
+ * here, and a button that promises one would be a dead end.
+ */
+const ACTIONS: { label: string; href: string; icon: string; cls?: string }[] = [
+  { label: 'Book a consultation', href: CONTACT.book, icon: I_CAL, cls: 'primary' },
+  {
+    label: 'Leave a message',
+    href: CONTACT.mailto + '?subject=' + encodeURIComponent('Message for the Rem Assist team'),
+    icon: I_MAIL,
+  },
+  { label: 'Call us', href: CONTACT.tel, icon: I_PHONE, cls: 'tel' },
 ];
 
-// Keyword → quick index
-const KW_INDEX: [RegExp, number][] = [
-  [/pricing|cost|rate|price|how much|budget/, 2],
-  [/trial|pilot/, 3],
-  [/onboard|ramp|how long|timeline|two week|2 week/, 4],
-  [/onboard|ramp|how long|timeline/, 4],
-  [/security|soc|iso|compliant|certif/, 5],
-  [/contact|phone|email|call|reach/, 6],
-  [/service|what do you do|offer|product|outsourc/, 0],
-  [/how.*work|process|steps/, 1],
-];
+/* ---- helpers ------------------------------------------------------------ */
 
-function answerFor(input: string): Msg {
-  const q = input.toLowerCase();
-  for (const [re, idx] of KW_INDEX) {
-    if (re.test(q)) {
-      return { from: 'bot', text: QUICK[idx].answer };
-    }
+/** One answer link. Internal routes go through next/link. */
+function AnswerLink({ label, href, first }: { label: string; href: string; first: boolean }) {
+  const arrow = first ? <Icon d={I_ARROW} size={14} /> : null;
+  if (href.startsWith('/') && !href.startsWith('//')) {
+    return <Link href={href}>{label}{arrow}</Link>;
   }
-  return { from: 'bot', text: 'I can help with services, pricing, onboarding, trial and security — or hand you straight to a person. ' + PHONE + ' / ' + EMAIL };
+  const external = /^https?:/i.test(href);
+  return (
+    <a href={href} {...(external ? { target: '_blank', rel: 'noopener' } : {})}>
+      {label}{arrow}
+    </a>
+  );
 }
+
+/**
+ * Answer body. Lines starting with a bullet become list items; consecutive
+ * bullets share one list so the dots line up.
+ */
+function Body({ lines }: { lines: string[] }) {
+  const blocks: { bullets: boolean; lines: string[] }[] = [];
+  for (const line of lines) {
+    const bullets = line.startsWith('•');
+    const tail = blocks[blocks.length - 1];
+    if (tail && tail.bullets === bullets) tail.lines.push(line);
+    else blocks.push({ bullets, lines: [line] });
+  }
+  return (
+    <>
+      {blocks.map((b, i) =>
+        b.bullets ? (
+          <ul key={i} className={styles.list}>
+            {b.lines.map((l, j) => <li key={j}>{l.slice(1).trim()}</li>)}
+          </ul>
+        ) : (
+          b.lines.map((l, j) => <p key={i + '-' + j}>{l}</p>)
+        )
+      )}
+    </>
+  );
+}
+
+/**
+ * Chips offered under the newest reply: the entry's follow-ups, then runners-up.
+ * The welcome card is allowed its full shortcut row; later replies are capped
+ * so the transcript never turns into a wall of pills.
+ */
+function chipsFor(msg: Msg, hero: boolean): KbEntry[] {
+  const ids = [...(msg.entry?.chips ?? [])];
+  for (const a of msg.alts ?? []) if (!ids.includes(a.id)) ids.push(a.id);
+  return ids
+    .map((id) => KB.find((k) => k.id === id))
+    .filter((e): e is KbEntry => !!e)
+    .slice(0, hero ? MAX_HERO_CHIPS : MAX_CHIPS);
+}
+
+/* ---- answer builder ----------------------------------------------------- */
+
+function buildBotMsg(input: string): Msg {
+  const trade = outsideScope(input);
+  if (trade) {
+    return {
+      from: 'bot',
+      text:
+        'We don’t provide ' + trade + ' ourselves — we are a remote-team ' +
+        'outsourcing partner, not a field-services company. What we do staff for ' +
+        'companies in your trade: customer support, sales, back-office and admin ' +
+        'seats hired as a team you approve.',
+      alts: byId('services', 'human'),
+    };
+  }
+  const { entry, alts } = match(input);
+  if (!entry) {
+    return {
+      from: 'bot',
+      text:
+        'I can help with services, pricing, onboarding, trial and security — or ' +
+        'hand you straight to a person on ' + CONTACT.phone + '.',
+      alts: byId('menu', 'human'),
+    };
+  }
+  return { from: 'bot', entry, alts };
+}
+
+/* ---- component ---------------------------------------------------------- */
 
 export default function AskRemAssist() {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([GREETING]);
+  const [pending, setPending] = useState(false);
   const [input, setInput] = useState('');
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [msgs, open]);
+    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' });
+  }, [msgs, pending, open]);
 
-  function send(text?: string) {
-    const t = (text ?? input).trim();
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  /**
+   * Append the question, then the answer after a short "typing" beat. A chip
+   * passes its own entry so the reply is exact rather than re-matched from the
+   * chip's wording.
+   */
+  const ask = useCallback((text: string, entry?: KbEntry) => {
+    const t = text.trim();
     if (!t) return;
-    setMsgs((prev) => [...prev, { from: 'user', text: t }, answerFor(t)]);
+    setMsgs((prev) => [...prev, { from: 'user', text: t }]);
+    setPending(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      setMsgs((prev) => [...prev, entry ? { from: 'bot', entry } : buildBotMsg(t)]);
+      setPending(false);
+    }, 480);
+  }, []);
+
+  function submit(e?: FormEvent) {
+    e?.preventDefault();
+    ask(input);
     setInput('');
+    if (inputRef.current) inputRef.current.style.height = '';
   }
 
+  /* The composer grows with the question, to the same 48–120px band. */
+  function autosize(el: HTMLTextAreaElement) {
+    el.style.height = 'auto';
+    el.style.height = Math.max(48, Math.min(el.scrollHeight + 2, 120)) + 'px';
+  }
+
+  const last = msgs.length - 1;
+
   return (
-    <>
+    <div className={styles.root}>
       {open && (
-        <div className={styles.panel} role="dialog" aria-label="Ask RemAssist">
+        <section
+          className={styles.panel}
+          role="dialog"
+          aria-modal="false"
+          aria-label="Ask RemAssist"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); }
+          }}
+        >
           <div className={styles.head}>
-            <span className={styles.avatar} aria-hidden="true">R</span>
-            <div>
-              <div className={styles.headTitle}>Ask RemAssist</div>
-              <div className={styles.headSub}>Answers instantly · 24/7</div>
+            <div className={styles.face}>
+              <img src={AVATAR} alt="Rem Assist" />
             </div>
-            <button type="button" className={styles.close} onClick={() => setOpen(false)} aria-label="Close" >×</button>
-          </div>
-          <div className={styles.body} ref={scrollRef}>
-            {msgs.map((m, i) => (
-              <div key={i} className={m.from === 'bot' ? styles.bot : styles.user} dangerouslySetInnerHTML={{ __html: m.text.replace(/\n/g, '<br/>') }} />
-            ))}
-            <div className={styles.chips}>
-              {QUICK.map((q) => (
-                <button key={q.label} type="button" className={styles.chip} onClick={() => send(q.label)}>{q.label}</button>
-              ))}
+            <div className={styles.id}>
+              <strong>Ask RemAssist</strong>
+              <span>Online · Replies instantly</span>
             </div>
+            <a
+              className={styles.icon}
+              href={MAILTO}
+              title={'Email ' + CONTACT.email}
+              aria-label={'Email the team at ' + CONTACT.email}
+            >
+              <Icon d={I_MAIL} size={16} />
+            </a>
+            <button
+              type="button"
+              className={styles.icon}
+              onClick={() => setOpen(false)}
+              title="Minimise"
+              aria-label="Close chat"
+            >
+              <Icon d={I_MIN} />
+            </button>
           </div>
-          <div className={styles.foot}>
-            <input
+
+          <div className={styles.log} ref={logRef} role="log" aria-live="polite">
+            {msgs.map((m, i) => {
+              if (m.from === 'user') {
+                return (
+                  <div key={i} className={`${styles.row} ${styles.rowMe}`}>
+                    <div className={styles.bub}><p>{m.text}</p></div>
+                  </div>
+                );
+              }
+
+              const e = m.entry;
+              const hero = e?.id === 'greeting';
+              const links = (e?.links ?? []).slice(0, MAX_LINKS);
+              /* Only the newest reply keeps its chips — the static widget
+                 cleared older ones for the same reason. */
+              const chips = i === last ? chipsFor(m, hero) : [];
+
+              return (
+                <div key={i} style={{ display: 'contents' }}>
+                  <div className={`${styles.row} ${hero ? styles.rowHero : ''}`}>
+                    {!hero && (
+                      <div className={styles.av}>
+                        <img src={AVATAR} alt="Rem Assist" />
+                      </div>
+                    )}
+                    <div className={styles.bub}>
+                      {hero ? (
+                        <>
+                          {e?.title && <h3 className={styles.heroTitle}>{e.title}</h3>}
+                          {(e?.text ?? []).map((l, j) => (
+                            <p key={j} className={styles.heroText}>{l}</p>
+                          ))}
+                          <div className={styles.actions}>
+                            {ACTIONS.map((a) => (
+                              <a
+                                key={a.label}
+                                href={a.href}
+                                className={a.cls ? styles[a.cls] : undefined}
+                                {...(/^https?:/i.test(a.href)
+                                  ? { target: '_blank', rel: 'noopener' }
+                                  : {})}
+                              >
+                                <Icon d={a.icon} size={13} />
+                                {a.label}
+                              </a>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {e?.title && <h4 className={styles.title}>{e.title}</h4>}
+                          {e?.text ? <Body lines={e.text} /> : <p>{m.text}</p>}
+                        </>
+                      )}
+                      {links.length > 0 && (
+                        <div className={styles.links}>
+                          {links.map(([label, href], j) => (
+                            <AnswerLink key={j} label={label} href={href} first={j === 0} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {chips.length > 0 && (
+                    <div className={`${styles.chips} ${hero ? styles.chipsHero : ''}`}>
+                      {chips.map((c) => (
+                        <button key={c.id} type="button" onClick={() => ask(chipLabel(c), c)}>
+                          {chipLabel(c)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {pending && (
+              <div className={styles.row}>
+                <div className={styles.av}><img src={AVATAR} alt="" /></div>
+                <div className={`${styles.bub} ${styles.typing}`}>
+                  <i /><i /><i />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <form className={styles.bar} onSubmit={submit}>
+            <textarea
+              ref={inputRef}
               className={styles.input}
+              rows={1}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && send()}
-              placeholder="Ask about services, pricing…"
+              placeholder="Ask your question…"
+              aria-label="Type your question"
+              onChange={(e) => { setInput(e.target.value); autosize(e.currentTarget); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
+              }}
             />
-            <button type="button" className={styles.sendBtn} onClick={() => send()} aria-label="Send">➤</button>
-          </div>
-          <div className={styles.links}>
-            <a href={MAILTO}>✉ {EMAIL}</a>
-            <a href={TEL}>☎ {PHONE}</a>
-          </div>
-        </div>
+            <button type="submit" className={styles.send} disabled={!input.trim()} aria-label="Send">
+              <Icon d={I_SEND} />
+            </button>
+          </form>
+        </section>
       )}
+
       <button
         type="button"
-        className={styles.launcher}
-        onClick={() => setOpen((o) => !o)}
-        aria-label={open ? 'Close Ask RemAssist' : 'Ask RemAssist'}
+        className={`${styles.launcher} ${open ? styles.launcherHidden : ''}`}
+        onClick={() => setOpen(true)}
+        aria-label="Ask RemAssist — open chat"
         aria-expanded={open}
+        tabIndex={open ? -1 : 0}
       >
-        {open ? (
-          <span className={styles.launcherClose} aria-hidden="true">&times;</span>
-        ) : (
-          <>
-            <span className={styles.launcherPing} aria-hidden="true" />
-            <span className={styles.launcherFace}>
-              {/* the Rem mark, as the artboard's launcher used */}
-              <img src="/images/rem-loader-logo.svg" alt="" />
-            </span>
-            <span className={styles.launcherDot} aria-hidden="true" />
-          </>
-        )}
+        <span className={styles.launcherPing} aria-hidden="true" />
+        <span className={styles.launcherFace}>
+          <img src={AVATAR} alt="" />
+        </span>
+        <span className={styles.launcherDot} aria-hidden="true" />
       </button>
-    </>
+    </div>
   );
 }

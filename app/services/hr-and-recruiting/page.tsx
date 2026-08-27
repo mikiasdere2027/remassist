@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
+import SeatTiersSection from '@/components/services/SeatTiers';
 
 export const metadata: Metadata = {
   title: 'HR & Recruiting',
@@ -535,44 +536,7 @@ export default function Page() {
     
   
     
-  <section className={styles['hr-section']}>
-      <div className={styles['hr-wrap']}>
-        <span className={styles['hr-kicker']}>Rates</span>
-        <h2 className={styles['hr-h2']} style={{ marginTop: "14px" }}>Two tiers, <span>same controls.</span></h2>
-        <p className={styles['hr-lede']}>Published, hourly, per seat — the same two tiers as every other service
-          line. What differs here is the training, not the price.</p>
-  
-        <div className={styles['hr-tiers']}>
-          <div className={styles['hr-tier']}>
-            <div className={styles['hr-tier-head']}>
-              <h3>Pro</h3>
-              <span className={styles['hr-tier-price']}><small>from</small><b>$8</b><em>/hr</em></span>
-            </div>
-            <p>Cleared the core programme and works in your ATS and HRIS from day one.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Suited to sourcing, screening volume and coordination</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Onboarding and records administration</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Best value per seat</span></li>
-            </ul>
-          </div>
-          <div className={`${styles['hr-tier']} ${styles['hr-tier--expert']}`}>
-            <div className={styles['hr-tier-head']}>
-              <h3>Expert</h3>
-              <span className={styles['hr-tier-price']}><small>from</small><b>$11</b><em>/hr</em></span>
-            </div>
-            <p>More years in recruiting or people operations, and a harder assessment path.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Suited to hard-to-fill roles and senior pipelines</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Anything candidate- or executive-facing</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Needs the least direction</span></li>
-            </ul>
-          </div>
-        </div>
-        <p className={styles['hr-tier-note']}>Volume drives the cost far more than seniority does — two open roles
-          and twenty are different engagements. See the <a href='/pricing'>full monthly grid</a>, and
-          note that a free trial comes before any of it.</p>
-      </div>
-    </section>
+  <SeatTiersSection />
   
   
     

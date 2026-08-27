@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import styles from './page.module.css';
+import SeatTiersSection from '@/components/services/SeatTiers';
+import InterviewRail from '@/components/services/InterviewRail';
+import { interviewsFor } from '@/lib/interviews';
+import BlogRail from '@/components/services/BlogRail';
 
 export const metadata: Metadata = {
   title: 'Virtual Back Office Team',
@@ -181,35 +185,21 @@ export default function Page() {
     
   
     
-  <section className={styles['vb-section']} style={{ background: "var(--bg-marketing-paper)" }}>
+
+    <InterviewRail
+      surface="white"
+      eyebrow="Meet the bench"
+      title={<>Hear who would <span>run the queue.</span></>}
+      lede="Clips from our screening interviews — the same recordings that come with a shortlist, so you can judge the attention to detail before anyone touches your documents."
+      seats={interviewsFor('virtual-back-office-team')}
+    />
+
+  <SeatTiersSection />
+
+  <section className={styles['vb-section']}>
       <div className={styles['vb-wrap']}>
-        <span className={styles['vb-kicker']}>Two ways to staff it</span>
-        <h2 className={styles['vb-h2']} style={{ marginTop: "14px" }}>One bench, <span>two kinds of depth.</span></h2>
-        <p className={styles['vb-lede']}>Every seat clears the same core program and operates under the same ISO controls.
-          The difference is experience and how much direction they need.</p>
-  
-        <div className={styles['vb-tiers']}>
-          <div className={styles['vb-tier']}>
-            <div className={styles['vb-tier-head']}><h3>Pro</h3><span className={styles['vb-tier-price']}><small>from</small><b>$8</b><em>/hr</em></span></div>
-            <p>Fully trained and fit for work from day one. Pro agents clear our core program and pick up whatever
-              software you run — CRM, helpdesk, billing, scheduling, or an internal tool.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Works on any stack</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Core program certified</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Best value per seat</li>
-            </ul>
-          </div>
-          <div className={`${styles['vb-tier']} ${styles['vb-tier--expert']}`}>
-            <div className={styles['vb-tier-head']}><h3>Expert</h3><span className={styles['vb-tier-price']}><small>from</small><b>$11</b><em>/hr</em></span></div>
-            <p>More years on the job and a far more rigorous assessment path. Experts arrive already fluent in
-              your kind of operation and need the least direction to get moving.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Senior experience</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Rigorous assessments</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Least supervision needed</li>
-            </ul>
-          </div>
-        </div>
+        <span className={styles['vb-kicker']}>Before you ask</span>
+        <h2 className={styles['vb-h2']} style={{ marginTop: "14px" }}>The questions that decide it.</h2>
   
         <div className={styles['vb-faq']}>
           <details>
@@ -240,6 +230,14 @@ export default function Page() {
     
   
     
+
+    <BlogRail
+      surface="white"
+      eyebrow="From the blog"
+      title={<>Reading for whoever <span>owns the backlog.</span></>}
+      lede="Playbooks on scoping the seat, ramping it, and keeping throughput steady — written by the people who source and manage these teams."
+    />
+
   <section id='contact' className={styles['vb-contact']}>
       <div className={styles['vb-wrap']}>
         <div style={{ textAlign: "center", marginBottom: "38px" }}>

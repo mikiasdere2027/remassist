@@ -302,6 +302,30 @@
   }
 
 /* === hand-additions (preserved by codemod) === */
+
+/* The generated .bp-toc rules style the contents list, but .bp-toc-cta's
+   button is an anchor inside .bp-toc too, so it was inheriting the list's
+   grey text, its 12px radius and — through .bp-toc a::before — a stray "8."
+   counter of its own. Hand the button back to .bp-btn. Specificity: the
+   generated rules are (0,1,1) and (0,2,1) on hover, so these are one class
+   higher each. */
+.bp-toc-cta .bp-btn--primary { color: #fff; border-radius: 60px; border-left: 0;
+  counter-increment: none; }
+.bp-toc-cta .bp-btn--primary::before { content: none; }
+.bp-toc-cta .bp-btn--primary:hover { background: var(--blue-700); color: #fff; }
+
+/* .bp-prose h3 sets a navy colour on the heading itself, which beats the
+   blue panel's inherited white. */
+.bp-inline-cta h3 { color: #fff; }
+
+/* On that panel a --brand-blue button all but disappears into its own
+   background (#518de0 on #326dda), and white on #518de0 is 3.4:1. The
+   primary takes the panel's own contrast instead; --light beside it already
+   reads as the outlined half of the pair. */
+.bp-inline-cta .bp-btn--primary { background: #fff; color: var(--brand-navy); }
+.bp-inline-cta .bp-btn--primary:hover { background: var(--bg-marketing-paper);
+  color: var(--brand-navy); box-shadow: 0 12px 22px -10px rgba(0, 5, 67, .55); }
+
 /* At <=1150px .bp-layout collapses to `grid-template-columns: 1fr`, but a 1fr
    track has an implicit min of auto (min-content). Something inside the
    article has a wide intrinsic minimum, so on a 390px phone the single track

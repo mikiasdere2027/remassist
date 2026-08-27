@@ -5,7 +5,6 @@
      band, two tier cards, accordion FAQ, navy centred close. Class names mirror
      .sr-* one for one so a change to the shared look can be applied to all three.
      ============================================================ */
-
   .cx-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
   .cx-kicker { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--brand-blue); font-weight: 600; }

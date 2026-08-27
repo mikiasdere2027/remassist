@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import styles from './page.module.css';
+import SeatTiersSection from '@/components/services/SeatTiers';
+import InterviewRail from '@/components/services/InterviewRail';
+import { interviewsFor } from '@/lib/interviews';
+import BlogRail from '@/components/services/BlogRail';
 
 export const metadata: Metadata = {
   title: 'Customer Service Agents',
@@ -168,6 +172,15 @@ export default function Page() {
     
   
     
+
+    <InterviewRail
+      surface="paper"
+      eyebrow="Meet the bench"
+      title={<>Hear an agent <span>before a customer does.</span></>}
+      lede="Clips from our screening interviews — the same recordings that come with a shortlist, so you can judge tone, clarity, and listening before anyone joins your queue."
+      seats={interviewsFor('customer-service-agents')}
+    />
+
   <section className={styles['cx-section']}>
       <div className={styles['cx-wrap']}>
         <span className={styles['cx-kicker']}>Quality</span>
@@ -201,46 +214,7 @@ export default function Page() {
     
   
     
-  <section className={styles['cx-section']} style={{ background: "var(--bg-marketing-paper)" }}>
-      <div className={styles['cx-wrap']}>
-        <span className={styles['cx-kicker']}>What a seat costs</span>
-        <h2 className={styles['cx-h2']} style={{ marginTop: "14px" }}>Two tiers, <span>same controls.</span></h2>
-        <p className={styles['cx-lede']}>The tier changes who sits in the seat. The QA, the reporting and the security
-          controls are identical either way.</p>
-  
-        <div className={styles['cx-tiers']}>
-          <div className={styles['cx-tier']}>
-            <div className={styles['cx-tier-head']}>
-              <h3>Pro</h3>
-              <span className={styles['cx-tier-price']}><small>from</small><b>$8</b><em>/hr</em></span>
-            </div>
-            <p>Best for scaling general support, inbox management and standard helpdesk queues.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Cleared the core programme and certified on it</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Picks up your helpdesk in days, whatever the stack</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Suited to high-volume triage, chat and first-line resolution</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Best value per seat</span></li>
-            </ul>
-          </div>
-          <div className={`${styles['cx-tier']} ${styles['cx-tier--expert']}`}>
-            <div className={styles['cx-tier-head']}>
-              <h3>Expert</h3>
-              <span className={styles['cx-tier-price']}><small>from</small><b>$11</b><em>/hr</em></span>
-            </div>
-            <p>Best for technical support, complex onboarding and customers who are already unhappy.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>More years on the job and a harder assessment path</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Arrives fluent in your operational motion</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Placed from a niche track, not the generalist bench</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Needs the least direction</span></li>
-            </ul>
-          </div>
-        </div>
-        <p className={styles['cx-tier-note']}>Coverage drives the cost far more than seniority does — see the
-          <a href='/pricing'>full monthly grid</a>. A pilot of 30–60 days comes before any
-          full rollout.</p>
-      </div>
-    </section>
+  <SeatTiersSection />
   
   
     
@@ -275,6 +249,14 @@ export default function Page() {
     
   
     
+
+    <BlogRail
+      surface="paper"
+      eyebrow="From the blog"
+      title={<>Reading for whoever <span>owns the queue.</span></>}
+      lede="Playbooks on scoping the seat, ramping it, and holding service quality steady — written by the people who source and manage these agents."
+    />
+
   <section className={styles['cx-close']}>
       <div className={styles['cx-wrap']}>
         <h2>Watch the queue move before you commit.</h2>

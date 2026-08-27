@@ -108,7 +108,6 @@ export default function Page() {
             <p>ISO 9001 quality management and ISO 27001 information security, audited by a third party rather than asserted on a page.</p>
             <span className={styles['rs-iso']}>
               <img src='/images/ISO_9001-2015.svg' alt='ISO 9001:2015 certified' />
-              <img src='/images/ISO_27001-2022.svg' alt='ISO 27001:2022 certified' />
             </span>
           </div>
           <div className={styles['rs-card']}>

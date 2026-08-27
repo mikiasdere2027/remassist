@@ -18,8 +18,13 @@ import {
  * page (§8). Pure arithmetic comes from lib/quiz; this component only handles
  * state, navigation and rendering. Results are shared via the URL hash so a
  * completed quiz is copy-pasteable ("#/…/41000" style).
+ *
+ * There is one result rendering, not one per host page: the quiz leaves a
+ * short "your result is ready" stub in the flow and puts the estimate itself
+ * in a portalled modal. /qualify used to render a second, inline copy of the
+ * same figures, which drifted from this one whenever either was touched.
  */
-export default function QuizLogic({ popup = false }: { popup?: boolean }) {
+export default function QuizLogic() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<Answers>>({});
   const [copied, setCopied] = useState(false);
@@ -33,7 +38,7 @@ export default function QuizLogic({ popup = false }: { popup?: boolean }) {
   /* One POST per completion. A ref, not state: firing it must not re-render,
      and a restored-from-hash result should not be counted as a new run. */
   const reported = useRef(false);
-  /* Fit-finder mode: the final result is shown in a popup instead of inline. */
+  /* The result is shown in a popup rather than inline, on every page. */
   const [popupOpen, setPopupOpen] = useState(false);
   /* The modal is portalled to <body>, so it cannot be trapped by an
      ancestor's overflow or transform. Gate on mount: document does not
@@ -56,10 +61,10 @@ export default function QuizLogic({ popup = false }: { popup?: boolean }) {
   const current = QUIZ[step];
   const done = step >= QUIZ.length;
 
-  // Fit-finder mode: pop the result open as soon as the quiz finishes.
+  // Pop the result open as soon as the quiz finishes.
   useEffect(() => {
-    if (popup && done) setPopupOpen(true);
-  }, [popup, done]);
+    if (done) setPopupOpen(true);
+  }, [done]);
 
   // Escape closes the popup; lock body scroll while it is open.
   useEffect(() => {
@@ -244,7 +249,7 @@ export default function QuizLogic({ popup = false }: { popup?: boolean }) {
           </>
         )}
 
-        {done && result && (popup ? (
+        {done && result && (
           <div className={styles.doneCompact}>
             <span className={styles.resTick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg></span>
             <span className={styles.resEyebrow}>Your result is ready</span>
@@ -256,48 +261,60 @@ export default function QuizLogic({ popup = false }: { popup?: boolean }) {
               See your estimate
             </button>
           </div>
-        ) : (
-          <>
-            <div className={styles.resTop}>
-              <span className={styles.resTick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg></span>
-              <span className={styles.resEyebrow}>Your recommended shape</span>
-            </div>
-            <h2 className={styles.resTitle}>{result.title}</h2>
-            <p className={styles.resBlurb}>{result.blurb}</p>
+        )}
+      </div>
+    </section>
 
-            <div className={styles.tiles}>
-              <div className={styles.tile}><span>Service line</span><b>{result.service}</b></div>
-              <div className={styles.tile}><span>Tier</span><b>{result.tier} — ${result.rate}/hr</b></div>
-              <div className={styles.tile}><span>Est. monthly</span><b>{result.cost}</b></div>
-            </div>
-            <div className={styles.math}>
-              <div className={styles.mathHead}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z" /><path d="M8 8h8M8 12h3M8 16h3M14 12v4" /></svg>
-                <b>How that number is built</b>
+      {/* The result: a centered, viewport-fitting modal, the same on both pages. */}
+      {/* Closes on the backdrop only — via e.target === e.currentTarget rather
+          than stopPropagation on the panel, which would also stop
+          BookingModal's document-level interceptor and leave the
+          "Book a free consult" button below doing nothing. */}
+      {popupOpen && result && mounted && createPortal(
+        <div
+          className={styles.overlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fit finder result"
+          onClick={(e) => { if (e.target === e.currentTarget) setPopupOpen(false); }}
+        >
+          <div className={styles.modal}>
+            <button type="button" className={styles.modalClose} onClick={() => setPopupOpen(false)} aria-label="Close estimate">×</button>
+
+            <div className={styles.modalHead}>
+              <div className={styles.resTop}>
+                <span className={styles.resTick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg></span>
+                <span className={styles.resEyebrow}>Your recommended shape</span>
               </div>
-              <div className={styles.mathRows}>
-                <div className={styles.mathRow}>
-                  <span>Coverage you selected</span>
-                  <b>{HOURS_LABEL[answers.hours ?? ''] || '160 hrs/month'}</b>
-                </div>
-                <div className={styles.mathRow}>
-                  <span>Tier your answers point at</span>
-                  <b>{result.tier} — ${result.rate}/hr</b>
-                </div>
-                <div className={styles.mathRow}>
-                  <span>Seats in the shape</span>
-                  <b>{result.seats === 1 ? 'One seat' : `${result.seats} seats`}</b>
-                </div>
-                <div className={`${styles.mathRow} ${styles.mathRowTotal}`}>
-                  <span>{result.hours} hrs × ${result.rate}/hr</span>
-                  <b>{result.cost}</b>
-                </div>
-              </div>
-              <p className={styles.mathNote}>
-                An estimate, not a quote. Your exact rate depends on hours and start date; we
-                confirm it on the call before anything is signed.
-              </p>
+              <h3 className={styles.resTitle}>{result.title}</h3>
+              <p className={styles.resBlurb}>{result.blurb}</p>
             </div>
+
+            <div className={styles.modalGrid}>
+              <div className={styles.modalTiles}>
+                  <div className={styles.tile}><span>Service line</span><b>{result.service}</b></div>
+                  <div className={styles.tile}><span>Tier</span><b>{result.tier} — ${result.rate}/hr</b></div>
+                  <div className={styles.tile}><span>Est. monthly</span><b>{result.cost}</b></div>
+              </div>
+
+              <div className={styles.math}>
+                <div className={styles.mathHead}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z" /><path d="M8 8h8M8 12h3M8 16h3M14 12v4" /></svg>
+                  <b>How that number is built</b>
+                </div>
+                <div className={styles.mathRows}>
+                  <div className={styles.mathRow}><span>Coverage you selected</span><b>{HOURS_LABEL[answers.hours ?? ''] || '160 hrs/month'}</b></div>
+                  <div className={styles.mathRow}><span>Tier your answers point at</span><b>{result.tier} — ${result.rate}/hr</b></div>
+                  <div className={styles.mathRow}><span>Seats in the shape</span><b>{result.seats === 1 ? 'One seat' : `${result.seats} seats`}</b></div>
+                  <div className={`${styles.mathRow} ${styles.mathRowTotal}`}><span>{result.hours} hrs × ${result.rate}/hr</span><b>{result.cost}</b></div>
+                </div>
+                <p className={styles.mathNote}>
+                  An estimate, not a quote. Your exact rate depends on hours and start date; we
+                  confirm it on the call before anything is signed.
+                </p>
+              </div>
+            </div>
+
 
             <div className={styles.answers}>
               <span className={styles.answersHeader}>Your answers — tap any to change it and come straight back</span>
@@ -393,89 +410,6 @@ export default function QuizLogic({ popup = false }: { popup?: boolean }) {
               )}
             </div>
 
-            <div className={styles.resCta}>
-              <a className={styles.cta} href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">
-                Book a free consult
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
-              </a>
-              <button type="button" className={`${styles.cta} ${styles.secondary}`} onClick={share}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17H7A5 5 0 0 1 7 7h2" /><path d="M15 7h2a5 5 0 1 1 0 10h-2" /><path d="M8 12h8" /></svg>
-                Copy share link
-              </button>
-              <button type="button" className={styles.restart} onClick={restart}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>Start over</button>
-              <span className={`${styles.copied} ${copied ? styles.copiedOn : ''}`}>Link copied</span>
-            </div>
-          </>
-        ))}
-      </div>
-    </section>
-
-      {/* Fit-finder popup: the final result in a centered, viewport-fitting modal. */}
-      {/* Closes on the backdrop only — via e.target === e.currentTarget rather
-          than stopPropagation on the panel, which would also stop
-          BookingModal's document-level interceptor and leave the
-          "Book a free consult" button below doing nothing. */}
-      {popup && popupOpen && result && mounted && createPortal(
-        <div
-          className={styles.overlay}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Fit finder result"
-          onClick={(e) => { if (e.target === e.currentTarget) setPopupOpen(false); }}
-        >
-          <div className={styles.modal}>
-            <button type="button" className={styles.modalClose} onClick={() => setPopupOpen(false)} aria-label="Close estimate">×</button>
-
-            <div className={styles.modalHead}>
-              <div className={styles.resTop}>
-                <span className={styles.resTick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg></span>
-                <span className={styles.resEyebrow}>Your recommended shape</span>
-              </div>
-              <h3 className={styles.resTitle}>{result.title}</h3>
-              <p className={styles.resBlurb}>{result.blurb}</p>
-            </div>
-
-            <div className={styles.modalGrid}>
-              <div className={styles.modalTiles}>
-                  <div className={styles.tile}><span>Service line</span><b>{result.service}</b></div>
-                  <div className={styles.tile}><span>Tier</span><b>{result.tier} — ${result.rate}/hr</b></div>
-                  <div className={styles.tile}><span>Est. monthly</span><b>{result.cost}</b></div>
-              </div>
-
-              <div className={styles.math}>
-                <div className={styles.mathHead}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z" /><path d="M8 8h8M8 12h3M8 16h3M14 12v4" /></svg>
-                  <b>How that number is built</b>
-                </div>
-                <div className={styles.mathRows}>
-                  <div className={styles.mathRow}><span>Coverage you selected</span><b>{HOURS_LABEL[answers.hours ?? ''] || '160 hrs/month'}</b></div>
-                  <div className={styles.mathRow}><span>Tier your answers point at</span><b>{result.tier} — ${result.rate}/hr</b></div>
-                  <div className={styles.mathRow}><span>Seats in the shape</span><b>{result.seats === 1 ? 'One seat' : `${result.seats} seats`}</b></div>
-                  <div className={`${styles.mathRow} ${styles.mathRowTotal}`}><span>{result.hours} hrs × ${result.rate}/hr</span><b>{result.cost}</b></div>
-                </div>
-                <p className={styles.mathNote}>
-                  An estimate, not a quote. Your exact rate depends on hours and start date; we
-                  confirm it on the call before anything is signed.
-                </p>
-              </div>
-            </div>
-
-
-            <div className={styles.answers}>
-              <span className={styles.answersHeader}>Your answers — tap any to change it and come straight back</span>
-              <div className={styles.answerRow}>
-                {QUIZ.map((q) => {
-                  const chosen = q.options.find((o) => o.value === answers[q.id]);
-                  if (!chosen) return null;
-                  return (
-                    <button key={q.id} type="button" className={styles.answer} onClick={() => changeAnswer(q.id)}>
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg>
-                      <b>{q.id}</b>: {chosen.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
 
             <div className={styles.resCta}>
               <a className={styles.cta} href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">

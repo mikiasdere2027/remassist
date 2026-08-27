@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import styles from './page.module.css';
+import SeatTiersSection from '@/components/services/SeatTiers';
+import InterviewRail from '@/components/services/InterviewRail';
+import { interviewsFor } from '@/lib/interviews';
+import BlogRail from '@/components/services/BlogRail';
 
 export const metadata: Metadata = {
   title: 'Sales & Revenue',
@@ -193,35 +197,21 @@ export default function Page() {
     
   
     
-  <section className={styles['sr-section']} style={{ background: "var(--bg-marketing-paper)" }}>
+
+    <InterviewRail
+      surface="white"
+      eyebrow="Meet the bench"
+      title={<>Hear a rep <span>before you meet one.</span></>}
+      lede="Clips from our screening interviews — the same recordings that come with a shortlist, so you can judge the English, the tone, and the thinking before a call is booked."
+      seats={interviewsFor('sales-and-revenue')}
+    />
+
+  <SeatTiersSection />
+
+  <section className={styles['sr-section']}>
       <div className={styles['sr-wrap']}>
-        <span className={styles['sr-kicker']}>What a seat costs</span>
-        <h2 className={styles['sr-h2']} style={{ marginTop: "14px" }}>Two tiers, <span>same controls.</span></h2>
-        <p className={styles['sr-lede']}>Every rep operates under the same ISO 9001 quality and ISO 27001 security
-          controls. The difference is experience and how much direction they need.</p>
-  
-        <div className={styles['sr-tiers']}>
-          <div className={styles['sr-tier']}>
-            <div className={styles['sr-tier-head']}><h3>Pro</h3><span className={styles['sr-tier-price']}><small>from</small><b>$8</b><em>/hr</em></span></div>
-            <p>Cleared our outbound track and certified in the tooling. Picks up your scripts, ICP, and
-              CRM conventions from day one.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Works any stack</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Outbound track certified</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Best value per seat</li>
-            </ul>
-          </div>
-          <div className={`${styles['sr-tier']} ${styles['sr-tier--expert']}`}>
-            <div className={styles['sr-tier-head']}><h3>Expert</h3><span className={styles['sr-tier-price']}><small>from</small><b>$11</b><em>/hr</em></span></div>
-            <p>More years carrying a number and a far more rigorous assessment path. Arrives fluent in your
-              kind of motion and needs the least direction.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Senior experience</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Rigorous assessments</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='m8.4 12.2 2.4 2.4 4.8-5' /></svg>Least supervision needed</li>
-            </ul>
-          </div>
-        </div>
+        <span className={styles['sr-kicker']}>Before you ask</span>
+        <h2 className={styles['sr-h2']} style={{ marginTop: "14px" }}>The questions that decide it.</h2>
   
         <div className={styles['sr-faq']}>
           <details>
@@ -256,6 +246,14 @@ export default function Page() {
     
   
     
+
+    <BlogRail
+      surface="white"
+      eyebrow="From the blog"
+      title={<>Reading for whoever <span>owns the number.</span></>}
+      lede="Playbooks on scoping the seat, ramping it, and keeping the pipeline honest — written by the people who source and manage these reps."
+    />
+
   <section className={styles['sr-close']}>
       <div className={styles['sr-wrap']}>
         <h2>See the reps before you commit to any of this.</h2>

@@ -29,7 +29,6 @@
      the "protected health information" answer is the paragraph to rewrite,
      and nothing else on the page needs to change.
      ============================================================ */
-
   .iv-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
   .iv-kicker { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--brand-blue); font-weight: 600; }

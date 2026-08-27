@@ -6,8 +6,6 @@ import styles from './HomeSections.module.css';
  * Server component: the three flagship service cards link to the ported
  * /services/* routes.
  */
-const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
-
 const SERVICES = [
   {
     href: '/services/sales-and-revenue',
@@ -44,6 +42,68 @@ const CHECK_ICON =
 export default function ServiceGrid() {
   return (
     <section className={styles.section} style={{ background: 'var(--blue-100)' }}>
+      {/* Decorative layers — ported verbatim from index.html (lines 1188–1192).
+          Kept inline to match the original exactly: gradient washes, the drifting
+          dot field, and the two circular stroke rings. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage:
+            'radial-gradient(ellipse 720px 420px at 12% -10%, rgba(247,244,236,0.85), transparent 65%), radial-gradient(ellipse 620px 520px at 92% 108%, rgba(44,123,229,0.20), transparent 62%)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: '-40px',
+          backgroundImage: 'radial-gradient(rgba(14,42,74,0.11) 1.6px, transparent 1.7px)',
+          backgroundSize: '22px 22px',
+          animation: 'dotDrift 34s linear infinite',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: -120,
+          right: -90,
+          width: 420,
+          height: 420,
+          borderRadius: 9999,
+          border: '1px solid rgba(14,42,74,0.10)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: -40,
+          right: -10,
+          width: 260,
+          height: 260,
+          borderRadius: 9999,
+          border: '1px dashed rgba(44,123,229,0.28)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 120,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.35))',
+          pointerEvents: 'none',
+        }}
+      />
       <div className={styles.wrap}>
         <span className={styles.eyebrow}>Our Services</span>
         <div className={styles.head}>
@@ -54,7 +114,10 @@ export default function ServiceGrid() {
               your goals within reach.
             </p>
             <div style={{ display: 'flex', gap: 12, marginTop: 22, flexWrap: 'wrap' }}>
-              <a href={BOOK} target="_blank" rel="noopener" className={styles.cta}>Book a Call</a>
+              <Link href="/services/extra-services" className={styles.cta}>
+                More services
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+              </Link>
               <Link href="/pricing" className={styles.cta}
                 style={{ background: '#fff', color: 'var(--brand-blue)', border: '1px solid rgba(81,141,224,0.45)' }}>
                 See pricing
@@ -91,13 +154,7 @@ export default function ServiceGrid() {
           ))}
         </div>
 
-        <div className={styles.ctaRow}>
-          <Link href="/services/extra-services" className={styles.cta}>
-            More services
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
-          </Link>
         </div>
-      </div>
     </section>
   );
 }

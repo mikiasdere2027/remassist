@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
+import SeatTiersSection from '@/components/services/SeatTiers';
+import InterviewRail from '@/components/services/InterviewRail';
+import { interviewsFor } from '@/lib/interviews';
+import BlogRail from '@/components/services/BlogRail';
 
 export const metadata: Metadata = {
   title: 'Finance & Accounting',
@@ -182,6 +186,15 @@ export default function Page() {
     
   
     
+
+    <InterviewRail
+      surface="paper"
+      eyebrow="Meet the bench"
+      title={<>Hear who would <span>keep your books.</span></>}
+      lede="Clips from our screening interviews — the same recordings that come with a shortlist, so you can judge the care and the questions before anyone is near your ledger."
+      seats={interviewsFor('finance-and-accounting')}
+    />
+
   <section className={styles['fn-section']}>
       <div className={styles['fn-wrap']}>
         <span className={styles['fn-kicker']}>Control</span>
@@ -221,44 +234,7 @@ export default function Page() {
     
   
     
-  <section className={styles['fn-section']} style={{ background: "var(--bg-marketing-paper)" }}>
-      <div className={styles['fn-wrap']}>
-        <span className={styles['fn-kicker']}>Rates</span>
-        <h2 className={styles['fn-h2']} style={{ marginTop: "14px" }}>Two tiers, <span>same controls.</span></h2>
-        <p className={styles['fn-lede']}>Published, hourly, per seat — the same two tiers as every other service
-          line. What differs here is the training, not the price.</p>
-  
-        <div className={styles['fn-tiers']}>
-          <div className={styles['fn-tier']}>
-            <div className={styles['fn-tier-head']}>
-              <h3>Pro</h3>
-              <span className={styles['fn-tier-price']}><small>from</small><b>$8</b><em>/hr</em></span>
-            </div>
-            <p>Cleared the core programme and works in your ledger from day one.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Suited to reconciliation, coding and the recurring cadence</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Picks up your ledger whatever the system</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Best value per seat</span></li>
-            </ul>
-          </div>
-          <div className={`${styles['fn-tier']} ${styles['fn-tier--expert']}`}>
-            <div className={styles['fn-tier-head']}>
-              <h3>Expert</h3>
-              <span className={styles['fn-tier-price']}><small>from</small><b>$11</b><em>/hr</em></span>
-            </div>
-            <p>More years on the job and a harder assessment path.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Suited to the close and the judgment calls</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Anything client- or auditor-facing</span></li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 12.5 4.5 4.5L19 7' /></svg><span>Needs the least direction</span></li>
-            </ul>
-          </div>
-        </div>
-        <p className={styles['fn-tier-note']}>Coverage drives the cost far more than seniority does — see the
-          <a href='/pricing'>full monthly grid</a>. A pilot of 30–60 days comes before any
-          full rollout, so you measure the work on your own books first.</p>
-      </div>
-    </section>
+  <SeatTiersSection />
   
   
     
@@ -297,6 +273,14 @@ export default function Page() {
     
   
     
+
+    <BlogRail
+      surface="paper"
+      eyebrow="From the blog"
+      title={<>Reading for whoever <span>signs off the month.</span></>}
+      lede="Playbooks on scoping the seat, ramping it, and keeping the controls intact — written by the people who source and manage these desks."
+    />
+
   <section className={styles['fn-close']}>
       <div className={styles['fn-wrap']}>
         <h2>See a week of your ledger handled first.</h2>

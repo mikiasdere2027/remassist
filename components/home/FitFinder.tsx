@@ -5,14 +5,32 @@ import shared from './HomeSections.module.css';
  * FitFinder — "Find out what your pod should look like" (index.html, Phase 02).
  * Section furniture only: the quiz itself is the same QuizLogic component
  * /qualify renders, per the de-duplication in MIGRATION-PLAN §8.
+ * The result itself is one portalled popup now, the same on both pages.
  */
 export default function FitFinder() {
   return (
     <section
       id="fit-finder"
-      style={{ background: 'var(--bg-marketing-paper)', borderTop: '1px solid var(--border-default)' }}
+      style={{
+        background: 'var(--bg-marketing-paper)',
+        borderTop: '1px solid var(--border-default)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
     >
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '96px 24px' }}>
+      {/* Drifting dot field — same effect as the Our Services section (index.html). */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: '-40px',
+          backgroundImage: 'radial-gradient(rgba(14,42,74,0.11) 1.6px, transparent 1.7px)',
+          backgroundSize: '22px 22px',
+          animation: 'dotDrift 34s linear infinite',
+          pointerEvents: 'none',
+        }}
+      />
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '96px 24px', position: 'relative', zIndex: 1 }}>
         <span className={shared.eyebrow}>Two-minute fit finder</span>
         <div className={shared.head}>
           <h2 className={shared.title}>Find out what your <span>pod should look like</span></h2>

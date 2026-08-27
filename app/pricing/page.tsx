@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
+import { SeatTiers } from '@/components/services/SeatTiers';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -31,36 +32,7 @@ export default function Page() {
           <span className={styles['pr-chip']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>ISO 9001 &amp; 27001 audited</span>
         </div>
   
-        <div className={styles['pr-tiers']}>
-          <div className={styles['pr-tier']}>
-            <span className={styles['pr-tier-tag']}>Best value</span>
-            <h3>Pro</h3>
-            <span className={styles['pr-price']}><small>from</small><b>$8</b><em>/hr</em></span>
-            <p>Fully trained and fit for work from day one. Pro seats clear our core programme and pick
-              up whatever software you run — CRM, helpdesk, billing, scheduling, or a tool you built
-              in-house.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Works on any stack</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Core programme certified before placement</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Best rate per seat</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Suited to repeatable, rules-based work</li>
-            </ul>
-          </div>
-  
-          <div className={`${styles['pr-tier']} ${styles['pr-tier--expert']}`}>
-            <span className={styles['pr-tier-tag']}>Most judgment</span>
-            <h3>Expert</h3>
-            <span className={styles['pr-price']}><small>from</small><b>$11</b><em>/hr</em></span>
-            <p>More years on the job and a far more rigorous assessment path. Experts arrive already
-              fluent in your kind of operation and need the least direction to get moving.</p>
-            <ul>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Senior experience</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Rigorous assessment path</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Least supervision needed</li>
-              <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Suited to client-facing, high-stakes work</li>
-            </ul>
-          </div>
-        </div>
+        <SeatTiers />
   
         <p className={styles['pr-lede']} style={{ marginTop: "26px", fontSize: "15px" }}>A pod can mix tiers — an Expert lead
           with Pro seats underneath is the most common shape we place, and the cheapest way to buy senior

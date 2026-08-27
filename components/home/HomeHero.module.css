@@ -99,19 +99,27 @@
 .chip:hover { z-index: 70; }   /* hovered chip over its neighbours */
 @keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-/* orbit chip: white card, blue play disc, label underneath */
+/* orbit chip: the artboard's square card, wearing the .eyebrow's background —
+   its glass fill, its white border and its 6px blur, character for character.
+   Everything else is the square as it was: play disc over a centred label. */
 .chipCard { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   /* fixed height, not min-height: "Watch Customer Service" runs to three lines
      while the others take two, and a ragged orbit reads as a bug */
-  width: 108px; height: 108px; box-sizing: border-box; padding: 12px 9px; background: #fff; border-radius: 12px;
+  width: 108px; height: 108px; box-sizing: border-box; padding: 12px 9px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   text-decoration: none; box-shadow: 0 14px 30px -10px rgba(0, 5, 67, 0.45);
-  transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out); }
-.chipCard:hover { transform: translateY(-3px); box-shadow: 0 20px 38px -10px rgba(0, 5, 67, 0.55);
+  transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out),
+    background 150ms var(--ease-out), border-color 150ms var(--ease-out); }
+.chipCard:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.5); box-shadow: 0 20px 38px -10px rgba(0, 5, 67, 0.55);
   text-decoration: none; }
+/* white disc, blue triangle: on glass the old brand-blue disc would sink into
+   the hero ramp behind it, and the label can no longer be navy either */
 .chipPlay { width: 34px; height: 34px; flex: none; display: grid; place-items: center;
-  border-radius: 50%; background: var(--brand-blue); }
-.chipPlay svg { width: 13px; height: 13px; margin-left: 2px; fill: #fff; }
-.chipLabel { font-size: 11.5px; font-weight: 700; line-height: 1.25; text-align: center; color: var(--brand-navy); }
+  border-radius: 50%; background: #fff; }
+.chipPlay svg { width: 13px; height: 13px; margin-left: 2px; fill: var(--brand-blue); }
+.chipLabel { font-size: 11.5px; font-weight: 700; line-height: 1.25; text-align: center; color: #fff; }
 
 /* ---- hover card on the orbit thumbnails -------------------------------- */
 .pop { position: absolute; top: 122px; left: 50%; transform: translateX(-50%); z-index: 60;

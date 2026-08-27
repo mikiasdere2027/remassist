@@ -3,11 +3,24 @@
    popups sit in the same flow and should not look like different products. */
 .overlay { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center;
   justify-content: center; padding: 20px; }
-.backdrop { position: absolute; inset: 0; background: rgba(0, 5, 67, 0.55); backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px); opacity: 0; transition: opacity 0.28s ease; }
+/* Scrim identical to the fit-finder overlay (QuizLogic .overlay): the same
+   rgba(0, 5, 67, .55) over a 2px blur. Declare `backdrop-filter` ALONE — with
+   `-webkit-backdrop-filter` listed after it, lightningcss collapsed the pair
+   and emitted neither, so this backdrop shipped with no blur at all. Where the
+   prefix is needed it goes first, as MobileNav does. */
+.backdrop { position: absolute; inset: 0; background: rgba(0, 5, 67, 0.55);
+  backdrop-filter: blur(2px); opacity: 0; transition: opacity 0.28s ease; }
 .visible .backdrop { opacity: 1; }
+/* Same box as the fit-finder modal: width min(1180px, 100%) inside the 20px
+   overlay padding, and the same calc(100vh - 40px) ceiling. That modal is
+   content-height under the ceiling; this one cannot be, because the Calendly
+   iframe has no intrinsic height. Measured against it: the quiz modal renders
+   680px at a 720px viewport (its cap) and 747px at 1000px (content-bound), so
+   760px under the shared ceiling tracks it within ~13px at any height —
+   taking the ceiling itself would sit 200px taller on a big screen. */
 .dialog { position: relative; display: grid; grid-template-columns: minmax(300px, 380px) 1fr;
-  width: min(1180px, 100%); height: min(760px, calc(100vh - 40px)); background: #fff; border-radius: 20px;
+  width: min(1180px, 100%); height: min(760px, calc(100vh - 40px));
+  max-height: calc(100vh - 40px); background: #fff; border-radius: 20px;
   overflow: hidden; box-shadow: 0 60px 120px -40px rgba(0, 5, 67, 0.6); opacity: 0;
   transform: translateY(14px) scale(0.985); transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .visible .dialog { opacity: 1; transform: none; }
@@ -64,13 +77,19 @@
   border-top-color: var(--brand-blue); animation: bookSpin 0.8s linear infinite; display: block; }
 @keyframes bookSpin { to { transform: rotate(360deg); } }
 
-.close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 38px; height: 38px;
-  border-radius: 50%; border: 1px solid var(--border-default); background: #fff; color: var(--ink-600);
+/* The fit-finder modal's close button (QuizLogic .modalClose): 36px, ink-50
+   disc, navy glyph, solid brand-blue on hover. Inset to 22/26 so it lands where
+   that one does — the quiz button is sticky inside 28px/32px of modal padding
+   with a -6px pull, which this dialog has no padding to reproduce. */
+.close { position: absolute; top: 22px; right: 26px; z-index: 2; width: 36px; height: 36px;
+  border-radius: 50%; border: 1px solid var(--border-default); background: var(--ink-50);
+  color: var(--brand-navy); font-size: 20px; line-height: 1;
   display: grid; place-items: center; cursor: pointer; transition: background 140ms, color 140ms, border-color 140ms; }
-.close:hover { background: var(--blue-50); color: var(--brand-blue); border-color: var(--brand-blue); }
+.close:hover { background: var(--brand-blue); border-color: var(--brand-blue); color: #fff; }
 
 @media (max-width: 780px) {
   .dialog { grid-template-columns: 1fr; grid-template-rows: auto 1fr; overflow-y: auto; }
+  .close { top: 14px; right: 14px; }
   .brand { padding: 40px 28px 30px; }
   .brand img, .brand .logo { height: 56px; }
   .mark { width: 190px; left: -40px; bottom: -64px; }

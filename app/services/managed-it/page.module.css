@@ -8,7 +8,6 @@
      (SVG pathLength pulses + conic halo) — an animated hero is the standard
      here, not the exception; see .it-lattice below.
      ============================================================ */
-
   .it-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
   .it-kicker { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--brand-blue); font-weight: 600; }

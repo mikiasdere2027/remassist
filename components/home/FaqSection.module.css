@@ -101,19 +101,27 @@
   font-weight: 600;
   font-size: 16px;
 }
-.chev {
+/* Plus/minus, copied from the service pages' .xx-faq summary::after
+   (app/services/sales-and-revenue/page.module.css) so every accordion on the
+   site carries the same control. This one is a button rather than a
+   <summary>, so the glyph hangs off the span and swaps on aria-expanded. */
+.plus {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: var(--brand-blue);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), background 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  background: rgba(81, 141, 224, 0.10);
+  color: var(--brand-blue);
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1;
+  transition: background 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), color 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.q[aria-expanded='true'] .chev { background: var(--brand-navy); transform: rotate(180deg); }
+.plus::after { content: "+"; }
+.q[aria-expanded='true'] .plus { background: var(--brand-blue); color: #fff; }
+.q[aria-expanded='true'] .plus::after { content: "\2212"; }
 
 .panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .panelOpen { grid-template-rows: 1fr; }
@@ -143,5 +151,5 @@
   .sealB { width: 128px; margin-left: -26px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .chev, .panel { transition: none; }
+  .plus, .panel { transition: none; }
 }

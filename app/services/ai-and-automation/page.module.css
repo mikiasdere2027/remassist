@@ -14,7 +14,6 @@
      because the model is unsure. No JavaScript anywhere on this page: the CSS
      keyframes and the line share one 12s clock.
      ============================================================ */
-
   .ai-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
   .ai-kicker { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--brand-blue); font-weight: 600; }

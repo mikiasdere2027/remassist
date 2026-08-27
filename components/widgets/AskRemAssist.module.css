@@ -1,61 +1,258 @@
-/* "Ask RemAssist" concierge — ported from assets/ask-remassist.js (Phase 02). */
-.panel { position: fixed; right: 20px; bottom: 84px; z-index: 1000; width: min(360px, calc(100vw - 40px));
-  background: #fff; border: 1px solid var(--border-default); border-radius: 16px; overflow: hidden;
-  box-shadow: 0 30px 80px -20px rgba(0, 5, 67, 0.5); display: flex; flex-direction: column; }
-.head { display: flex; align-items: center; gap: 12px; padding: 14px 16px;
-  background: linear-gradient(160deg, #326dda, #000543 70%); color: #fff; }
-.avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.18);
-  display: grid; place-items: center; font-weight: 700; font-size: 15px; }
-.headTitle { font-size: 15px; font-weight: 700; }
-.headSub { font-size: 11.5px; opacity: 0.8; }
-.close { margin-left: auto; background: none; border: 0; color: #fff; font-size: 22px; cursor: pointer;
-  line-height: 1; padding: 0 4px; }
-.body { padding: 14px 16px; height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-.bot { align-self: flex-start; background: var(--blue-50); border: 1px solid var(--border-default);
-  border-radius: 12px 12px 12px 4px; padding: 9px 12px; font-size: 13.5px; line-height: 1.55;
-  color: var(--ink-900); max-width: 85%; white-space: pre-line; }
-.user { align-self: flex-end; background: var(--brand-blue); color: #fff; border-radius: 12px 12px 4px 12px;
-  padding: 9px 12px; font-size: 13.5px; max-width: 85%; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.chip { font-size: 12px; font-weight: 600; color: var(--brand-blue); background: #fff;
-  border: 1px solid rgba(81, 141, 224, 0.4); border-radius: 999px; padding: 6px 11px; cursor: pointer;
-  transition: background 140ms; }
-.chip:hover { background: rgba(81, 141, 224, 0.08); }
-.foot { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border-default); }
-.input { flex: 1; min-width: 0; border: 1px solid var(--border-default); border-radius: 999px;
-  padding: 9px 14px; font: inherit; font-size: 13.5px; }
-.input:focus { outline: none; border-color: var(--brand-blue); }
-.sendBtn { background: var(--brand-blue); border: 0; color: #fff; border-radius: 50%; width: 36px;
-  height: 36px; cursor: pointer; font-size: 15px; }
-.links { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px;
-  border-top: 1px solid var(--border-default); font-size: 11.5px; color: var(--ink-500); }
-.links a { color: var(--brand-blue); text-decoration: none; }
-/* Launcher — ported from assets/ask-remassist.js (#rem-ask-launch): a gradient
-   ring holding the Rem mark on a white disc, with a presence dot and a slow
-   ping. The first port rendered a flat blue circle with the word "Ask", which
-   is not the mark. */
-.launcher { position: fixed; right: 20px; bottom: 20px; z-index: 1001;
+/* "Ask RemAssist" concierge — chrome matched 1:1 to the static widget in
+   assets/ask-remassist.js (the design index.html ships), with the button count
+   deliberately cut back: at most two answer links and three chips per reply,
+   no standing three-button handoff row, and no duplicate contact strip under
+   the composer. Colours are literal rather than tokenised so the two
+   implementations cannot drift apart. */
+
+.root {
+  position: fixed; right: 24px; bottom: 24px; z-index: 90000;
+  font-size: 14px; line-height: 1.5;
+}
+.root *, .root *::before, .root *::after { box-sizing: border-box; }
+
+/* ---- launcher ---------------------------------------------------------- */
+.launcher {
+  position: relative; display: flex; align-items: center; justify-content: center;
   width: 62px; height: 62px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
   background: linear-gradient(150deg, #34bdf0 0%, #518de0 55%, #000543 100%);
   box-shadow: 0 14px 34px -8px rgba(0, 5, 67, 0.55);
-  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 200ms, opacity 200ms;
+}
 .launcher:hover { box-shadow: 0 18px 40px -8px rgba(0, 5, 67, 0.6); transform: translateY(-2px); }
 .launcher:focus-visible { outline: 3px solid #34bdf0; outline-offset: 3px; }
+/* The panel sits over the launcher, exactly as the static widget does. */
+.launcherHidden { opacity: 0; transform: scale(0.7); pointer-events: none; }
 
-/* white disc holding the mark */
-.launcherFace { position: absolute; inset: 5px; border-radius: 50%; background: #fff;
-  display: grid; place-items: center; overflow: hidden; }
+.launcherFace {
+  position: absolute; inset: 5px; border-radius: 50%; background: #fff;
+  display: grid; place-items: center; overflow: hidden;
+}
 .launcherFace img { width: 66%; height: 66%; object-fit: contain; display: block; }
-/* presence dot */
-.launcherDot { position: absolute; top: 2px; right: 2px; width: 15px; height: 15px;
-  border-radius: 50%; background: #25d366; border: 2.5px solid #fff; }
-/* slow outward ping */
-.launcherPing { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid #34bdf0;
-  opacity: 0; animation: remAskPing 2.8s ease-out infinite; pointer-events: none; }
+.launcherDot {
+  position: absolute; top: 2px; right: 2px; width: 15px; height: 15px;
+  border-radius: 50%; background: #25d366; border: 2.5px solid #fff;
+}
+.launcherPing {
+  position: absolute; inset: -4px; border-radius: 50%; border: 2px solid #34bdf0;
+  opacity: 0; animation: remAskPing 2.8s ease-out infinite; pointer-events: none;
+}
 @keyframes remAskPing {
-  0% { opacity: 0.7; transform: scale(0.92); }
+  0%   { opacity: 0.7; transform: scale(0.92); }
   70%, 100% { opacity: 0; transform: scale(1.28); }
 }
-.launcherClose { position: relative; z-index: 1; font-size: 26px; line-height: 1; color: #fff; }
-@media (prefers-reduced-motion: reduce) { .launcherPing { animation: none; } }
+
+/* ---- panel ------------------------------------------------------------- */
+.panel {
+  position: absolute; right: 0; bottom: 0;
+  width: 384px; max-width: calc(100vw - 32px);
+  height: min(624px, calc(100vh - 130px));
+  display: flex; flex-direction: column;
+  background: #fff; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 34px 80px -24px rgba(0, 5, 67, 0.5), 0 0 0 1px rgba(0, 5, 67, 0.06);
+  animation: remAskPanelIn 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: 100% 100%;
+}
+@keyframes remAskPanelIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---- header ------------------------------------------------------------ */
+.head {
+  position: relative; flex: none; display: flex; align-items: center; gap: 12px;
+  padding: 16px 14px 16px 18px; overflow: hidden; color: #fff;
+  background: linear-gradient(135deg, #326dda 0%, #000543 78%);
+}
+.head::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.4;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1.2px, transparent 1.3px);
+  background-size: 13px 13px;
+}
+.head > * { position: relative; }
+.face {
+  width: 42px; height: 42px; flex: none; border-radius: 50%; background: #fff;
+  display: grid; place-items: center; overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.face img { width: 64%; height: 64%; object-fit: contain; display: block; }
+.id { min-width: 0; flex: 1; }
+.id strong { display: block; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.id span {
+  display: flex; align-items: center; gap: 6px; margin-top: 2px;
+  font-size: 11.5px; color: rgba(255, 255, 255, 0.78);
+}
+.id span::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; background: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.22);
+}
+.icon {
+  width: 34px; height: 34px; flex: none; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.12);
+  color: #fff; cursor: pointer; text-decoration: none;
+  transition: background 150ms, transform 150ms;
+}
+.icon:hover { background: rgba(255, 255, 255, 0.26); transform: scale(1.06); }
+.icon:focus-visible { outline: 2px solid #34bdf0; outline-offset: 2px; }
+
+/* ---- log --------------------------------------------------------------- */
+.log {
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  padding: 18px 16px 14px; background: #f5f7fa;
+  display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin;
+}
+.log::-webkit-scrollbar { width: 8px; }
+.log::-webkit-scrollbar-thumb { background: #d7dde8; border-radius: 8px; border: 2px solid #f5f7fa; }
+
+.row {
+  display: flex; gap: 9px; align-items: flex-end;
+  animation: remAskIn 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes remAskIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.rowMe { flex-direction: row-reverse; }
+.av {
+  width: 28px; height: 28px; flex: none; border-radius: 50%; background: #fff;
+  display: grid; place-items: center; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 5, 67, 0.14);
+}
+.av img { width: 66%; height: 66%; object-fit: contain; display: block; }
+.bub {
+  max-width: 87%; padding: 12px 14px; border-radius: 16px; border-bottom-left-radius: 5px;
+  background: #fff; color: #000543; border: 1px solid rgba(0, 5, 67, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 5, 67, 0.07);
+}
+.rowMe .bub {
+  background: linear-gradient(140deg, #0f8ffe, #326dda); color: #fff; border: 0;
+  border-radius: 16px; border-bottom-right-radius: 5px;
+  box-shadow: 0 6px 16px -6px rgba(50, 109, 218, 0.6);
+}
+.bub p { margin: 0 0 8px; font-size: 13.5px; }
+.bub p:last-child { margin-bottom: 0; }
+
+/* welcome card — full width, no avatar, leads with a headline */
+.rowHero .bub {
+  max-width: 100%; width: 100%; padding: 18px 17px; border-bottom-left-radius: 16px;
+}
+.heroTitle {
+  margin: 0 0 7px; font-size: 20px; line-height: 1.22; font-weight: 700;
+  letter-spacing: -0.02em; color: #000543;
+}
+/* Beats `.bub p` on specificity, which would otherwise set the size. */
+.bub .heroText { margin: 0; font-size: 13px; line-height: 1.55; color: #667180; }
+
+.title {
+  margin: 0 0 6px; font-size: 14px; font-weight: 700; color: #000543; letter-spacing: -0.01em;
+}
+.list { margin: 0; padding: 0; list-style: none; }
+.list li {
+  position: relative; margin: 0 0 6px; padding-left: 15px; font-size: 13.5px; line-height: 1.5;
+}
+.list li:last-child { margin-bottom: 0; }
+.list li::before {
+  content: ""; position: absolute; left: 2px; top: 8px; width: 5px; height: 5px;
+  border-radius: 50%; background: #518de0;
+}
+
+/* ---- answer links — two at most, the first one solid ------------------- */
+.links { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+.links a {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px;
+  font-size: 12.5px; font-weight: 600; text-decoration: none;
+  background: #eef4ff; color: #1c56c4; border: 1px solid #d9e6ff;
+  transition: background 150ms, transform 150ms;
+}
+.links a:hover { background: #e0ecff; transform: translateY(-1px); color: #1c56c4; }
+.links a:first-child { background: #518de0; color: #fff; border-color: #518de0; }
+.links a:first-child:hover { background: #0070d8; color: #fff; }
+.links a svg { flex: none; opacity: 0.85; }
+
+/* ---- contact actions on the welcome card ------------------------------- */
+/* The static widget's handoff row (.rem-ask-hand), kept on the welcome card
+   only rather than repeated under every single answer. */
+.actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+.actions a {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px;
+  font-size: 12px; font-weight: 600; text-decoration: none;
+  background: #fff; color: #000543; border: 1px solid rgba(0, 5, 67, 0.12);
+  transition: background 150ms, border-color 150ms, transform 150ms;
+}
+.actions a:hover {
+  transform: translateY(-1px); border-color: rgba(0, 5, 67, 0.25); color: #000543;
+}
+.actions a svg { flex: none; opacity: 0.7; }
+/* The booking slot is the one action worth the accent. */
+.actions .primary {
+  background: #518de0; color: #fff; border-color: #518de0;
+}
+.actions .primary:hover { background: #0070d8; color: #fff; }
+.actions .primary svg { opacity: 0.9; }
+.actions .tel { border-color: #cfe0ff; color: #1c56c4; }
+.actions .tel:hover { background: #eef4ff; color: #1c56c4; }
+
+/* ---- chips ------------------------------------------------------------- */
+.chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 2px 2px 37px; }
+.chipsHero { padding-left: 2px; }
+.chips button {
+  padding: 8px 12px; border-radius: 999px; border: 1px solid #cfe0ff;
+  background: #fff; color: #1c56c4; font-family: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: background 150ms, transform 150ms, border-color 150ms;
+}
+.chips button:hover { background: #eef4ff; transform: translateY(-1px); }
+.chips button:focus-visible { outline: 2px solid #518de0; outline-offset: 2px; }
+
+/* ---- typing ------------------------------------------------------------ */
+.typing { display: flex; gap: 4px; padding: 14px; }
+.typing i {
+  width: 7px; height: 7px; border-radius: 50%; background: #b9c3d4;
+  animation: remAskDot 1.15s ease-in-out infinite;
+}
+.typing i:nth-child(2) { animation-delay: 160ms; }
+.typing i:nth-child(3) { animation-delay: 320ms; }
+@keyframes remAskDot {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* ---- composer ---------------------------------------------------------- */
+.bar {
+  flex: none; display: flex; align-items: flex-end; gap: 8px;
+  padding: 12px 14px 14px; background: #fff; border-top: 1px solid rgba(0, 5, 67, 0.07);
+}
+/* 48px, not 46: border-box height must clear padding + one line + borders, or
+   an empty textarea overflows by 2px and shows a scrollbar. */
+.input {
+  flex: 1; min-width: 0; height: 48px; max-height: 120px; padding: 13px;
+  border: 1px solid #dbe1ea; border-radius: 14px; background: #f7f9fc;
+  font-family: inherit; font-size: 13.5px; line-height: 1.45; color: #000543;
+  resize: none; overflow-y: auto; scrollbar-width: thin;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.input::-webkit-scrollbar { width: 6px; }
+.input::-webkit-scrollbar-button { display: none; }
+.input::-webkit-scrollbar-thumb { background: #d7dde8; border-radius: 6px; }
+.input:focus {
+  outline: 0; border-color: #518de0; background: #fff;
+  box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.13);
+}
+.send {
+  width: 42px; height: 42px; flex: none; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: #518de0; color: #fff; cursor: pointer;
+  transition: background 150ms, transform 150ms;
+}
+.send:hover { background: #0070d8; transform: scale(1.05); }
+.send:disabled { background: #c8d2e0; cursor: default; transform: none; }
+
+/* ---- phones — full screen, as the static widget does ------------------- */
+@media (max-width: 520px) {
+  .root { right: 16px; bottom: 16px; }
+  .panel {
+    position: fixed; inset: 0; width: 100vw; max-width: none;
+    height: 100dvh; border-radius: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .root *, .root *::before, .root *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

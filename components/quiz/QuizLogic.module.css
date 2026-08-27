@@ -63,7 +63,6 @@
   font-weight: 700; line-height: 1.18; letter-spacing: -0.022em; color: var(--brand-navy); }
 .resBlurb { margin: 14px 0 0; font-size: 16px; line-height: 1.72; color: var(--ink-600); max-width: 66ch; }
 
-.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
 .tile { background: var(--bg-marketing-paper); border: 1px solid var(--border-default);
   border-radius: 13px; padding: 17px 18px; }
 .tile span { display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
@@ -203,7 +202,4 @@
 
 @media (max-width: 820px) {
   .modalGrid { grid-template-columns: 1fr; }
-}
-@media (max-width: 480px) {
-  .tiles { grid-template-columns: 1fr; }
 }
