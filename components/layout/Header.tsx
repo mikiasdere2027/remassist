@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import MobileNav from './MobileNav';
 import styles from './Header.module.css';
 
 /**
@@ -153,6 +154,9 @@ export default function Header() {
           <Link className={`${styles['nav-link']} ${styles['nav-secondary']}`} href="/qualify">Qualify</Link>
           <a className={styles['nav-cta']} href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">Book a Call</a>
         </nav>
+
+        {/* Below 820px the nav row above is hidden and this takes over. */}
+        <MobileNav />
       </div>
     </header>
   );

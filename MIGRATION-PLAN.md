@@ -64,8 +64,12 @@ Check a real browser at 390px, and check that images and links resolve.
    it back is a separate, smaller job.
 2. **Run the migration.** `npm run db:migrate` then `npm run db:seed`, with real credentials.
    Postgres 18 is installed locally but needs a password. See `.env.example`.
-3. **Mobile navigation.** The header currently scrolls sideways inside itself — containment,
-   not a design. A hamburger + drawer is the expected pattern but is a design decision.
+3. ~~**Mobile navigation.**~~ **Built 2026-08-27: hamburger + drawer** below 820px, replacing the
+   sideways-scrolling containment. The desktop row and its pure-CSS mega panels are untouched —
+   `MobileNav` is a separate client component, so `Header` stays a server component and the
+   desktop nav still works with JavaScript off. The drawer is the first place the service
+   directory has ever been reachable on a phone. Worth a look before cutover, since it is new
+   design rather than a port.
 4. **The hero video.** 9.1 MB, 108 seconds, 640×360, for a 420px circle. Autoplay is now
    skipped for reduced-motion and Save-Data visitors, but it is still ~18× the rest of the page
    for everyone else. Needs a re-encode and ideally a poster frame.

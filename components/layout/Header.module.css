@@ -105,32 +105,11 @@
   .nav-caret, .nav-mega { display: none; }
   .nav-secondary { display: none; }
 }
-/* Below the tablet break the nav row is ~366px of links next to a ~120px
-   logo, which pushed every page 134px wider than a 390px viewport — the whole
-   site scrolled sideways on a phone. The artboard has the same gap (it was
-   authored desktop-only and never got a mobile nav), so this is inherited
-   rather than a porting regression.
-   
-   This is the containment fix, not a redesign: the row shrinks and scrolls
-   inside the header instead of pushing the document. Every link stays
-   reachable and no new markup or JS is involved. A proper mobile nav
-   (hamburger + drawer) is a design decision, not a bug fix — see the handover
-   note. */
+/* Below the tablet break the desktop row is replaced outright by the drawer
+   in MobileNav. It used to scroll sideways inside the header — containment for
+   a row that is ~366px of links next to a ~120px logo, which pushed every page
+   134px past a 390px viewport. The artboards never had a mobile nav at all, so
+   that gap was inherited rather than introduced by the port. */
 @media (max-width: 820px) {
-  .nav-row {
-    flex: 1 1 auto;
-    min-width: 0;               /* required — flex items default to min-content */
-    gap: 16px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .nav-row::-webkit-scrollbar { display: none; }
-  .nav-link { font-size: 14px; }
-  .nav-cta { padding: 9px 14px; font-size: 14px; }
-}
-@media (max-width: 480px) {
-  .nav-row { gap: 14px; }
-  .nav-cta { padding: 8px 12px; font-size: 13px; }
+  .nav-row { display: none; }
 }
