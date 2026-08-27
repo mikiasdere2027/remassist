@@ -185,6 +185,10 @@
   --fg-secondary: var(--ink-600);
   --fg-tertiary:  var(--ink-500);
   --fg-on-dark:   #F4F6FB;
+  /* Secondary text on the navy surfaces. The --ink-* greys are all #667180,
+     which is tuned for light backgrounds — on #000543 it measures 3.84:1 and
+     fails AA. This is the same role at 8.12:1. Measured, not eyeballed. */
+  --fg-on-dark-muted: #A6A8BD;
   --fg-on-blue:   #FFFFFF;
   --fg-link:      var(--blue-600);
 
@@ -270,6 +274,12 @@
    ============================================================ */
 
 html, body {
+  /* Long unbreakable tokens — the legal pages carry bare email addresses and
+     URLs (support@remassistance.com measures 240px), which pushed
+     /terms-of-service 235px past a 390px viewport. `break-word` only breaks a
+     word that would otherwise overflow its line box, and unlike `anywhere` it
+     does not change min-content sizing, so no grid or flex track shifts. */
+  overflow-wrap: break-word;
   font-family: var(--font-sans);
   font-size: var(--fs-body);
   line-height: var(--lh-normal);
@@ -366,3 +376,41 @@ code, kbd, pre, samp {
   outline-offset: 2px;
   border-radius: var(--r-sm);
 }
+/* ============================================================
+   Motion — site-wide reduced-motion baseline.
+   Ported out of the blog post artboard's page CSS: a document-level
+   rule cannot live in a CSS Module (a pure selector needs a local
+   class), and it was never page-specific to begin with.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* ============================================================
+   Skip link — the header mega-menu puts ~30 nav links ahead of
+   the content, so a keyboard or screen-reader user otherwise
+   tabs the whole navigation on every page before reaching it.
+   Off-screen until focused, then a normal control.
+   ============================================================ */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -60px;                 /* out of view, still focusable */
+  z-index: 100;
+  padding: 12px 20px;
+  border-radius: 0 0 8px 8px;
+  background: var(--brand-navy);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 150ms var(--ease-out);
+}
+.skip-link:focus {
+  top: 0;
+  text-decoration: none;
+  color: #fff;
+}
+/* The wrapper is only a focus target for the skip link; it must not
+   draw a ring of its own when focused programmatically. */
+#main-content:focus { outline: none; }
