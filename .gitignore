@@ -15,3 +15,6 @@ node_modules/
 .env*
 # ...but the documented template is meant to be committed
 !.env.example
+
+# Dev server log
+dev.log
