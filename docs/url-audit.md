@@ -1,7 +1,7 @@
 # §3.1 URL Audit — remassistance.com (blocking prerequisite)
 
-> **Status:** initial inventory collected (2026-08-25). Open items below need
-> business/client input before the redirect map (§11.3) can be finalized.
+> **Status:** inventory collected (2026-08-25); destinations resolved and the
+> redirect map filled (2026-08-26). One open item remains — see §4.
 >
 > This audit sizes Phase 01 (port scope) and feeds `lib/redirects.ts` (Phase 05).
 
@@ -80,9 +80,19 @@ must **not** alter or drop the MX record, or email breaks.
       if Cloudflare proxies, its "orange cloud" behavior changes the cutover.
 - [ ] **Inbound campaign URLs / QR codes / printed media** that must not move to
       a 301 — these are business-owned, not discoverable via sitemap.
-- [ ] **Which legacy WordPress pages have a true Next.js equivalent** vs. which
+- [x] **Which legacy WordPress pages have a true Next.js equivalent** vs. which
       map to the nearest relevant parent (rule: never blanket-redirect to `/`;
-      §11.3).
+      §11.3). → **Resolved 2026-08-26** by loading each live page and mapping it
+      in `lib/redirects.ts`. `/saas/`, `/rem-ai/`, `/thank-you-page/` and
+      `/job-form/` turned out to be empty Elementor stubs (nav + footer only),
+      which is why two go to the nearest topical parent and two are left to
+      404. Asserted in `lib/redirects.test.ts`.
+- [ ] **Does `/careers/` come back?** It is the one legacy page with real
+      content and no Next.js equivalent (its listings look like Elementor demo
+      copy — "Head of Payment Operations"). Currently left to 404 rather than
+      dumping applicants on a sales page. Decide: rebuild it, point it at a
+      third-party job board, or keep the 404. `/job-form/` follows whatever
+      `/careers/` does.
 
 ## 5. Feed into the project
 

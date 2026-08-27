@@ -1,9 +1,11 @@
 import type { NextConfig } from 'next';
+import { redirects as legacyRedirects } from './lib/redirects';
 
 /**
  * Rem Assist — Next.js app config.
- * Phase 00: standalone output for the VPS target, Nginx-owned compression,
- * and security headers. The 301 redirect map (§11.3) lands in Phase 05.
+ * Standalone output for the VPS target, Nginx-owned compression, security
+ * headers, and the §11.3 legacy redirect map (sourced from lib/redirects.ts so
+ * one list feeds both the server and the CI assertion).
  */
 const config: NextConfig = {
   output: 'standalone',
@@ -21,6 +23,17 @@ const config: NextConfig = {
   },
   images: {
     formats: ['image/avif', 'image/webp'],
+  },
+  async redirects() {
+    // `permanent: true` makes Next emit 308, not the 301 §11.3 specifies. Both
+    // are permanent and Google treats them alike, but 301 is what older
+    // crawlers and link-checkers handle without argument — and these rules
+    // exist for exactly that long tail. Map the flag to an explicit status.
+    return legacyRedirects.map(({ source, destination, permanent }) => ({
+      source,
+      destination,
+      statusCode: permanent ? (301 as const) : (302 as const),
+    }));
   },
   async headers() {
     return [
