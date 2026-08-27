@@ -110,14 +110,13 @@ export default function Footer() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
               <img
                 src="/images/ISO_9001-2015.svg"
-                alt="ISO 9001:2015 certified"
+                alt="ISO 9001 certified"
                 style={{ height: 44, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }}
               />
-              <img
-                src="/images/ISO_27001-2022.svg"
-                alt="ISO 27001:2022 certified"
-                style={{ height: 44, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }}
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3, color: '#fff' }}>ISO 9001/27001</span>
+                <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: 'var(--brand-blue)' }}>Certified</span>
+              </div>
             </div>
           </div>
 
@@ -125,10 +124,11 @@ export default function Footer() {
             <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
               Services
             </div>
-            <FooterLink href="/services/customer-service-agents">Customer Service Agents</FooterLink>
+            <FooterLink href="/services/sales-and-revenue">Sales &amp; Revenue</FooterLink>
+            <FooterLink href="/services/customer-service-agents">Customer Service<br />Agents</FooterLink>
+            <FooterLink href="/services/finance-and-accounting">Finance &amp; Accounting</FooterLink>
             <FooterLink href="/services/gtm-teams">GTM Teams</FooterLink>
             <FooterLink href="/services/sdr-as-a-service">SDR as a Service</FooterLink>
-            <FooterLink href="/services/extra-services">Extra Services</FooterLink>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

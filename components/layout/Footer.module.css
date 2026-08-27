@@ -1,6 +1,6 @@
 /* Footer grid — ported from partials/footer.html (<style> block).
    Scoped as a CSS module to match the header's approach. */
-.dc-footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 40px;
+.dc-footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 0.7fr 1.25fr; gap: 40px;
   padding-bottom: 40px; border-bottom: 1px solid var(--navy-700); }
 @media (max-width: 900px) {
   .dc-footer-grid { grid-template-columns: 1fr 1fr; gap: 34px 28px; }
