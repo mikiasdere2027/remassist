@@ -31,10 +31,22 @@ export function isDatabaseConfigured(): boolean {
 export function getDb() {
   if (!process.env.DATABASE_URL) throw new DatabaseUnavailableError();
   if (!client) {
+    /* Pool size depends on how many processes there are.
+       On the VPS there is exactly one Node instance (§2.2 rules out cluster
+       mode), so 10 connections against Postgres's default 100 is comfortable.
+       On serverless every warm function instance holds its own pool, so 10
+       each exhausts a small database quickly — Neon's free tier allows far
+       fewer than 100. Keep it to one and let the platform's own pooler
+       (Neon's -pooler endpoint, PgBouncer) do the multiplexing. */
+    const serverless = Boolean(process.env.VERCEL);
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      max: 10,                    // single Node instance; Postgres default is 100
-      idleTimeoutMillis: 30_000,
+      max: serverless ? 1 : 10,
+      idleTimeoutMillis: serverless ? 10_000 : 30_000,
+      // Neon and most hosted Postgres require TLS; local dev usually does not.
+      ...(/\bsslmode=require\b/.test(process.env.DATABASE_URL)
+        ? { ssl: { rejectUnauthorized: true } }
+        : {}),
     });
     client = drizzle(pool, { schema });
   }
