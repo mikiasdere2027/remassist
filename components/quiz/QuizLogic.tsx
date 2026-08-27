@@ -104,12 +104,29 @@ export default function QuizLogic({ popup = false }: { popup?: boolean }) {
        this with `step < QUIZ.length - 1` left the last answer on the last
        question forever, so `done` never flipped and the result screen — the
        entire point of the page — was unreachable. The 432-case parity test
-       covers score() arithmetic, not the flow, so it stayed green throughout. */
-    setStep(step + 1);
+       covers score() arithmetic, not the flow, so it stayed green throughout.
+
+       One exception: once every question has an answer, go straight to the
+       result. On a first run that is the same as step + 1, but after editing a
+       single answer it honours what the chip row offers — "tap any to change it
+       and come straight back" — instead of marching through the rest again. */
+    const complete = QUIZ.every((q) => next[q.id] != null);
+    setStep(complete ? QUIZ.length : step + 1);
   }
 
   function back() {
     if (step > 0) setStep(step - 1);
+  }
+
+  /* The artboard's `quizRestart`: back to an empty first question. Clearing
+     `reported` too, so the fresh run counts as its own lead rather than being
+     swallowed as a duplicate of the one just abandoned. */
+  function restart() {
+    setAnswers({});
+    setStep(0);
+    setPopupOpen(false);
+    setCapture('idle');
+    reported.current = false;
   }
 
   function changeAnswer(id: keyof Answers) {
@@ -381,9 +398,11 @@ export default function QuizLogic({ popup = false }: { popup?: boolean }) {
                 Book a free consult
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
               </a>
-              <button type="button" className={`${styles.cta} ${styles.quiet}`} onClick={share}>
+              <button type="button" className={`${styles.cta} ${styles.secondary}`} onClick={share}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17H7A5 5 0 0 1 7 7h2" /><path d="M15 7h2a5 5 0 1 1 0 10h-2" /><path d="M8 12h8" /></svg>
                 Copy share link
               </button>
+              <button type="button" className={styles.restart} onClick={restart}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>Start over</button>
               <span className={`${styles.copied} ${copied ? styles.copiedOn : ''}`}>Link copied</span>
             </div>
           </>
@@ -418,9 +437,9 @@ export default function QuizLogic({ popup = false }: { popup?: boolean }) {
 
             <div className={styles.modalGrid}>
               <div className={styles.modalTiles}>
-                <div className={styles.tile}><span>Service line</span><b>{result.service}</b></div>
-                <div className={styles.tile}><span>Tier</span><b>{result.tier} — ${result.rate}/hr</b></div>
-                <div className={styles.tile}><span>Est. monthly</span><b>{result.cost}</b></div>
+                  <div className={styles.tile}><span>Service line</span><b>{result.service}</b></div>
+                  <div className={styles.tile}><span>Tier</span><b>{result.tier} — ${result.rate}/hr</b></div>
+                  <div className={styles.tile}><span>Est. monthly</span><b>{result.cost}</b></div>
               </div>
 
               <div className={styles.math}>
@@ -441,12 +460,30 @@ export default function QuizLogic({ popup = false }: { popup?: boolean }) {
               </div>
             </div>
 
+
+            <div className={styles.answers}>
+              <span className={styles.answersHeader}>Your answers — tap any to change it and come straight back</span>
+              <div className={styles.answerRow}>
+                {QUIZ.map((q) => {
+                  const chosen = q.options.find((o) => o.value === answers[q.id]);
+                  if (!chosen) return null;
+                  return (
+                    <button key={q.id} type="button" className={styles.answer} onClick={() => changeAnswer(q.id)}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg>
+                      <b>{q.id}</b>: {chosen.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className={styles.resCta}>
               <a className={styles.cta} href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">
                 Book a free consult
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
               </a>
-              <button type="button" className={`${styles.cta} ${styles.quiet}`} onClick={share}>Copy share link</button>
+              <button type="button" className={`${styles.cta} ${styles.secondary}`} onClick={share}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17H7A5 5 0 0 1 7 7h2" /><path d="M15 7h2a5 5 0 1 1 0 10h-2" /><path d="M8 12h8" /></svg>Copy share link</button>
+              <button type="button" className={styles.restart} onClick={restart}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>Start over</button>
               <span className={`${styles.copied} ${copied ? styles.copiedOn : ''}`}>Link copied</span>
             </div>
           </div>
