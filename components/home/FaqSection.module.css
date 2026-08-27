@@ -1,0 +1,147 @@
+/* FaqSection — "Certifications & FAQ" (index.html §faq, Phase 02).
+   Two columns: the navy certifications panel and the FAQ accordion card.
+   The artboard collapses them to one column at 1024px. */
+
+.section { background: #f5f7fa; position: relative; overflow: hidden; }
+.inner { max-width: 1200px; margin: 0 auto; padding: 88px 24px; position: relative; z-index: 1; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  align-items: stretch;
+  gap: clamp(18px, 2vw, 28px);
+}
+
+/* ---- left: certifications ------------------------------------------- */
+.certs {
+  background: linear-gradient(160deg, #326dda, #000543 70%);
+  color: #fff;
+  padding: clamp(36px, 4vw, 56px);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 28px;
+  box-shadow: 0 50px 90px -45px rgba(0, 5, 67, 0.45);
+}
+/* dotted plate, sits under the copy */
+.dots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1.3px, transparent 1.4px);
+  background-size: 13px 13px;
+  opacity: 0.45;
+}
+.certsCopy { position: relative; }
+.certsTitle {
+  margin: 18px 0 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  font-size: clamp(28px, 3vw, 40px);
+  max-width: 16ch;
+}
+.certsTitle span { color: #34bdf0; }
+.certsDesc {
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+  line-height: 1.75;
+  max-width: 44ch;
+}
+
+/* the two seals overlap and tilt against each other */
+.seals {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: clamp(30px, 4vw, 48px);
+  padding-bottom: 34px;
+}
+.seal { line-height: 0; filter: drop-shadow(0 22px 28px rgba(0, 5, 67, 0.38)); }
+.sealA { transform: translateY(-22px) rotate(-6deg); width: clamp(170px, 22vw, 250px); }
+.sealB { transform: translateY(30px) rotate(7deg); width: clamp(150px, 18vw, 215px); margin-left: -38px; }
+.seal svg { width: 100%; height: auto; display: block; }
+
+/* ---- right: FAQ card ------------------------------------------------- */
+.card {
+  background: #fff;
+  padding: clamp(30px, 3.2vw, 48px) clamp(24px, 2.8vw, 42px);
+  border-radius: 28px;
+  box-shadow: 0 50px 90px -45px rgba(0, 5, 67, 0.45);
+}
+.lede { margin: 0 0 26px; color: var(--ink-600); font-size: 16px; }
+.lede a {
+  color: var(--brand-blue);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1.5px solid var(--brand-blue);
+}
+
+.list { border-top: 1px solid rgba(0, 5, 67, 0.1); }
+.item { border-bottom: 1px solid rgba(0, 5, 67, 0.1); }
+.q {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  background: none;
+  border: 0;
+  padding: 24px 4px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--brand-navy);
+  font-weight: 600;
+  font-size: 16px;
+}
+.chev {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ink-50);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), background 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.q[aria-expanded='true'] .chev { background: var(--brand-blue); transform: rotate(180deg); }
+
+.panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.panelOpen { grid-template-rows: 1fr; }
+.panelInner { overflow: hidden; min-height: 0; }
+.a { color: var(--ink-600); font-size: 15px; line-height: 1.75; padding: 4px 4px 26px; max-width: 62ch; margin: 0; }
+.a b { color: var(--brand-navy); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 4px 26px; }
+.chip {
+  background: #fff;
+  border: 1px solid rgba(0, 5, 67, 0.08);
+  border-radius: 999px;
+  padding: 8px 15px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-navy);
+  transition: 0.3s;
+}
+.chip:hover { border-color: rgba(81, 141, 224, 0.45); box-shadow: 0 8px 18px -12px rgba(0, 5, 67, 0.5); }
+
+@media (max-width: 1024px) {
+  .grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .inner { padding: 64px 18px; }
+  .sealA { width: 150px; }
+  .sealB { width: 128px; margin-left: -26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chev, .panel { transition: none; }
+}
