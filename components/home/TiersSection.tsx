@@ -59,11 +59,11 @@ export default function TiersSection() {
                 two tier cards opposite. */}
             <div className={styles.duo}>
               <Image
-                src="/images/Agents/Virtual-assitant.jpg"
-                alt="A Rem Assist support agent wearing a headset"
+                src="/images/Agents/Customer support employee.webp"
+                alt="Two Rem Assist customer support agents wearing headsets in the office"
                 fill
                 sizes="(max-width: 1024px) 92vw, 40vw"
-                style={{ objectFit: 'cover', objectPosition: '66% 22%' }}
+                style={{ objectFit: 'cover', objectPosition: '50% 34%' }}
               />
             </div>
             {/* id is a link target: the blog article links to /#certifications */}
