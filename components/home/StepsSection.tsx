@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import shared from './HomeSections.module.css';
 import styles from './StepsSection.module.css';
 
 /**
@@ -50,13 +51,14 @@ export default function StepsSection() {
       }}
     >
       <div className={styles.wrap}>
-        <span className={`${styles.eyebrow} ${styles.eyebrowDark}`}>How It Works</span>
-        <div className={styles.head}>
-          <h2 className={styles.title}>
+        <span className={`${shared.eyebrow} ${shared.eyebrowDark}`}>How It Works</span>
+        {/* the artboard uses the shared header here with its dark modifier */}
+        <div className={`${shared.head} ${shared.headDark}`}>
+          <h2 className={shared.title}>
             From consult to coverage<br />in four simple steps
           </h2>
-          <div className={styles.aside}>
-            <p className={styles.desc}>
+          <div className={shared.aside}>
+            <p className={shared.desc}>
               Most clients go from first call to a fully onboarded pod inside two weeks — with a
               free trial before you commit.
             </p>

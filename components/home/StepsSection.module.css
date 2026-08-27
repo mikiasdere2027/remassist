@@ -1,14 +1,11 @@
 /* "From consult to coverage" — ported from index.html (Phase 02). */
 .section { background: #518de0; position: relative; overflow: hidden; }
 .wrap { max-width: 1200px; margin: 0 auto; padding: 112px 24px; position: relative; }
-.eyebrow { display: inline-flex; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.11em;
-  text-transform: uppercase; font-weight: 600; margin-bottom: 12px; }
-.eyebrowDark { color: #fff; opacity: 0.85; }
-.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; flex-wrap: wrap; }
-.title { margin: 18px 0 0; font-family: var(--font-display); font-size: clamp(30px, 3.6vw, 46px);
-  font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; color: #fff; }
-.aside { max-width: 440px; }
-.desc { margin: 0; font-size: 15.5px; line-height: 1.65; color: rgba(255, 255, 255, 0.82); }
+/* The header lives in HomeSections.module.css. The artboard marks this
+   section up with .dc-sec-head--dark, i.e. the same header every other
+   section uses, inverted — not a separate set of rules. The copies that used
+   to sit here had a mono 12px eyebrow and a 46px title against the shared
+   52px, so this section's heading was visibly smaller than the rest. */
 
 .stage { position: relative; margin-top: 60px; }
 .line { position: absolute; top: 57px; left: 8%; right: 8%; height: 1px;

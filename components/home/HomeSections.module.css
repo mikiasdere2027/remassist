@@ -4,19 +4,42 @@
 /* ---- Section furniture ---- */
 .section { position: relative; overflow: hidden; }
 .wrap { max-width: 1200px; margin: 0 auto; padding: 88px 24px; position: relative; z-index: 1; }
+/* Section header — the artboard's .dc-sec-* rules. The first port rebuilt
+   these as flex with space-between, which lets the two columns size to their
+   own content instead of holding the 1.2 / 0.8 proportion the design is set
+   in, and dropped the header's bottom margin so every section ran tight into
+   its own content. */
 .eyebrow { display: inline-flex; align-items: center; gap: 10px; color: var(--brand-blue);
   font-weight: 600; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; }
-.eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brand-blue); }
+.eyebrow::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--brand-blue); }
 .eyebrowDark { color: #fff; }
 .eyebrowDark::before { background: #fff; }
-.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 40px;
-  flex-wrap: wrap; margin-top: 18px; }
-.title { margin: 0; color: var(--brand-navy); font-weight: 700; letter-spacing: -0.02em;
-  line-height: 1.08; font-size: clamp(30px, 4vw, 52px); font-family: var(--font-display); }
+
+.head { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; align-items: end;
+  margin: 18px 0 32px; }
+/* a header with nothing on the right gives the heading the full width */
+.headSolo { grid-template-columns: 1fr; }
+
+.title { margin: 0; align-self: start; font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 52px); line-height: 1.08; font-weight: 700;
+  letter-spacing: -0.02em; color: var(--brand-navy); }
 .title span { color: var(--brand-blue); }
+
+.aside { display: flex; flex-direction: column; align-items: flex-start; align-self: end;
+  gap: 18px; padding-bottom: 6px; }
+.desc { margin: 0; color: var(--ink-600); font-size: 16px; line-height: 1.75; max-width: 46ch; }
+.desc b { color: var(--brand-blue); font-weight: 700; }
+
+/* the same header inverted for the blue sections */
 .titleLight { color: #fff; }
-.aside { max-width: 440px; }
-.desc { margin: 0; color: var(--ink-600); font-size: 16px; line-height: 1.75; }
+.headDark .title { color: #fff; }
+.headDark .title span { color: rgba(255, 255, 255, 0.62); }
+.headDark .desc { color: rgba(255, 255, 255, 0.82); }
+
+@media (max-width: 900px) {
+  .head { grid-template-columns: 1fr; gap: 18px; align-items: start; }
+}
 
 /* ---- Service grid (We extend your team!) ----
    Values are the artboard's .dc-team-* rules verbatim. The first port
