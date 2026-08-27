@@ -38,7 +38,7 @@ export default function Page() {
           <a href='/blog/hiring-offshore-without-losing-quality-control' className={styles['bk-featured']}>
             <div className={styles['bk-thumb']}>
               <span className={styles['bk-badge']}>Featured</span>
-              <img className={styles['bk-thumb-pic']} src='/images/blog/hiring-offshore.svg' alt='' loading='lazy' />
+              <Image className={styles['bk-thumb-pic']} src='/images/blog/hiring-offshore.jpg' alt='' fill sizes="(max-width: 900px) 100vw, 500px" style={{ objectPosition: '50% 18%' }} />
             </div>
             <div className={styles['bk-featured-body']}>
               <div className={styles['bk-topic']}>Hiring Strategy</div>
@@ -67,7 +67,7 @@ export default function Page() {
         <div className={styles['bk-grid']}>
   
           <div className={styles['bk-card']}>
-            <div className={`${styles['bk-thumb-sm']} ${styles['g1']}`}><img className={styles['bk-thumb-pic']} src='/images/blog/role-scorecard.svg' alt='' loading='lazy' /><span className={styles['bk-type']}>Guide</span></div>
+            <div className={`${styles['bk-thumb-sm']} ${styles['g1']}`}><Image className={styles['bk-thumb-pic']} src='/images/blog/role-scorecard.jpg' alt='' fill sizes="(max-width: 900px) 100vw, 380px" /><span className={styles['bk-type']}>Guide</span></div>
             <div className={styles['bk-card-body']}>
               <div className={styles['bk-topic']}>Hiring Strategy</div>
               <h3>The Role Scorecard: Define a Remote Hire in One Page</h3>
@@ -81,7 +81,7 @@ export default function Page() {
           </div>
   
           <div className={styles['bk-card']}>
-            <div className={`${styles['bk-thumb-sm']} ${styles['g2']}`}><img className={styles['bk-thumb-pic']} src='/images/blog/cost-roi.svg' alt='' loading='lazy' /><span className={styles['bk-type']}>Blog</span></div>
+            <div className={`${styles['bk-thumb-sm']} ${styles['g2']}`}><Image className={styles['bk-thumb-pic']} src='/images/blog/cost-roi.jpg' alt='' fill sizes="(max-width: 900px) 100vw, 380px" /><span className={styles['bk-type']}>Blog</span></div>
             <div className={styles['bk-card-body']}>
               <div className={styles['bk-topic']}>Cost &amp; ROI</div>
               <h3>When Offshore Hiring Is the Wrong Call</h3>
@@ -95,7 +95,7 @@ export default function Page() {
           </div>
   
           <div className={styles['bk-card']}>
-            <div className={`${styles['bk-thumb-sm']} ${styles['g3']}`}><img className={styles['bk-thumb-pic']} src='/images/blog/onboarding-30-days.svg' alt='' loading='lazy' /><span className={styles['bk-type']}>Guide</span></div>
+            <div className={`${styles['bk-thumb-sm']} ${styles['g3']}`}><Image className={styles['bk-thumb-pic']} src='/images/blog/onboarding-30-days.jpg' alt='' fill sizes="(max-width: 900px) 100vw, 380px" /><span className={styles['bk-type']}>Guide</span></div>
             <div className={styles['bk-card-body']}>
               <div className={styles['bk-topic']}>Team Management</div>
               <h3>The First 30 Days: An Onboarding Plan You Can Copy</h3>

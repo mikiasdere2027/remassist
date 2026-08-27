@@ -67,7 +67,9 @@ export default function ArticleBody() {
             </div>
           </div>
   <div className={styles['bp-figure']}>
-            <img className={styles['bp-figure-pic']} src='/images/blog/hiring-offshore.svg' alt='' loading='lazy' />
+            <Image className={styles['bp-figure-pic']} src='/images/blog/hiring-offshore.jpg'
+              alt='Two colleagues reviewing work together at a desk' fill priority
+              sizes="(max-width: 900px) 100vw, 1120px" style={{ objectPosition: '50% 18%' }} />
           </div>
         </article>
       </div>

@@ -31,7 +31,7 @@ export const POSTS: Post[] = [
     date: '2026-02-18',
     readTime: '11 min read',
     category: 'Hiring',
-    image: '/images/blog/hiring-offshore.svg',
+    image: '/images/blog/hiring-offshore.jpg',
     published: true,
   },
   {
@@ -41,7 +41,7 @@ export const POSTS: Post[] = [
     date: '2026-01-29',
     readTime: '7 min read',
     category: 'Hiring',
-    image: '/images/blog/role-scorecard.svg',
+    image: '/images/blog/role-scorecard.jpg',
     published: false,
   },
   {
@@ -51,7 +51,7 @@ export const POSTS: Post[] = [
     date: '2026-01-14',
     readTime: '6 min read',
     category: 'Strategy',
-    image: '/images/blog/cost-roi.svg',
+    image: '/images/blog/cost-roi.jpg',
     published: false,
   },
   {
@@ -61,7 +61,7 @@ export const POSTS: Post[] = [
     date: '2025-12-11',
     readTime: '9 min read',
     category: 'Onboarding',
-    image: '/images/blog/onboarding-30-days.svg',
+    image: '/images/blog/onboarding-30-days.jpg',
     published: false,
   },
 ];
