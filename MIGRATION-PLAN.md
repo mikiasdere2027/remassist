@@ -15,14 +15,74 @@ Hostinger VPS behind Nginx, and promote it to production at `remassistance.com`.
 | **Domain** | Replaces `remassistance.com`, retiring the separate codebase there |
 | **Estimate** | 34–52 focused engineering days (~7–11 weeks, one developer) |
 
-> **Status:** planning document. Figures were measured against the `main` working tree; day counts
-> are planning inputs, not commitments. One item is **blocking** — see
-> [§3.1 Blocking prerequisite](#31-blocking-prerequisite).
+> **Status:** in progress, not a planning document any more. Day counts below were planning
+> inputs, not commitments. See [§0 Where this actually stands](#0-where-this-actually-stands)
+> for current state and the open decisions.
+
+---
+
+## 0. Where this actually stands
+
+Updated 2026-08-27. The plan's phase order was not followed exactly — Phase 05 was done before
+Phase 03, and Phase 01 had to be reopened.
+
+| Phase | State | Notes |
+|---|---|---|
+| **00** Groundwork | done | Next.js scaffold, tokens, header/footer, CI |
+| **01** Static port | **done (reopened)** | Shipped "complete" but 20 of 22 routes rendered unstyled and all 118 images 404'd — see below |
+| **02** Interactive | done | Home sections, hero, quiz, widgets, blog-article chrome |
+| **03** Database | **server side done** | Schema, migration, `POST /api/leads`, `POST /api/quiz`. **Migration not yet run** — needs a `DATABASE_URL` |
+| **04** Admin | not started | Depends on 03 |
+| **05** SEO + redirects | done | Metadata, canonicals, OG, sitemap, robots, JSON-LD, 11 × 301, `/blog/[slug]` |
+| **06** Cutover | not started | Needs VPS access |
+
+### What Phase 01 got wrong
+
+Its exit criterion was "all render server-side; visual diffs clean". A visual diff would have
+passed, because the artboards carry the same defects. The real state was:
+
+- **20 of 22 routes rendered completely unstyled.** The codemod emitted `className='pr-wrap'`
+  string literals while the CSS went into a *Module* with hashed selectors. Root cause: the
+  attribute branch tested for `'className'`, but the parser yields `'class'`.
+- **All 118 image references 404'd.** `rewriteAssetPath` mapped `assets/images/x` to `/x`
+  instead of `/images/x`.
+- **Every nav link 404'd.** The header and footer still pointed at `.dc.html` artboards — 28
+  dead links on every page.
+- **Mobile was unusable.** Fixed-column grids, a nav that never collapsed, a 260px sidebar
+  leaving a 26px prose column. All inherited from the artboards, all invisible in a diff.
+
+The lesson for anything still to be ported: **a diff against the artboard is not the test.**
+Check a real browser at 390px, and check that images and links resolve.
+
+### Open decisions — these need a human, not more engineering
+
+1. **Where does the lead form live?** `POST /api/leads` is live and tested, but nothing in the
+   app posts to it. The ported Ask widget is FAQ-only (the legacy lead flow was dropped in
+   Phase 02) and the quiz has no email step. Options: quiz result screen, Ask widget, or both.
+2. **Run the migration.** `npm run db:migrate` then `npm run db:seed`, with real credentials.
+   Postgres 18 is installed locally but needs a password. See `.env.example`.
+3. **Mobile navigation.** The header currently scrolls sideways inside itself — containment,
+   not a design. A hamburger + drawer is the expected pattern but is a design decision.
+4. **The hero video.** 9.1 MB, 108 seconds, 640×360, for a 420px circle. Autoplay is now
+   skipped for reduced-motion and Save-Data visitors, but it is still ~18× the rest of the page
+   for everyone else. Needs a re-encode and ideally a poster frame.
+5. **`/careers`.** The only legacy WordPress page with real content and no equivalent. Currently
+   left to 404 rather than redirected somewhere irrelevant. Rebuild, point at a job board, or
+   accept the 404? `/job-form` follows whatever it does.
+
+### Measured state
+
+- Home page, production: **510 KB / 39 requests** (was 1,729 KB / 78 before the prefetch and
+  image work). Other routes 457–482 KB, mostly the shared JS baseline.
+- 460 tests, 0 lint errors, build 28/28 static pages.
+- Only remaining WCAG AA contrast failures are the `#518de0` pair, which is a known and
+  accepted brand trade-off — `--blue-700` already passes at 4.84 if it is ever revisited.
 
 ---
 
 ## Table of contents
 
+0. [Where this actually stands](#0-where-this-actually-stands)
 1. [Why migrate](#1-why-migrate)
 2. [Target architecture](#2-target-architecture)
 3. [Prerequisites and open decisions](#3-prerequisites-and-open-decisions)
