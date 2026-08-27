@@ -112,3 +112,35 @@
 
 .quiet { background: none; color: var(--ink-600); padding: 14px 10px; }
 .quiet:hover { background: none; color: var(--brand-blue); transform: none; box-shadow: none; }
+/* ---- Email capture on the result screen -------------------------------
+   Placed after the estimate and before the CTAs: the visitor has just been
+   shown a number, which is the moment the address is worth asking for. */
+.cap { margin-top: 22px; padding: 22px 22px 20px; border-radius: 14px;
+  background: var(--bg-marketing-paper); border: 1px solid var(--border-default); }
+.capHead { display: block; font-size: 15px; font-weight: 700; color: var(--brand-navy); }
+.capNote { margin: 6px 0 14px; font-size: 13.5px; line-height: 1.6; color: var(--ink-600); max-width: 58ch; }
+.capRow { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+.capField { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.capLabel { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-600); }
+.capInput { width: 100%; box-sizing: border-box; padding: 11px 13px; font-family: inherit;
+  font-size: 15px; color: var(--brand-navy); background: #fff;
+  border: 1px solid var(--border-strong); border-radius: 8px; transition: border-color 150ms; }
+.capInput:focus { outline: none; border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.18); }
+.capInput::placeholder { color: var(--ink-400); }
+.capSubmit { flex: none; align-self: flex-end; display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 22px; font-family: inherit; font-size: 15px; font-weight: 600; color: #fff;
+  background: var(--brand-blue); border: 0; border-radius: 8px; cursor: pointer;
+  transition: background 150ms, transform 150ms; }
+.capSubmit:hover:not(:disabled) { background: var(--blue-700); transform: translateY(-1px); }
+.capSubmit:disabled { opacity: 0.65; cursor: default; }
+/* The honeypot must be reachable by nothing a human uses — off-screen rather
+   than display:none, which some bots skip. */
+.capHoney { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.capMsg { margin: 12px 0 0; font-size: 13.5px; line-height: 1.6; }
+.capOk { color: var(--low-700); font-weight: 600; }
+.capErr { color: var(--ink-600); }
+.capErr a { color: var(--brand-blue); font-weight: 600; }
+.capFine { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--ink-500); }
+@media (max-width: 600px) {
+  .capSubmit { width: 100%; justify-content: center; align-self: stretch; }
+}

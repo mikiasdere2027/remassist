@@ -56,9 +56,12 @@ Check a real browser at 390px, and check that images and links resolve.
 
 ### Open decisions — these need a human, not more engineering
 
-1. **Where does the lead form live?** `POST /api/leads` is live and tested, but nothing in the
-   app posts to it. The ported Ask widget is FAQ-only (the legacy lead flow was dropped in
-   Phase 02) and the quiz has no email step. Options: quiz result screen, Ask widget, or both.
+1. ~~**Where does the lead form live?**~~ **Decided 2026-08-27: the quiz result screen.** That is
+   the highest-intent moment on the site — the visitor has just been shown a price — and
+   `/api/leads` already accepts the quiz payload, so the lead arrives with the exact estimate
+   attached. Live on `/qualify` and the home fit finder, with the §9.2 `mailto:` fallback.
+   The Ask widget still has no capture; its legacy lead flow was dropped in Phase 02 and adding
+   it back is a separate, smaller job.
 2. **Run the migration.** `npm run db:migrate` then `npm run db:seed`, with real credentials.
    Postgres 18 is installed locally but needs a password. See `.env.example`.
 3. **Mobile navigation.** The header currently scrolls sideways inside itself — containment,

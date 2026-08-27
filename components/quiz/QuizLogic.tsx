@@ -9,6 +9,7 @@ import {
   decodeAnswers,
   HOURS_LABEL,
   type Answers,
+  type QuizResult,
 } from '@/lib/quiz/quiz';
 
 /**
@@ -21,6 +22,13 @@ export default function QuizLogic() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<Answers>>({});
   const [copied, setCopied] = useState(false);
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [honey, setHoney] = useState('');
+  const [sending, setSending] = useState(false);
+  /* idle | sent | fallback — `fallback` means the POST failed and the visitor
+     is being handed a pre-filled email instead, per §9.2. */
+  const [capture, setCapture] = useState<'idle' | 'sent' | 'fallback'>('idle');
   /* One POST per completion. A ref, not state: firing it must not re-render,
      and a restored-from-hash result should not be counted as a new run. */
   const reported = useRef(false);
@@ -83,6 +91,50 @@ export default function QuizLogic() {
     delete next[id];
     setAnswers(next);
     setStep(idx);
+  }
+
+  /* §9.2: never lose a lead to a 500. A failed POST composes the same message
+     as a mailto: instead of showing an error and dropping it. */
+  function mailtoFallback(r: QuizResult) {
+    const body = [
+      `I just used the fit finder and got this estimate:`,
+      ``,
+      `Shape:    ${r.title}`,
+      `Service:  ${r.service}`,
+      `Tier:     ${r.tier} at $${r.rate}/hr`,
+      `Coverage: ${HOURS_LABEL[answers.hours ?? ''] || ''}`,
+      `Estimate: ${r.cost} / month`,
+      ``,
+      name ? `Name: ${name}` : '',
+      `Please get in touch.`,
+    ].filter(Boolean).join('\n');
+    return `mailto:support@remassistance.com?subject=${encodeURIComponent('Fit finder estimate — ' + r.service)}&body=${encodeURIComponent(body)}`;
+  }
+
+  async function sendEstimate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!result || sending) return;
+    setSending(true);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          name: name || undefined,
+          honey: honey || undefined,
+          source: 'qualify_quiz',
+          page: window.location.href,
+          quiz: { answers, result, completed: true },
+        }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setCapture('sent');
+    } catch {
+      setCapture('fallback');
+    } finally {
+      setSending(false);
+    }
   }
 
   function share() {
@@ -204,6 +256,84 @@ export default function QuizLogic() {
                   );
                 })}
               </div>
+            </div>
+
+            <div className={styles.cap}>
+              {capture === 'sent' ? (
+                <>
+                  <span className={styles.capHead}>Sent — check your inbox.</span>
+                  <p className={styles.capMsg + ' ' + styles.capOk}>
+                    We have your estimate on file. Someone will follow up, and the consult is free
+                    either way.
+                  </p>
+                </>
+              ) : capture === 'fallback' ? (
+                <>
+                  <span className={styles.capHead}>That did not go through.</span>
+                  <p className={styles.capMsg + ' ' + styles.capErr}>
+                    Rather than lose it,{' '}
+                    <a href={mailtoFallback(result)}>send it as an email instead</a> — the estimate
+                    is already filled in.
+                  </p>
+                </>
+              ) : (
+                <form onSubmit={sendEstimate}>
+                  <span className={styles.capHead}>Want this estimate in writing?</span>
+                  <p className={styles.capNote}>
+                    We will send this exact breakdown to your inbox. No sequence, no follow-up
+                    unless you ask — the consult is free either way.
+                  </p>
+                  <div className={styles.capRow}>
+                    <label className={styles.capField}>
+                      <span className={styles.capLabel}>Email</span>
+                      <input
+                        className={styles.capInput}
+                        type="email"
+                        name="email"
+                        required
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        onChange={(ev) => setEmail(ev.target.value)}
+                      />
+                    </label>
+                    <label className={styles.capField}>
+                      <span className={styles.capLabel}>Name (optional)</span>
+                      <input
+                        className={styles.capInput}
+                        type="text"
+                        name="name"
+                        autoComplete="name"
+                        placeholder="Your name"
+                        value={name}
+                        onChange={(ev) => setName(ev.target.value)}
+                      />
+                    </label>
+                    <button type="submit" className={styles.capSubmit} disabled={sending}>
+                      {sending ? 'Sending…' : 'Send it to me'}
+                    </button>
+                  </div>
+                  {/* Bots fill this; humans never see it. The route answers 200
+                      and writes nothing. */}
+                  <div className={styles.capHoney} aria-hidden="true">
+                    <label>
+                      Do not fill this in
+                      <input
+                        type="text"
+                        name="company_website"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        value={honey}
+                        onChange={(ev) => setHoney(ev.target.value)}
+                      />
+                    </label>
+                  </div>
+                  <p className={styles.capFine}>
+                    We use it to send the estimate and to get in touch about it. Nothing else — see
+                    the <a href="/privacy-policy">privacy policy</a>.
+                  </p>
+                </form>
+              )}
             </div>
 
             <div className={styles.resCta}>
