@@ -1,10 +1,18 @@
 /**
  * Rate limiter — MIGRATION-PLAN §9.1.
  *
- * In-memory and per-process, which is the right shape for the target: a single
- * Node instance behind Nginx (§2.2 rules out cluster mode). If the app is ever
- * run multi-process this becomes per-worker and the effective limit multiplies
- * — move it to Postgres or Redis at that point, do not just raise the number.
+ * In-memory and per-process, which is the right shape for the plan's target: a
+ * single Node instance behind Nginx (§2.2 rules out cluster mode). If the app
+ * is ever run multi-process this becomes per-worker and the effective limit
+ * multiplies — move it to Postgres or Redis at that point, do not just raise
+ * the number.
+ *
+ * ON VERCEL THIS DOES NOT LIMIT ANYTHING. Serverless functions do not share
+ * memory, and instances are created and discarded per traffic pattern, so each
+ * request may land on a fresh Map. The route still calls it and still answers
+ * 429 when a single warm instance sees six requests, which is exactly the kind
+ * of partial behaviour that reads as working. Treat the lead endpoint as
+ * unthrottled on Vercel until this is backed by a shared store.
  *
  * Fixed windows, not a sliding log: a burst can straddle a boundary and get
  * 2x the limit. For "stop one IP hammering the lead form" that is fine, and it
