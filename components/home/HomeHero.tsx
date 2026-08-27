@@ -54,7 +54,7 @@ const CHIPS = [
   },
 ];
 
-const WORDS = ['customer service', 'go-to-market', 'outbound sales', 'IT staff', 'back office', 'specialized roles'];
+const WORDS = ['Customer Service', 'Go-to-Market', 'Outbound Sales', 'IT Staff', 'Back Office', 'Specialized Roles'];
 
 function popClass(pop: string) {
   if (pop === 'right') return `${styles.pop} ${styles.popRight}`;
@@ -145,7 +145,7 @@ export default function HomeHero() {
             <span className={styles.eyebrowText}>Expert teams. Built around your goals.</span>
           </div>
           <h1 className={styles.h1}>
-            Remote teams for<span className={styles.srOnly}> specialized roles</span>
+            Remote Teams for<span className={styles.srOnly}> Specialized Roles</span>
           </h1>
           <div className={styles.rot} aria-hidden="true">
             <div className={styles.rotTrack}>
