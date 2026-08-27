@@ -124,10 +124,11 @@
 .cta svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;
   stroke-linecap: round; stroke-linejoin: round; }
 /* ---- Tiers (One bench, two kinds of depth) ---- */
-.levGrid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 64px; align-items: end; margin-top: 40px; }
-.duoCol { display: flex; flex-direction: column; justify-content: flex-end; gap: 24px; min-height: 366px; }
-.duo { display: flex; align-items: flex-end; flex: 1; min-height: 0; }
-.duo img { width: 100%; max-width: 430px; height: auto; display: block; }
+.levGrid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 64px; align-items: stretch; margin-top: 40px; }
+.duoCol { display: flex; flex-direction: column; gap: 24px; }
+.duo { position: relative; flex: 1 1 auto; min-height: 260px; border-radius: 18px;
+  overflow: hidden; background: rgba(255,255,255,0.14); box-shadow: var(--shadow-lg); }
+.duo img { width: 100%; height: 100%; object-fit: cover; object-position: 66% 22%; display: block; }
 .isoCard { display: flex; gap: 16px; background: #fff; border-radius: 18px; padding: 22px 24px;
   box-shadow: var(--shadow-md); border: 1px solid var(--border-default); }
 .isoShield { width: 44px; height: 44px; border-radius: 50%; background: rgba(81,141,224,0.1);
@@ -141,37 +142,39 @@
 .isoMarks { display: flex; gap: 10px; margin-top: 12px; }
 .isoChip { display: grid; place-items: center; }
 .isoChip img { height: 30px; width: auto; display: block; }
-.tiers { display: flex; flex-direction: column; gap: 20px; }
-.tier { display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: start;
-  background: #fff; border-radius: 18px; padding: 26px 28px; box-shadow: var(--shadow-lg);
+.tiers { display: flex; flex-direction: column; gap: 16px; }
+.tier { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: start;
+  background: #fff; border-radius: 18px; padding: 20px 24px; box-shadow: var(--shadow-lg);
   border-left: 6px solid var(--brand-blue); transition: transform 200ms var(--ease-out),
   box-shadow 200ms var(--ease-out); }
 .tier:hover { transform: translateY(-2px); box-shadow: 0 30px 60px -28px rgba(0,5,67,0.4); }
 .tierExpert { border-left-color: var(--brand-navy); }
-.tierIcon { width: 74px; height: 74px; flex: none; display: grid; place-items: center; border-radius: 50%;
+.tierIcon { width: 58px; height: 58px; flex: none; display: grid; place-items: center; border-radius: 50%;
   background: rgba(81,141,224,0.09); color: var(--brand-blue); }
-.tierIcon svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 1.6;
+.tierIcon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6;
   stroke-linecap: round; stroke-linejoin: round; }
-.tierTitle { margin: 4px 0 0; font-size: 24px; font-weight: 700; line-height: 1.15; color: var(--brand-navy); }
-.tierPrice { display: flex; margin-top: 10px; align-items: baseline; gap: 6px; white-space: nowrap; }
-.tierPrice small { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+.tierTitle { margin: 2px 0 0; font-size: 21px; font-weight: 700; line-height: 1.15; color: var(--brand-navy); }
+.tierPrice { display: flex; margin-top: 6px; align-items: baseline; gap: 6px; white-space: nowrap; }
+.tierPrice small { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink-500); font-weight: 600; }
-.tierPrice b { font-family: var(--font-display); font-size: clamp(38px, 3.6vw, 52px); font-weight: 800;
+.tierPrice b { font-family: var(--font-display); font-size: clamp(30px, 2.5vw, 38px); font-weight: 800;
   line-height: 0.9; letter-spacing: -0.03em; color: var(--brand-blue); }
-.tierPrice em { font-style: normal; font-size: 16px; font-weight: 700; color: var(--brand-blue); }
-.tierText { margin: 10px 0 0; font-size: 15px; line-height: 1.65; color: var(--ink-600); }
-.tierChips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-.tierChip { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600;
-  color: var(--ink-700); background: var(--ink-50); border-radius: 9999px; padding: 7px 14px; }
+.tierPrice em { font-style: normal; font-size: 14px; font-weight: 700; color: var(--brand-blue); }
+.tierText { margin: 8px 0 0; font-size: 14px; line-height: 1.6; color: var(--ink-600); }
+.tierChips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.tierChip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  color: var(--ink-700); background: var(--ink-50); border-radius: 9999px; padding: 6px 12px; }
 .tierChip svg { width: 14px; height: 14px; flex: none; fill: none; stroke: var(--brand-blue);
   stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.tierGo { width: 38px; height: 38px; flex: none; display: grid; place-items: center; margin-top: 4px;
+.tierGo { width: 34px; height: 34px; flex: none; display: grid; place-items: center; margin-top: 4px;
   border-radius: 50%; background: rgba(81,141,224,0.08); color: var(--brand-blue); }
 .tierGo svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;
   stroke-linecap: round; stroke-linejoin: round; }
 
 @media (max-width: 1024px) {
   .levGrid { grid-template-columns: 1fr; gap: 40px; }
+  /* stacked, the photo has no tier column to match, so give it a fixed ratio */
+  .duo { flex: none; aspect-ratio: 16 / 10; min-height: 0; }
   .teamCard { grid-template-columns: auto 1px auto 1fr auto; }
   .teamFaces { display: none; }
 }

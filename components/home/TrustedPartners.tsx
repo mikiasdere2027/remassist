@@ -16,16 +16,39 @@ import styles from './TrustedPartners.module.css';
 const PARTNERS = [
   {
     name: 'Tano Group',
-    logo: '/uploads/tano-logo-clean.png',
-    w: 750,
-    h: 745,
+    logo: '/images/tano-group-logo.png',
+    w: 320,
+    h: 128,
     href: 'https://tanogrp.com/',
   },
   {
     name: 'LocateNMove',
-    logo: '/uploads/locatenmovebluelogo.png',
-    w: 807,
-    h: 527,
+    logo: '/images/locate-n-move-logo.png',
+    w: 320,
+    h: 188,
+    href: null,
+  },
+  // href stays null until someone confirms the sites — a wrong link on a
+  // client's name is worse than no link.
+  {
+    name: 'Fix My Foundation',
+    logo: '/images/fix-my-foundation-logo.png',
+    w: 320,
+    h: 183,
+    href: null,
+  },
+  {
+    name: 'Mejia Auto',
+    logo: '/images/mejia-auto-logo.png',
+    w: 320,
+    h: 107,
+    href: null,
+  },
+  {
+    name: 'Sprint Real Estate',
+    logo: '/images/sprint-real-estate-logo.png',
+    w: 320,
+    h: 107,
     href: null,
   },
 ];

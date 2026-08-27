@@ -1,8 +1,11 @@
+import Image from 'next/image';
 import styles from './HomeSections.module.css';
 
 /**
  * TiersSection — "One bench, two kinds of depth" (index.html, Phase 02).
  * Pro ($8/hr) + Expert ($11/hr) tiers with the ISO 9001/27001 certification card.
+ * The left column is a photo plate above that card; both columns are the same
+ * height, so the plate flexes rather than carrying a fixed size.
  */
 const TIERS = [
   {
@@ -51,8 +54,17 @@ export default function TiersSection() {
 
         <div className={styles.levGrid}>
           <div className={styles.duoCol}>
+            {/* A photograph, not the old agent-duo vector. It fills whatever
+                height the ISO card leaves, so this column ends level with the
+                two tier cards opposite. */}
             <div className={styles.duo}>
-              <img src="/images/agent-duo.svg" alt="Two Rem Assist support agents wearing headsets" />
+              <Image
+                src="/images/Agents/Virtual-assitant.jpg"
+                alt="A Rem Assist support agent wearing a headset"
+                fill
+                sizes="(max-width: 1024px) 92vw, 40vw"
+                style={{ objectFit: 'cover', objectPosition: '66% 22%' }}
+              />
             </div>
             {/* id is a link target: the blog article links to /#certifications */}
             <div className={styles.isoCard} id="certifications">
