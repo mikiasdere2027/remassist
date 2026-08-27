@@ -112,8 +112,25 @@ export default function AskRemAssist() {
           </div>
         </div>
       )}
-      <button type="button" className={styles.launcher} onClick={() => setOpen((o) => !o)} aria-label="Ask RemAssist">
-        {open ? '×' : 'Ask'}
+      <button
+        type="button"
+        className={styles.launcher}
+        onClick={() => setOpen((o) => !o)}
+        aria-label={open ? 'Close Ask RemAssist' : 'Ask RemAssist'}
+        aria-expanded={open}
+      >
+        {open ? (
+          <span className={styles.launcherClose} aria-hidden="true">&times;</span>
+        ) : (
+          <>
+            <span className={styles.launcherPing} aria-hidden="true" />
+            <span className={styles.launcherFace}>
+              {/* the Rem mark, as the artboard's launcher used */}
+              <img src="/images/rem-loader-logo.svg" alt="" />
+            </span>
+            <span className={styles.launcherDot} aria-hidden="true" />
+          </>
+        )}
       </button>
     </>
   );

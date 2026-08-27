@@ -30,7 +30,32 @@
 .links { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px;
   border-top: 1px solid var(--border-default); font-size: 11.5px; color: var(--ink-500); }
 .links a { color: var(--brand-blue); text-decoration: none; }
-.launcher { position: fixed; right: 20px; bottom: 20px; z-index: 1001; width: 56px; height: 56px;
-  border-radius: 50%; border: 0; background: var(--brand-blue); color: #fff; font-size: 16px; font-weight: 700;
-  cursor: pointer; box-shadow: 0 12px 30px -8px rgba(0, 5, 67, 0.5); }
-.launcher:hover { background: var(--blue-700); }
+/* Launcher — ported from assets/ask-remassist.js (#rem-ask-launch): a gradient
+   ring holding the Rem mark on a white disc, with a presence dot and a slow
+   ping. The first port rendered a flat blue circle with the word "Ask", which
+   is not the mark. */
+.launcher { position: fixed; right: 20px; bottom: 20px; z-index: 1001;
+  width: 62px; height: 62px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(150deg, #34bdf0 0%, #518de0 55%, #000543 100%);
+  box-shadow: 0 14px 34px -8px rgba(0, 5, 67, 0.55);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+.launcher:hover { box-shadow: 0 18px 40px -8px rgba(0, 5, 67, 0.6); transform: translateY(-2px); }
+.launcher:focus-visible { outline: 3px solid #34bdf0; outline-offset: 3px; }
+
+/* white disc holding the mark */
+.launcherFace { position: absolute; inset: 5px; border-radius: 50%; background: #fff;
+  display: grid; place-items: center; overflow: hidden; }
+.launcherFace img { width: 66%; height: 66%; object-fit: contain; display: block; }
+/* presence dot */
+.launcherDot { position: absolute; top: 2px; right: 2px; width: 15px; height: 15px;
+  border-radius: 50%; background: #25d366; border: 2.5px solid #fff; }
+/* slow outward ping */
+.launcherPing { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid #34bdf0;
+  opacity: 0; animation: remAskPing 2.8s ease-out infinite; pointer-events: none; }
+@keyframes remAskPing {
+  0% { opacity: 0.7; transform: scale(0.92); }
+  70%, 100% { opacity: 0; transform: scale(1.28); }
+}
+.launcherClose { position: relative; z-index: 1; font-size: 26px; line-height: 1; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .launcherPing { animation: none; } }
