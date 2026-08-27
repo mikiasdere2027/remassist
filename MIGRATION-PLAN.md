@@ -1314,14 +1314,26 @@ breakpoints in the page-level `<style>` blocks.
 
 ### 13.3 CI gates
 
-| Gate | Blocks merge |
-|---|---|
-| `tsc --noEmit` | yes |
-| ESLint | yes |
-| Quiz parity (432 cases) | yes |
-| Visual diffs within tolerance | yes, override with review |
-| **Every redirect resolves to a live page** | yes |
-| Lighthouse SEO ≥ 95 on a sampled route set | yes from Phase 05 |
+| Gate | Blocks merge | Status (2026-08-27) |
+|---|---|---|
+| `tsc --noEmit` | yes | **in CI** |
+| ESLint | yes | **in CI** |
+| Quiz parity (432 cases) | yes | **in CI** — the `npm test` step was missing entirely until 2026-08-27, so this had never run |
+| Visual diffs within tolerance | yes, override with review | **not set up** — see below |
+| **Every redirect resolves to a live page** | yes | **in CI**, as a unit assertion against the route list; not yet a smoke test against a running server |
+| Lighthouse SEO ≥ 95 on a sampled route set | yes from Phase 05 | **not set up** |
+
+§13.1's premise no longer holds: it says baselines come from "the current production pages", but
+production is the old WordPress site and looks nothing like the port. Standing up Playwright needs
+a decision about what the baseline actually is — the artboards, or a blessed run of the new site.
+Until then the coverage is the measured sweeps recorded in §0, not screenshots.
+
+§13.2's lead-API cases are covered at route level in `lib/leads/route.test.ts` — invalid payload,
+malformed body, honeypot dropped silently, 503 when the database is absent (which is what makes the
+`mailto:` fallback fire), the limit tripping on the sixth request, per-address isolation, and
+x-forwarded-for spoofing. **A successful insert and seed idempotency are not covered**: both need a
+live Postgres, and mocking the Drizzle chain would assert the mock was called rather than that a row
+lands. Add them once CI has a database.
 
 ---
 
