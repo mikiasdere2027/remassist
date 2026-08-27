@@ -42,6 +42,11 @@ const PAGES = [
   { src: 'Pricing.dc.html', route: 'pricing', title: 'Pricing' },
   { src: 'Blog.dc.html', route: 'blog', title: 'Blog & Guides' },
   { src: 'Case Studies.dc.html', route: 'case-studies', title: 'Case Studies' },
+  /* Qualify.dc.html is deliberately absent. Its page is hand-composed: the
+     artboard's own quiz markup is replaced by <QuizLogic />, the de-duplicated
+     component /qualify and the home fit finder share (§8). Regenerating it
+     would reintroduce a second copy of the quiz. Its sections 2-5 were ported
+     across by hand and its CSS lives below the hand-additions sentinel. */
   // Service pages (Phase 01 · Task 2)
   { src: 'Customer Service Agents.dc.html', route: 'services/customer-service-agents', title: 'Customer Service Agents' },
   { src: 'GTM Teams.dc.html', route: 'services/gtm-teams', title: 'GTM Teams' },
