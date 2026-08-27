@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './QuizLogic.module.css';
 import {
   QUIZ,
@@ -18,7 +19,7 @@ import {
  * state, navigation and rendering. Results are shared via the URL hash so a
  * completed quiz is copy-pasteable ("#/…/41000" style).
  */
-export default function QuizLogic() {
+export default function QuizLogic({ popup = false }: { popup?: boolean }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<Answers>>({});
   const [copied, setCopied] = useState(false);
@@ -32,6 +33,13 @@ export default function QuizLogic() {
   /* One POST per completion. A ref, not state: firing it must not re-render,
      and a restored-from-hash result should not be counted as a new run. */
   const reported = useRef(false);
+  /* Fit-finder mode: the final result is shown in a popup instead of inline. */
+  const [popupOpen, setPopupOpen] = useState(false);
+  /* The modal is portalled to <body>, so it cannot be trapped by an
+     ancestor's overflow or transform. Gate on mount: document does not
+     exist while this renders on the server. */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Restore a shared result from the URL hash on first paint.
   useEffect(() => {
@@ -47,6 +55,25 @@ export default function QuizLogic() {
 
   const current = QUIZ[step];
   const done = step >= QUIZ.length;
+
+  // Fit-finder mode: pop the result open as soon as the quiz finishes.
+  useEffect(() => {
+    if (popup && done) setPopupOpen(true);
+  }, [popup, done]);
+
+  // Escape closes the popup; lock body scroll while it is open.
+  useEffect(() => {
+    if (!popupOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPopupOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [popupOpen]);
 
   /* Anonymous funnel capture (§6.2): answers and the quote shown, no personal
      data. Fire-and-forget — the result screen never waits on it and never
@@ -153,7 +180,8 @@ export default function QuizLogic() {
   const progress = done ? 100 : Math.round((step / QUIZ.length) * 100);
 
   return (
-    <section className={styles.card}>
+    <>
+      <section className={styles.card}>
       <div className={styles.bar}>
         <span className={styles.barFill} style={{ width: `${progress}%` }} />
       </div>
@@ -199,7 +227,19 @@ export default function QuizLogic() {
           </>
         )}
 
-        {done && result && (
+        {done && result && (popup ? (
+          <div className={styles.doneCompact}>
+            <span className={styles.resTick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg></span>
+            <span className={styles.resEyebrow}>Your result is ready</span>
+            <p className={styles.doneCompactText}>
+              Your recommended seat mix and estimate are in a popup — close it to come back here
+              and retake, or book the free consult.
+            </p>
+            <button type="button" className={styles.cta} onClick={() => setPopupOpen(true)}>
+              See your estimate
+            </button>
+          </div>
+        ) : (
           <>
             <div className={styles.resTop}>
               <span className={styles.resTick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg></span>
@@ -347,8 +387,72 @@ export default function QuizLogic() {
               <span className={`${styles.copied} ${copied ? styles.copiedOn : ''}`}>Link copied</span>
             </div>
           </>
-        )}
+        ))}
       </div>
     </section>
+
+      {/* Fit-finder popup: the final result in a centered, viewport-fitting modal. */}
+      {/* Closes on the backdrop only — via e.target === e.currentTarget rather
+          than stopPropagation on the panel, which would also stop
+          BookingModal's document-level interceptor and leave the
+          "Book a free consult" button below doing nothing. */}
+      {popup && popupOpen && result && mounted && createPortal(
+        <div
+          className={styles.overlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fit finder result"
+          onClick={(e) => { if (e.target === e.currentTarget) setPopupOpen(false); }}
+        >
+          <div className={styles.modal}>
+            <button type="button" className={styles.modalClose} onClick={() => setPopupOpen(false)} aria-label="Close estimate">×</button>
+
+            <div className={styles.modalHead}>
+              <div className={styles.resTop}>
+                <span className={styles.resTick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg></span>
+                <span className={styles.resEyebrow}>Your recommended shape</span>
+              </div>
+              <h3 className={styles.resTitle}>{result.title}</h3>
+              <p className={styles.resBlurb}>{result.blurb}</p>
+            </div>
+
+            <div className={styles.modalGrid}>
+              <div className={styles.modalTiles}>
+                <div className={styles.tile}><span>Service line</span><b>{result.service}</b></div>
+                <div className={styles.tile}><span>Tier</span><b>{result.tier} — ${result.rate}/hr</b></div>
+                <div className={styles.tile}><span>Est. monthly</span><b>{result.cost}</b></div>
+              </div>
+
+              <div className={styles.math}>
+                <div className={styles.mathHead}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z" /><path d="M8 8h8M8 12h3M8 16h3M14 12v4" /></svg>
+                  <b>How that number is built</b>
+                </div>
+                <div className={styles.mathRows}>
+                  <div className={styles.mathRow}><span>Coverage you selected</span><b>{HOURS_LABEL[answers.hours ?? ''] || '160 hrs/month'}</b></div>
+                  <div className={styles.mathRow}><span>Tier your answers point at</span><b>{result.tier} — ${result.rate}/hr</b></div>
+                  <div className={styles.mathRow}><span>Seats in the shape</span><b>{result.seats === 1 ? 'One seat' : `${result.seats} seats`}</b></div>
+                  <div className={`${styles.mathRow} ${styles.mathRowTotal}`}><span>{result.hours} hrs × ${result.rate}/hr</span><b>{result.cost}</b></div>
+                </div>
+                <p className={styles.mathNote}>
+                  An estimate, not a quote. Your exact rate depends on hours and start date; we
+                  confirm it on the call before anything is signed.
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.resCta}>
+              <a className={styles.cta} href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">
+                Book a free consult
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+              </a>
+              <button type="button" className={`${styles.cta} ${styles.quiet}`} onClick={share}>Copy share link</button>
+              <span className={`${styles.copied} ${copied ? styles.copiedOn : ''}`}>Link copied</span>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
