@@ -12,20 +12,29 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "package:standalone": "node tools/package-standalone.js",
-    "db:sync-partials": "node tools/sync-partials.js --check"
+    "db:sync-partials": "node tools/sync-partials.js --check",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "node --experimental-strip-types db/seed.ts"
   },
   "dependencies": {
+    "drizzle-orm": "^0.45.2",
     "next": "15.5.24",
+    "pg": "^8.23.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@tailwindcss/postcss": "^4.1.7",
     "@types/node": "^22.10.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.17.0",
     "eslint-config-next": "15.5.24",
     "node-html-parser": "^9.0.1",
