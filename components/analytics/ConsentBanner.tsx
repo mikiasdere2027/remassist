@@ -42,8 +42,9 @@ export default function ConsentBanner() {
     <section className={styles.banner} aria-label="Cookie choices">
       <p className={styles.text}>
         <strong className={styles.title}>We&apos;d like to measure how this site is used</strong>
-        Analytics and advertising cookies help us see which pages bring teams to us. They
-        are not set unless you agree, and the site works exactly the same either way.{' '}
+        Analytics and advertising cookies help us see which pages bring teams to us, and
+        they let the video on our home page play by itself. They are not set unless you
+        agree, and the site works the same either way — the video waits for a click.{' '}
         <a href="/privacy-policy">Read our privacy policy</a>.
       </p>
       <div className={styles.actions}>

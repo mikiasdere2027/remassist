@@ -176,9 +176,17 @@
    the scroll observer also clears when it mutes the video off screen, so the
    two never disagree. Plain `filter`, not the -webkit- alias: every browser
    that can play this has had it unprefixed for years. */
-.disc video { width: 420px; height: 420px; object-fit: cover; display: block;
+.media { position: absolute; inset: 0; overflow: hidden; border-radius: 9999px;
   filter: grayscale(100%); transition: filter 600ms var(--ease-out); }
-.discLive video { filter: grayscale(0%); }
+.discLive .media { filter: grayscale(0%); }
+.poster { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* YouTube only ever serves 16:9, so filling a circle means centre-cropping the
+   frame the way object-fit would: full height, the width that 16:9 implies,
+   and the overflow clipped by .media. pointer-events are off because the disc
+   has its own play button over this — a click must reach that, not the player
+   underneath it, which is also why the embed runs with controls=0. */
+.frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: calc(420px * 16 / 9); height: 420px; border: 0; pointer-events: none; }
 .playBtn { position: absolute; inset: 0; width: 100%; height: 100%; border: none; background: transparent;
   display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0;
   transition: opacity 200ms; }
@@ -229,6 +237,6 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .rotTrack, .chip, .orbitRing, .soundRing, .sound, .popWave i { animation: none !important; }
-  .disc video { transition: none; }   /* still switches to colour, just instantly */
+  .media { transition: none; }   /* still switches to colour, just instantly */
   .hero, .hero * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
 }

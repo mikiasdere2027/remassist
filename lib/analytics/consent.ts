@@ -11,7 +11,8 @@
  * reasonably allow one and refuse the other:
  *
  * - `analytics`  aggregate measurement — pageviews, funnels, Core Web Vitals
- * - `marketing`  attribution and advertising — the campaign cookie, ad tags
+ * - `marketing`  attribution and advertising — the campaign cookie, ad tags,
+ *                and embedded third-party media such as the home hero's clip
  *
  * The record of the decision is itself a cookie, and that one needs no
  * consent: a consent record is strictly necessary by definition, since
@@ -30,8 +31,12 @@ export const CONSENT_COOKIE = 'ra_consent';
  * Bump to re-ask everyone. Required when categories change meaning or a new
  * vendor is added — consent given for what we did last year does not cover
  * something new, and reusing the old record would be consent-washing.
+ *
+ * 2: the home hero's clip moved from a self-hosted file to a YouTube embed,
+ *    which is a new vendor under `marketing`. Anyone who answered version 1
+ *    answered a question that did not include it, so they are asked again.
  */
-const CONSENT_VERSION = 1;
+const CONSENT_VERSION = 2;
 
 const MAX_AGE_SEC = 180 * 24 * 60 * 60; // six months, then ask again
 
