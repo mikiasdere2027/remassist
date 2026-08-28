@@ -24,6 +24,12 @@ const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
 /* The same clip the interview rail serves for Kalkidan — it was in the repo
    twice, once under its camera filename. One copy, named for who is in it. */
 const VIDEO = '/uploads/Interviews/kalkidan.mp4';
+/* The still the rail already uses for this clip. Without it the disc is an
+   empty hole whenever the video does not play — which is not the rare case
+   it sounds like: reduced-motion and save-data visitors are never sent the
+   file at all, and video 404s on any host that does not resolve Git LFS.
+   A poster is what makes all of those degrade to a photograph. */
+const POSTER = '/images/interviews/kalkidan.jpg';
 
 /* Offsets and delays are the artboard's, relative to the 500x500 orbit box.
    `pop` mirrors the dc-hero-pop--right / --up modifiers: chips near the right
@@ -212,7 +218,7 @@ export default function HomeHero() {
           </div>
 
           <div className={`${styles.disc} ${soundOn ? styles.discLive : ''}`}>
-            <video ref={videoRef} src={VIDEO} loop muted playsInline />
+            <video ref={videoRef} src={VIDEO} poster={POSTER} loop muted playsInline />
             <button type="button" className={styles.playBtn} aria-label="Play or pause video" onClick={toggleVideo}>
               <span className={styles.playDisc}>
                 {paused ? (
