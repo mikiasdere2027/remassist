@@ -10,17 +10,16 @@ const compat = new FlatCompat({ baseDirectory: __dirname });
 // Next.js + TypeScript recommended rules (flat config bridge).
 // Legacy static-site files live outside the Next app and are ignored:
 // linting the DC runtime (support.js) or the artboard HTML buys nothing.
+// The artboards, index.html and partials/ are all under legacy-html/ now.
 const eslintConfig = [
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     ignores: [
       'support.js',
       'assets/**',
-      'partials/**',
       'tools/**',
       'uploads/**',
-      '**/*.dc.html',
-      'index.html',
+      'legacy-html/**',
       '.next/',
       'next-env.d.ts',
       'package-lock.json',

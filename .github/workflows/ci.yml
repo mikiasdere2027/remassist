@@ -41,10 +41,11 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Static artboard sync guard
-        # The legacy static site still ships until Phase 15 decommission; the
-        # partials must not drift from the shipped artboards.
-        run: node tools/sync-partials.js --check
+      # The static artboard sync guard ran `tools/sync-partials.js --check`
+      # here. The artboards, index.html and partials/ now live together under
+      # legacy-html/, which is gitignored, so a CI checkout has nothing to
+      # check and the step could only ever fail. Partial drift is a local
+      # concern until Phase 15 decommissions the static site outright.
 
       - name: Standalone package guard
         # Standalone does not copy public/ or .next/static; the pack step is

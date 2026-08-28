@@ -19,7 +19,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '..');
+/* The static site now lives under legacy-html/ and is gitignored — the pages,
+   index.html and partials/ all moved together, so this only needs a new root. */
+const ROOT = path.join(path.resolve(__dirname, '..'), 'legacy-html');
 const CHECK = process.argv.includes('--check');
 
 const PARTS = [
