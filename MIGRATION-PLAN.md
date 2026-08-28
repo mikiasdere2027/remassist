@@ -34,6 +34,7 @@ Phase 03, and Phase 01 had to be reopened.
 | **03** Database | **server side done** | Schema, migration, `POST /api/leads`, `POST /api/quiz`. **Migration not yet run** — needs a `DATABASE_URL` |
 | **04** Admin | not started | Depends on 03 |
 | **05** SEO + redirects | done | Metadata, canonicals, OG, sitemap, robots, JSON-LD, 11 × 301, `/blog/[slug]` |
+| — Website loader | done | Rebuilt on Canvas 2D, home route, once per session — reverses the §7.4 cut |
 | **06** Cutover | not started | Needs VPS access |
 
 ### What Phase 01 got wrong
@@ -955,14 +956,47 @@ Two standalone scripts port mostly mechanically:
 - `assets/ask-remassist.js` — 1,484 lines of rule-based assistant (keyword table → canned answers).
   No backend dependency beyond the `LEAD_ENDPOINT` wired up in §9.
 
-Three files are **deleted, not ported**:
+Two files are **deleted, not ported**:
 
-- `assets/website-loader.js` and the loader markup — it exists to mask the CDN React + Babel boot.
-  With server rendering there is nothing to hide, and a splash screen in front of already-rendered
-  HTML is a pure regression.
 - `assets/image-slot.js` and its `.image-slots.state.json` sidecar — a design-canvas authoring tool
   with no role in a deployed app.
 - `support.js` — the DC runtime itself.
+
+`assets/website-loader.js` was on that list too, on the grounds that it exists to mask the CDN
+React + Babel boot, and that a splash screen in front of already-rendered HTML is a pure
+regression. **That reasoning was right about the masking role and is not disputed** — but it
+treated the loader as only a boot mask, when it is also the brand's opening moment. Rebuilt
+2026-08-28 as `components/loader/RemLoader.tsx`, deliberately not as a port:
+
+- **Canvas 2D, no dependency.** three.js is ~150 KB gzipped that would have to arrive *before*
+  the loading screen could draw, on the route where time to first paint is the point. The
+  shaders translate directly — see the table at the top of `components/loader/paint.ts`. Cost
+  of the whole feature: **+4 KB gzipped JS, ~1 KB CSS**, measured against a build with
+  `<RemLoader />` removed.
+- **Once per browser session, home route only.** A `sessionStorage` flag plus a module-level
+  `hasPlayed` guard, so returning to `/` mid-visit does not drop a full-screen overlay into a
+  client-side navigation.
+- **Compressed 2.6×, and the hold is derived from the sequence.** The reference runs 4.5 s;
+  this plays the same choreography in **1.33 s**, then cross-fades over 400 ms — 1.73 s of
+  overlay in all. The lock also fires the instant the last ribbon settles, closing a full
+  second of dead air the reference had between 2.36 s and 3.4 s.
+
+  The first cut got this wrong in a way worth recording: it paired a hand-picked 1200 ms floor
+  with the full 4.5 s sequence, so the fade always began around the first ribbon and the mark
+  was **never seen to assemble**. `FLOOR_MS` is now derived from the sequence rather than
+  chosen, and `timeline.test.ts` asserts nothing is still animating at the moment of reveal.
+  Speed is a single `SPEED` constant in `lib/loader/timeline.ts`; the hold, the cap, the
+  progress bar and the backstop all follow it.
+
+  Readiness is `document.fonts.ready`, deliberately not `window.load` — §0 open decision 4's
+  9.1 MB hero video makes `load` land seconds after the page is usable.
+
+Two failure modes are handled explicitly, because both leave a visitor stuck behind a navy
+rectangle: the reveal runs on a `setInterval`, not `requestAnimationFrame` (rAF does not fire in
+a background tab, and `/` is opened in one constantly), and an inline script in the served HTML
+arms a 6 s backstop that clears the overlay even if the React bundle never arrives. That script
+sets `overflow` on `<html>` before hydration, which is why the root layout now carries
+`suppressHydrationWarning`.
 
 ---
 

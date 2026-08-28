@@ -1,0 +1,34 @@
+/**
+ * Rem Assist mark — the four ribbon paths, as data.
+ *
+ * Single source for the loader. The same artwork exists as a flat image at
+ * `public/images/rem-loader-logo.svg` (the loader's static fallback) and is
+ * duplicated inline in `assets/website-loader.js` and the standalone
+ * `legacy-html/RemAssist Logo Icon Web-loader.html`; those two are the retired
+ * three.js implementation and are kept only as reference. This file is the copy
+ * the app builds from.
+ *
+ * Paths are in the artboard's own coordinates. Draw order is source order and
+ * is load-bearing — the last ribbon is the outer one and paints over the rest.
+ */
+export const LOGO_VIEWBOX = { width: 311.2, height: 382 } as const;
+
+/** Artboard centre, subtracted to put the mark's origin at (0, 0). */
+export const LOGO_CENTER = {
+  x: LOGO_VIEWBOX.width / 2,
+  y: LOGO_VIEWBOX.height / 2,
+} as const;
+
+export interface LogoPath {
+  /** Exact brand colour of this ribbon. */
+  fill: string;
+  /** SVG path data, in viewBox coordinates. */
+  d: string;
+}
+
+export const LOGO_PATHS: readonly LogoPath[] = [
+  { fill: '#37BCF0', d: 'M173.5,13c7.6,0,15.2,0.6,22.7,2.1s9.7,3,9.4,8.3c-0.7,11.1-17.9,4.8-24.5,4.5C92.4,23.7,19.9,92.7,25.6,182.5 c0.5,8.8,4.8,20.8,5,28.1c0.1,4.5-3.7,8.5-8.3,8.1C12.2,217.9,9,176.9,10.6,157c5.6-64.1,55.2-121.9,117-138.5l15-3.1 c8-1.6,16.1-2.4,24.2-2.4H173.5L173.5,13z' },
+  { fill: '#0E8FD8', d: 'M236.8,178.8c-2.4-2.1-2.5-6-3.3-9.3c-1-5.1-1.9-11.2-3-15.7c-1.9-7.6-5.9-15-10.6-21.1 c-27.7-36.1-88.8-29.6-107.4,12c-26.3,58.8,33.1,108.4,87.1,116.6c5.8,1.3,10.4-2.8,16-3.7c6.1-0.9,10.5-0.1,16.3,0.2 c12.5,0.2,18.1,13.1,10.9,22.8c-3.7,4.5-10.2,5.1-15.6,5.4c-14.1,0.7-15.8,0.2-26.2-7.3s-12.7-2.7-18.7-4.2 c-53-12.9-106.3-62.7-90.7-121.3c21.1-87.8,150.3-76.8,159.1,11.9c0.4,4.2,0.5,7.8-1.6,11C246.7,180.1,240.5,181.8,236.8,178.8 L236.8,178.8z' },
+  { fill: '#05AEEE', d: 'M155.4,37.3c24.2-2,47.4,1.1,69.6,10.8c7,3.1,24,9.6,19.4,19.1c-5.5,11.3-19.1-0.4-26.8-3.7 C121,22,22.6,115.5,58.9,214.2c2.1,5.6,10.5,19.6,10.8,23.3c0.5,7.1-5.1,11.5-11.8,8.7c-7.5-3.1-18-33.7-20-42 C19.5,125.9,74.3,44.2,155.4,37.3z' },
+  { fill: '#0B9CE0', d: 'M280.6,183c0.3-168-232.1-148.7-218.9-1.6c1.6,18.3,7.7,36,17.5,51.6c13.2,21,27.5,40.1,13.6,69.6 c-3.1,6.6-16.3,19.3-3.9,24.6c6.9,3,11.7-4.5,14.9-9.5c10.3-17,12.2-38.1,7.5-57.6c-2.5-10.4-7.2-20.1-13.2-28.9 c-28.8-42-26.6-78.7,2.1-119.5c44.6-53.5,133.9-36.6,156.7,28.5c6.9,19.7,3.8,37.2,11.2,56.8c2.2,5.8,15.6,30.7,14.4,34.4 c-0.8,2.3-12.2,2.9-15.6,4.4c-16.9,7.4-5.4,41.2-15.3,54.7c-5.9,8-18,4.7-26.5,5.5c-26.6,2.7-46.2,34.5-52.5,58 c-1.9,4.7-2.8,13.6,4,15.3c12.6,1.6,12.4-15.8,16.8-24c27-51.4,39.3-20.9,66.7-39.3c16.5-12.3,11.9-45.8,14.6-54.9 c29.3-3,27.8-18.4,20.8-35.3C291.4,206,280.7,183.2,280.6,183L280.6,183z' },
+];

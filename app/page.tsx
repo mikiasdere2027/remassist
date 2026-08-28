@@ -9,6 +9,7 @@ import TrustedPartners from '@/components/home/TrustedPartners';
 import FitFinder from '@/components/home/FitFinder';
 import FaqSection from '@/components/home/FaqSection';
 import TeamRail from '@/components/home/TeamRail';
+import RemLoader from '@/components/loader/RemLoader';
 
 export const metadata: Metadata = {
   title: 'Remote Teams | Rem Assist',
@@ -25,18 +26,24 @@ export const metadata: Metadata = {
  */
 export default function Home() {
   return (
-    <main>
-      {/* HomeHero renders the trust strip as its own second flex child */}
-      <HomeHero />
-      <RemAcronym />
-      <ServiceGrid />
-      <TiersSection />
-      <TechTicker />
-      <StepsSection />
-      <TrustedPartners />
-      <FitFinder />
-      <FaqSection />
-      <TeamRail />
-    </main>
+    <>
+      {/* The brand loader, server-rendered into this page's static HTML so it
+          is on screen from the first byte rather than arriving with hydration.
+          It clears itself once per browser session. */}
+      <RemLoader />
+      <main>
+        {/* HomeHero renders the trust strip as its own second flex child */}
+        <HomeHero />
+        <RemAcronym />
+        <ServiceGrid />
+        <TiersSection />
+        <TechTicker />
+        <StepsSection />
+        <TrustedPartners />
+        <FitFinder />
+        <FaqSection />
+        <TeamRail />
+      </main>
+    </>
   );
 }

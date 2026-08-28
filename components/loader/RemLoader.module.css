@@ -1,0 +1,98 @@
+/* RemLoader — the full-screen brand animation over the home route.
+   Chrome ported from the inline styles on #rem-loader in index.html: navy
+   ground, centred mark, a hairline progress track and a "Loading" caption.
+
+   These rules ship in the prerendered document's <head> (Next emits a
+   stylesheet link for every server-rendered component), so the overlay is
+   fully styled on first paint. That matters more here than anywhere else on
+   the site — an unstyled frame of this markup is a white flash. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999; /* over the mobile drawer (70) and both widgets */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000543;
+  opacity: 1;
+  /* Not a transition: the fade is driven frame by frame alongside the canvas
+     so the two stay in step. */
+}
+
+/* The canvas fills the overlay; the mark sizes itself inside it (see
+   paint.ts resize()), so there is nothing to lay out here. */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Shown instead of the canvas for reduced-motion and Save-Data visitors, and
+   whenever canvas setup throws. Same sizing rule as the canvas mark:
+   ~24vh, 130–210px, never wider than 42vw. */
+.fallback {
+  position: absolute;
+  height: clamp(130px, 24vh, 210px);
+  width: auto;
+  max-width: 42vw;
+  opacity: 0.95;
+}
+
+/* Hidden by default: the canvas path never shows it, and it must not flash
+   behind the animation on the first frame. */
+.fallbackHidden {
+  opacity: 0;
+}
+
+.track {
+  position: absolute;
+  left: 50%;
+  bottom: 11vh;
+  transform: translateX(-50%);
+  width: min(56vw, 230px);
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.bar {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #34bdf0, #518de0);
+  transition: width 0.4s ease;
+}
+
+.caption {
+  position: absolute;
+  left: 50%;
+  bottom: 8vh;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+}
+
+/* Reduced motion: the mark holds still and the bar stops sliding. The
+   overlay still clears itself — it is the animation that is dropped, not the
+   reveal. */
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    transition: none;
+  }
+}
+
+/* A splash screen has no business in a printout, and the overlay would
+   otherwise print as a full navy page. */
+@media print {
+  .overlay {
+    display: none !important;
+  }
+}

@@ -48,7 +48,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={sora.variable}>
+    /* suppressHydrationWarning: the home page's loader locks scroll from an
+       inline script that runs during parse, so <html> carries a style
+       attribute the server never rendered. React reports that as a hydration
+       mismatch on every home-page load otherwise. It suppresses one level
+       only — attributes on this element — and the loader owns that style
+       imperatively, so there is nothing here for React to patch.
+       See components/loader/RemLoader.tsx. */
+    <html lang="en" className={sora.variable} suppressHydrationWarning>
       <body>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <Header />
