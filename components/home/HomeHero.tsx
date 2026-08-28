@@ -129,6 +129,10 @@ export default function HomeHero() {
     else { v.pause(); setPaused(true); }
   }
 
+  /* soundOn drives the disc's colour as well as the pill's label: the clip is
+     greyscale while muted and blooms to colour when the visitor turns sound on
+     (see .discLive). That makes it the one bit of colour photography on the
+     page, which is the point — it marks the clip as live. */
   function toggleSound() {
     const v = videoRef.current;
     if (!v) return;
@@ -205,7 +209,7 @@ export default function HomeHero() {
             </div>
           </div>
 
-          <div className={styles.disc}>
+          <div className={`${styles.disc} ${soundOn ? styles.discLive : ''}`}>
             <video ref={videoRef} src={VIDEO} loop muted playsInline />
             <button type="button" className={styles.playBtn} aria-label="Play or pause video" onClick={toggleVideo}>
               <span className={styles.playDisc}>
