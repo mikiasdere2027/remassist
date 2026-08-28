@@ -23,11 +23,13 @@
  * nothing. That is deliberate: a direct visit must never clobber a real
  * touch, which is the classic way first-touch data is silently destroyed.
  *
- * CONSENT: this writes a first-party cookie used for marketing attribution.
- * Whether it may be set before consent is a legal question, not a technical
- * one, and it is not settled here — `captureTouch` is a single call site so
- * gating it behind a consent signal later is a one-line change.
+ * CONSENT: this writes a first-party cookie for marketing attribution, which
+ * is not strictly necessary under ePrivacy, so nothing is stored until the
+ * visitor has agreed. The touch is still *computed* on arrival and held in
+ * memory, then written if and when consent arrives — see `captureTouch`.
  */
+
+import { hasConsent } from './consent';
 
 /** Campaign parameters, the standard five. */
 export const CAMPAIGN_KEYS = [
@@ -124,20 +126,50 @@ function writeCookie(name: string, touch: Touch): void {
 }
 
 /**
- * Record this arrival. Safe to call on every page view: a visit with nothing
- * campaign-like about it writes nothing, and the first touch is only ever
- * written once.
+ * The arrival we have seen but are not yet allowed to store.
+ *
+ * Module scope, so it survives client-side navigation — which is how this
+ * site moves between pages. That matters: a visitor lands on a campaign URL,
+ * the banner appears, they read two pages and only then accept. Recomputing
+ * the touch at that point would read the *third* page's URL and find nothing,
+ * silently losing the campaign. Holding it here means accepting later still
+ * attributes correctly. A full page reload does lose it, which is the honest
+ * cost of asking permission first.
+ */
+let pendingTouch: Touch | null = null;
+
+/**
+ * Record this arrival, storing it only if consent allows.
+ *
+ * Safe to call on every page view: a visit with nothing campaign-like about
+ * it is not a touch, and the first touch is only ever written once.
  */
 export function captureTouch(): void {
   if (typeof window === 'undefined') return;
   const touch = readTouch(window.location.href, document.referrer || undefined);
-  if (!touch) return;
-  if (!readCookie(FIRST_TOUCH_COOKIE)) writeCookie(FIRST_TOUCH_COOKIE, touch);
-  writeCookie(LAST_TOUCH_COOKIE, touch);
+  if (touch) pendingTouch = touch;
+  persistPendingTouch();
 }
 
-/** What to send with a conversion. Undefined when nothing was ever recorded. */
+/**
+ * Write the held touch, if there is one and we are now allowed to. Called
+ * again whenever consent changes, which is what makes a late acceptance still
+ * attribute the visit that earned it.
+ */
+export function persistPendingTouch(): void {
+  if (!pendingTouch || !hasConsent('marketing')) return;
+  if (!readCookie(FIRST_TOUCH_COOKIE)) writeCookie(FIRST_TOUCH_COOKIE, pendingTouch);
+  writeCookie(LAST_TOUCH_COOKIE, pendingTouch);
+  pendingTouch = null;
+}
+
+/**
+ * What to send with a conversion. Undefined when nothing was recorded — and
+ * undefined without marketing consent even if cookies survive from an earlier
+ * decision, because sending it to the server is processing it.
+ */
 export function attributionForSubmit(): Attribution | undefined {
+  if (!hasConsent('marketing')) return undefined;
   const first = readCookie(FIRST_TOUCH_COOKIE);
   const last = readCookie(LAST_TOUCH_COOKIE);
   if (!first && !last) return undefined;

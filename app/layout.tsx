@@ -8,6 +8,7 @@ import BookingModal from '@/components/widgets/BookingModal';
 import JsonLd from '@/components/layout/JsonLd';
 import AttributionCapture from '@/components/analytics/AttributionCapture';
 import GoogleTagManager from '@/components/analytics/GoogleTagManager';
+import ConsentBanner from '@/components/analytics/ConsentBanner';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 import '@/styles/globals.css';
 
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <JsonLd />
         <AttributionCapture />
         <GoogleTagManager />
+        <ConsentBanner />
       </body>
     </html>
   );

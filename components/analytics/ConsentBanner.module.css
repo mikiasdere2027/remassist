@@ -1,0 +1,85 @@
+/* Consent banner. Bottom-anchored rather than a full-screen interstitial:
+   a modal that blocks the page before the visitor has read anything is a
+   dark pattern in the other direction, and it wrecks the LCP of the hero
+   they arrived to see. */
+
+.banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9000; /* under the loader (99999), over page furniture */
+  margin: 0 auto;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(0, 5, 67, 0.1);
+  box-shadow: 0 28px 60px -24px rgba(0, 5, 67, 0.45);
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-600);
+}
+
+.title {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--brand-navy);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Accept and reject are the same size and weight. Making "reject" a quiet
+   text link while "accept" is a filled button is the pattern regulators have
+   repeatedly ruled invalid, and it is not worth the exposure. */
+.btn {
+  flex: 1 1 auto;
+  min-width: 140px;
+  padding: 11px 18px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms, color 150ms;
+}
+
+.accept {
+  border: 1px solid var(--brand-blue);
+  background: var(--brand-blue);
+  color: #fff;
+}
+.accept:hover { background: var(--blue-700); border-color: var(--blue-700); }
+
+.reject {
+  border: 1px solid rgba(0, 5, 67, 0.18);
+  background: #fff;
+  color: var(--brand-navy);
+}
+.reject:hover { border-color: var(--brand-navy); background: var(--bg-marketing-paper); }
+
+.btn:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 3px; }
+
+@media (min-width: 640px) {
+  .banner { flex-direction: row; align-items: center; gap: 24px; }
+  .actions { flex: none; }
+  .btn { flex: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+}

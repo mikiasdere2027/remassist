@@ -17,6 +17,8 @@
  * is unlawful. The type below is deliberately narrow to make it awkward.
  */
 
+import { hasConsent } from './consent';
+
 export interface EventParams {
   [key: string]: string | number | boolean | undefined;
 }
@@ -71,7 +73,12 @@ declare global {
 export function analyticsEnabled(): boolean {
   if (typeof window === 'undefined') return false;
   if (!process.env.NEXT_PUBLIC_GTM_ID) return false;
-  return process.env.NEXT_PUBLIC_VERCEL_ENV === 'production';
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production') return false;
+  /* Consent is checked here, at the emit, and not only in GTM's own Consent
+     Mode. Consent Mode governs what Google's tags do with an event; it does
+     not stop the event reaching the container in the first place, and an
+     event we were not permitted to collect should not be sent at all. */
+  return hasConsent('analytics');
 }
 
 /**

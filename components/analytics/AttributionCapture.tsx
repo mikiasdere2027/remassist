@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { captureTouch } from '@/lib/analytics/attribution';
+import { captureTouch, persistPendingTouch } from '@/lib/analytics/attribution';
+import { onConsentChange } from '@/lib/analytics/consent';
 
 /**
  * Records the campaign that brought this visitor in, once per page load.
@@ -17,11 +18,17 @@ import { captureTouch } from '@/lib/analytics/attribution';
  * load, so mount is exactly when it happens. Internal navigation carries no
  * new campaign to record.
  *
+ * Storage waits for consent; only the computation happens here.
+ *
  * Renders nothing.
  */
 export default function AttributionCapture() {
   useEffect(() => {
     captureTouch();
+    /* The touch is computed on arrival but only stored once marketing consent
+       exists. Someone who lands on a campaign URL and accepts three pages
+       later still gets attributed — see persistPendingTouch. */
+    return onConsentChange(persistPendingTouch);
   }, []);
 
   return null;
