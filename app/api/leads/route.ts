@@ -2,6 +2,7 @@ import { getDb, isDatabaseConfigured } from '@/db';
 import { leads, quizSubmissions } from '@/db/schema';
 import type { Answers, QuizResult } from '@/lib/quiz/quiz';
 import { LeadBody, utmFromPage } from '@/lib/leads/schema';
+import { mergeAttribution } from '@/lib/analytics/attribution';
 import { rateLimit } from '@/lib/rate-limit';
 import { notifyNewLead } from '@/lib/notify';
 
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: 'invalid' }, { status: 400 });
   }
 
-  const { honey, page, quiz, ...d } = parsed.data;
+  const { honey, page, quiz, attribution, ...d } = parsed.data;
   // Bots fill the hidden field. Answer 200 so they learn nothing, and write
   // nothing — telling them they were blocked just tells them what to change.
   if (honey) return Response.json({ ok: true });
@@ -55,7 +56,10 @@ export async function POST(req: Request) {
         ...d,
         pageUrl: page,
         referrer: req.headers.get('referer'),
-        utm: utmFromPage(page),
+        /* Last touch wins over the submitting page's query, and first touch
+           rides alongside under a first_ prefix. A conversion two pages deep
+           into the visit used to land here with utm: null. */
+        utm: mergeAttribution(utmFromPage(page), attribution),
       })
       .returning({ id: leads.id });
 

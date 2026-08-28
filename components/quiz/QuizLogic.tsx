@@ -12,6 +12,8 @@ import {
   type Answers,
   type QuizResult,
 } from '@/lib/quiz/quiz';
+import { attributionForSubmit } from '@/lib/analytics/attribution';
+import { track } from '@/lib/analytics/events';
 
 /**
  * QuizLogic — interactive qualification quiz, shared by /qualify and the home
@@ -174,10 +176,17 @@ export default function QuizLogic() {
           honey: honey || undefined,
           source: 'qualify_quiz',
           page: window.location.href,
+          /* The campaign that brought them in, which is usually not on this
+             URL — they landed somewhere else and navigated here. */
+          attribution: attributionForSubmit(),
           quiz: { answers, result, completed: true },
         }),
       });
       if (!res.ok) throw new Error(String(res.status));
+      /* Only after the row is written. Firing on submit would count leads the
+         server rejected or never stored, and this is the number the ad spend
+         gets judged on. No email or name goes with it — see lib/analytics. */
+      track('generate_lead', { lead_source: 'qualify_quiz', has_quiz: true });
       setCapture('sent');
     } catch {
       setCapture('fallback');

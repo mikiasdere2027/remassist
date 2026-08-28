@@ -23,6 +23,21 @@ export const LeadBody = z.object({
      it through validation lets the route answer 200 and drop it silently,
      which is the behaviour §9.1 describes. */
   honey: z.string().max(500).optional(),
+  /* First/last touch campaign data, read from the visitor's attribution
+     cookies at submit time. Client-supplied and therefore untrusted, so both
+     the number of keys and the length of each value are bounded — this lands
+     in a jsonb column and an unbounded record is a free write amplifier.
+     See lib/analytics/attribution.ts for why the cookie exists at all. */
+  attribution: z
+    .object({
+      first: z.record(z.string().max(40), z.string().max(200)).optional(),
+      last: z.record(z.string().max(40), z.string().max(200)).optional(),
+    })
+    .refine(
+      (a) => Object.keys(a.first ?? {}).length <= 20 && Object.keys(a.last ?? {}).length <= 20,
+      { message: 'too many attribution keys' },
+    )
+    .optional(),
   /* Optional quiz payload, sent when source is qualify_quiz. */
   quiz: z
     .object({
