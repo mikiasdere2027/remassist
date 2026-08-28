@@ -32,7 +32,14 @@
   font-weight: 800; font-size: 4rem; color: rgba(255, 255, 255, 0.3); letter-spacing: -0.02em;
   font-family: var(--font-display); }
 .photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  object-position: 50% 18%; filter: grayscale(1); }
+  object-position: 50% 18%; filter: grayscale(1);
+  transition: filter 450ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+/* Colour on hover, on the same duration and curve as the card's lift, so the
+   two read as one gesture rather than two effects that happen to coincide.
+   The rule matches the hero, where the clip turns colour once the visitor
+   switches the sound on: greyscale is the resting state of every photograph on
+   the site, and colour marks the one the visitor is actually attending to. */
+.card:hover .photo img { filter: grayscale(0); }
 
 .meta { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
   padding: 20px 21px 18px; }
@@ -58,4 +65,7 @@
 @media (prefers-reduced-motion: reduce) {
   .card { transition: none; }
   .card:hover { transform: none; }
+  /* The photo still goes colour — that is the point of the hover, not motion.
+     It just arrives instantly instead of fading. */
+  .photo img { transition: none; }
 }
