@@ -6,6 +6,11 @@
  * clip (see `public/images/interviews`) so a card costs one optimised image
  * instead of a video download — the `<video>` element only mounts on click.
  *
+ * The slug list has to stay in step with what is actually on disk: a slug with
+ * no file gives every service page a card whose video 404s, and the count has
+ * to stay at five or `interviewsFor` repeats a face (POSITIONS lists five seats
+ * per service). `interviews.test.ts` asserts both against the filesystem.
+ *
  * `position` is per service rather than per person: the card's top-left label is
  * the page's own role (the reference design puts the role where a logo would
  * sit), so the seat under the name has to read as a seat on that desk. Swap in
@@ -19,13 +24,21 @@ export interface Interviewee {
   length: string;
 }
 
-/** Source order = the order the clips were uploaded. */
+/**
+ * Source order = the order the clips were uploaded (file mtime).
+ *
+ * Re-cut 2026-08-28: basleal-abera, nebait-aemro and maereg-hailu were replaced
+ * with ermias-lemma, tensae-wubeshet and kalkidan. Lengths are read off each
+ * file's mvhd atom, not estimated — there is no ffmpeg in this toolchain, so
+ * they are parsed straight out of the MP4 header. Names for Ermias and Kalkidan
+ * match the spellings already used in `components/home/TeamRail.tsx`.
+ */
 export const INTERVIEWS: Interviewee[] = [
   { slug: 'nahom-dereje', name: 'Nahom Dereje', length: '3:50' },
-  { slug: 'basleal-abera', name: 'Basleal Abera', length: '1:20' },
-  { slug: 'natty-negash', name: 'Natty Negash', length: '2:34' },
-  { slug: 'nebait-aemro', name: 'Nebait Aemro', length: '1:07' },
-  { slug: 'maereg-hailu', name: 'Maereg Hailu', length: '0:24' },
+  { slug: 'tensae-wubeshet', name: 'Tensae Wubeshet', length: '2:42' },
+  { slug: 'ermias-lemma', name: 'Ermias Lemma', length: '4:23' },
+  { slug: 'natty-negash', name: 'Natty Negash', length: '2:33' },
+  { slug: 'kalkidan', name: 'Kalkidan Yilkal T.', length: '1:48' },
 ];
 
 export interface InterviewSeat extends Interviewee {
@@ -71,6 +84,16 @@ const POSITIONS: Record<string, string[]> = {
     'Cloud & Backup Administrator',
     'Network Support Technician',
   ],
+  /* The directory page is not one desk, so its five seats deliberately come
+     from five different ones — the subject of that page is the range itself,
+     and five variations on a single role would misrepresent it. */
+  'extra-services': [
+    'Sales Development Representative',
+    'Voice Support Agent',
+    'Bookkeeper',
+    'IT Help Desk Technician',
+    'Executive Assistant',
+  ],
 };
 
 /** How far the clip order is rotated per service, so no two pages open on the
@@ -82,6 +105,10 @@ const ROTATION: Record<string, number> = {
   'finance-and-accounting': 2,
   'virtual-back-office-team': 3,
   'managed-it': 4,
+  /* There are five clips and six pages, so one shift has to repeat. The
+     directory shares with Sales & Revenue rather than with a desk page a
+     visitor is likely to open in the same session from here. */
+  'extra-services': 0,
 };
 
 /**
