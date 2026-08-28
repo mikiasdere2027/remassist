@@ -21,7 +21,9 @@ import styles from './HomeHero.module.css';
  */
 
 const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
-const VIDEO = '/uploads/20260521_174353000_iOS.MP4';
+/* The same clip the interview rail serves for Kalkidan — it was in the repo
+   twice, once under its camera filename. One copy, named for who is in it. */
+const VIDEO = '/uploads/Interviews/kalkidan.mp4';
 
 /* Offsets and delays are the artboard's, relative to the 500x500 orbit box.
    `pop` mirrors the dc-hero-pop--right / --up modifiers: chips near the right
