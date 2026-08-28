@@ -60,15 +60,67 @@
     font-weight: 700; color: #fff; line-height: 1.35; }
   .xs-blend p { margin: 9px 0 0; font-size: 14px; line-height: 1.65; color: rgba(255,255,255,0.86); }
 
-  /* ---------- the directory itself ---------- */
-  .xs-cat { padding: 52px 0; border-top: 1px solid var(--border-default);
-    background: var(--bg-marketing-paper); scroll-margin-top: 88px; }
-  .xs-cat:nth-of-type(even) { background: #fff; }
-  .xs-cat-head { display: flex; align-items: flex-start; gap: 16px; text-decoration: none; color: inherit; }
+  /* ---------- the directory itself ----------
+     Nine <details name="directory"> in one section. This used to be nine
+     stacked <section>s, all open at every width above 760px: 3,537px of the
+     page — more than half of it — spent on nine blocks of the same shape.
+     The accordion already existed below 760px, driven by :target; it is now
+     the behaviour everywhere, and native <details> rather than :target, so a
+     summary is a real control (keyboard, expanded state announced) and the
+     open one can be closed again. */
+  .xs-directory { background: var(--bg-marketing-paper);
+    border-top: 1px solid var(--border-default);
+    border-bottom: 1px solid var(--border-default); }
+  .xs-directory .xs-wrap { padding-top: 8px; padding-bottom: 8px; }
+
+  .xs-cat { border-bottom: 1px solid var(--border-default); scroll-margin-top: 88px; }
+  .xs-cat:last-child { border-bottom: 0; }
+  /* An explicit hairline, not --border-default: both border tokens resolve to
+     #f5f7fa, which is invisible against this ground. These rules separate one
+     category from the next, so they have to be seen. */
+  .xs-cat { border-bottom-color: rgba(0, 5, 67, 0.12); --cat-bleed: 16px; }
+  /* Open, the category is a raised white card on the paper ground — not the
+     bare white rectangle this was. Two things make it read as a surface: the
+     rounded corners, and the negative inline margin with matching padding.
+     The bleed pushes the white 16px past the content on each side, so the
+     icon and the rows sit inside a margin instead of flush against the edge,
+     while their text stays optically aligned with the closed summaries above
+     and below — opening a category must not shunt its title sideways.
+     .xs-wrap's 24px padding is constant at every width, so 16px of bleed can
+     never reach the viewport edge. The hairline is dropped while open: the
+     card's own edge is the separator. */
+  .xs-cat[open] { background: #fff; border-radius: 16px;
+    margin: 10px calc(-1 * var(--cat-bleed)); padding: 0 var(--cat-bleed);
+    border-bottom-color: transparent;
+    box-shadow: 0 1px 2px rgba(0, 5, 67, 0.05), 0 20px 46px -30px rgba(0, 5, 67, 0.5); }
+
+  /* The whole summary is the hit area. list-style:none + ::-webkit-details-marker
+     removes the native triangle in every current browser; the chevron in the
+     markup is the affordance instead. */
+  .xs-cat-head { display: flex; align-items: center; gap: 16px; cursor: pointer;
+    padding: 22px 0; list-style: none; color: inherit;
+    transition: background 140ms; }
+  .xs-cat-head::-webkit-details-marker { display: none; }
+  .xs-cat-head::marker { content: ''; }
+  .xs-cat-head:hover .xs-cat-ico { background: rgba(81,141,224,0.18); }
+  .xs-cat-head:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 3px;
+    border-radius: 12px; }
   .xs-cat-txt { display: block; flex: 1 1 auto; }
-  .xs-cat-toggle { display: none; }
+
+  .xs-cat-toggle { display: grid; place-items: center; flex: none;
+    width: 30px; height: 30px; border-radius: 9999px;
+    background: rgba(81,141,224,0.10); transition: background 140ms; }
+  .xs-cat-toggle svg { width: 16px; height: 16px; fill: none; stroke: var(--brand-blue);
+    stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+    transition: transform 200ms var(--ease-out, ease); }
+  .xs-cat[open] .xs-cat-toggle { background: var(--brand-blue); }
+  .xs-cat[open] .xs-cat-toggle svg { stroke: #fff; transform: rotate(180deg); }
+
+  .xs-panel { padding-bottom: 30px; }
+
   .xs-cat-ico { flex: none; width: 48px; height: 48px; border-radius: 13px;
-    background: rgba(81,141,224,0.10); display: grid; place-items: center; }
+    background: rgba(81,141,224,0.10); display: grid; place-items: center;
+    transition: background 140ms; }
   .xs-cat-ico svg { width: 24px; height: 24px; fill: none; stroke: var(--brand-blue);
     stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .xs-cat-head h2 { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 2.3vw, 29px);
@@ -76,10 +128,13 @@
   .xs-cat-head p { margin: 6px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-600); max-width: 60ch; }
 
   /* rows, not cards: 35 services as cards made the page endless */
-  .xs-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 34px; margin-top: 24px; }
+  .xs-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 34px; margin-top: 4px; }
+  /* The row hairline is an explicit rgba for the same reason the category one
+     is: --border-default resolves to #f5f7fa, which was invisible against the
+     paper ground and is invisible again against the open card's white. */
   .xs-row { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 14px;
     padding: 13px 12px; border-radius: 10px; text-decoration: none;
-    border-bottom: 1px solid var(--border-default);
+    border-bottom: 1px solid rgba(0, 5, 67, 0.07);
     transition: background 140ms, padding-left 140ms; }
   .xs-row:hover { background: rgba(81,141,224,0.07); padding-left: 16px; }
   .xs-row b { font-size: 15px; font-weight: 700; color: var(--brand-navy); line-height: 1.35; }
@@ -147,6 +202,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .xs-blend, .xs-choose, .xs-row, .xs-nav a { transition: none; }
+    .xs-cat-head, .xs-cat-ico, .xs-cat-toggle, .xs-cat-toggle svg { transition: none; }
     .xs-blend:hover, .xs-choose:hover, .xs-nav a:hover { transform: none; }
     .xs-row:hover { padding-left: 12px; }
   }
@@ -158,29 +214,20 @@
   }
 
   @media (max-width: 760px) {
-    /* On a phone the nine areas plus thirty-five rows is still a long scroll, so
-       the rows collapse and only the chosen area opens. Driven by :target from the
-       chips and the headings: no JavaScript, and single-open behaviour for free. */
+    /* The collapsing is no longer phone-only — <details> now does it at every
+       width — so what is left here is sizing. The :target rules that used to
+       drive it are gone with the mechanism. */
     .xs-plain, .xs-band { padding: 58px 0; }
-    .xs-cat { padding: 0; border-top: 1px solid var(--border-default); background: #fff !important; }
-    .xs-cat .xs-wrap { padding: 0 24px; }
-    .xs-cat-head { padding: 18px 0; align-items: center; }
+    .xs-cat-head { padding: 16px 0; }
+    /* The tagline is the first thing to go on a narrow header; it comes back
+       once the category is open, where there is room for it. */
     .xs-cat-head p { display: none; }
+    .xs-cat[open] .xs-cat-head p { display: block; }
     .xs-cat-head h2 { font-size: 18px; }
     .xs-cat-ico { width: 40px; height: 40px; border-radius: 11px; }
     .xs-cat-ico svg { width: 20px; height: 20px; }
-    .xs-cat-toggle { display: grid; place-items: center; flex: none; width: 28px; height: 28px;
-      border-radius: 50%; background: var(--bg-marketing-paper); }
-    .xs-cat-toggle svg { width: 15px; height: 15px; fill: none; stroke: var(--brand-blue);
-      stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform 220ms; }
-    .xs-rows { display: none; margin-top: 0; padding-bottom: 8px; }
-    .xs-cat-more { display: none; }
-    .xs-cat:target .xs-rows { display: grid; }
-    .xs-cat:target .xs-cat-more { display: inline-flex; margin-bottom: 20px; }
-    .xs-cat:target { background: var(--bg-marketing-paper) !important; }
-    .xs-cat:target .xs-cat-toggle { background: var(--brand-blue); }
-    .xs-cat:target .xs-cat-toggle svg { stroke: #fff; transform: rotate(180deg); }
-    .xs-cat:target .xs-cat-head p { display: block; }
+    .xs-cat-toggle { width: 28px; height: 28px; }
+    .xs-cat-toggle svg { width: 15px; height: 15px; }
 
     .xs-pop { display: none; }
     .xs-nav { gap: 8px; }
@@ -188,3 +235,42 @@
     .xs-nav-ico { width: 24px; height: 24px; }
   }
 .hv-1{background:var(--blue-700);color:#fff}
+
+/* ---------- hero cover photograph (hand-addition) ----------
+   The hero was a flat gradient panel; it now carries the team photograph
+   full-bleed. Three things make a busy office frame safe to set type on:
+   greyscale, which is how every photograph on this site is treated and which
+   also flattens the roll-up banner's competing blues; the navy scrim, which is
+   what actually buys the contrast; and an object-position pinned high, because
+   the faces sit in the frame's upper-middle band and its bottom edge is desk
+   clutter — that is the part a short crop should lose first. */
+.xs-hero { position: relative; overflow: hidden; background: var(--brand-navy); }
+.xs-hero-media { position: absolute; inset: 0; }
+.xs-hero-media img { object-fit: cover; object-position: 50% 34%; filter: grayscale(1); }
+/* ::after is the scrim. It comes after the media in tree order, so it paints
+   over the photograph without a negative z-index anywhere in the stack. */
+.xs-hero::after { content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 5, 67, 0.66) 0%, rgba(0, 5, 67, 0.8) 58%, rgba(0, 5, 67, 0.93) 100%),
+    linear-gradient(102deg, rgba(0, 71, 179, 0.55) 0%, rgba(81, 141, 224, 0.16) 58%, transparent 100%); }
+.xs-hero .xs-wrap { position: relative; z-index: 2;
+  padding-top: 104px; padding-bottom: 72px; }
+
+/* Type inverts on the photograph. Scoped to .xs-hero so .xs-h1, .xs-lede and
+   .xs-hint keep their navy everywhere else on the page. */
+/* #9ec5ff measured 4.49:1 against the darkest-scrimmed corner of the crop —
+   one hundredth under AA for 13px text. #b9d4ff clears it with room to spare.
+   The h1's accent span keeps #9ec5ff: at 54px it only needs 3:1 and measures
+   5.79:1. */
+.xs-hero .xs-eyebrow { color: #b9d4ff; }
+.xs-hero .xs-h1 { color: #fff; }
+.xs-hero .xs-h1 span { color: #9ec5ff; }
+.xs-hero .xs-lede { color: rgba(255, 255, 255, 0.9); }
+.xs-hero .xs-hint { color: rgba(255, 255, 255, 0.74); }
+
+@media (max-width: 760px) {
+  .xs-hero .xs-wrap { padding-top: 68px; padding-bottom: 52px; }
+  /* Narrow crops cut the sides in, not the middle: nudge toward the seated
+     pair so a phone does not frame the printer. */
+  .xs-hero-media img { object-position: 54% 30%; }
+}

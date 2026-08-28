@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import styles from './page.module.css';
+import InterviewRail from '@/components/services/InterviewRail';
+import BlogRail from '@/components/services/BlogRail';
+import OpenTargetDetails from '@/components/services/OpenTargetDetails';
+import { interviewsFor } from '@/lib/interviews';
 
 export const metadata: Metadata = {
   title: 'Extra Services',
@@ -17,8 +22,15 @@ export default function Page() {
     
   
     
-  <section style={{ background: "linear-gradient(180deg,#f7faff 0%,var(--bg-marketing-paper) 70%)" }}>
-      <div className={styles['xs-wrap']} style={{ paddingTop: "76px", paddingBottom: "48px" }}>
+  <section className={styles['xs-hero']}>
+      {/* Cover photograph. alt is empty on purpose: it is the backdrop the
+          headline sits on and carries nothing the copy does not already say,
+          so a screen reader should skip it rather than narrate the furniture.
+          priority because this is the page's LCP element. */}
+      <div className={styles['xs-hero-media']}>
+        <Image src='/images/Rem-Teams.jpeg' alt='' fill priority sizes='100vw' />
+      </div>
+      <div className={styles['xs-wrap']}>
         <p className={styles['xs-eyebrow']}>Services</p>
         <h1 className={styles['xs-h1']}>Everything we staff, <span>in one place.</span></h1>
         <p className={styles['xs-lede']}>One trained seat often covers several of these at once — that is the
@@ -107,275 +119,284 @@ export default function Page() {
   
   
     
-  <section id='sales-revenue' className={styles['xs-cat']}>
+  {/* The directory. Nine sections became nine <details name='directory'>:
+      the browser keeps exactly one open, which is the whole point — as nine
+      open panels this was 3,537px, over half the page, and every panel the
+      same shape as the last. `name` does the single-open natively, so there
+      is no JS and no :target; where it is unsupported the panels simply all
+      open, which is the page as it was. The hero's category nav still links
+      to these ids, and browsers scroll to (and expand) a closed <details>
+      addressed by fragment. */}
+  {/* Opens the category the hero nav points at: the browser scrolls to a
+      closed <details> but will not expand it. */}
+    <OpenTargetDetails />
+
+  <section className={styles['xs-directory']} aria-label='Service directory'>
       <div className={styles['xs-wrap']}>
-        <a className={styles['xs-cat-head']} href='#sales-revenue'>
-          <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m4 17 5-5 4 3 6-7' /><path d='M15 8h4v4' /></svg></span>
-          <span className={styles['xs-cat-txt']}>
-            <h2>Sales &amp; Revenue</h2>
-            <p>Pipeline built and worked by dedicated reps.</p>
-          </span>
-          <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
-        </a>
-        <div className={styles['xs-rows']}>
-            <a className={styles['xs-row']} href='/services/sdr-as-a-service'>
-              <b>SDR as a Service</b><small>Outbound reps booking qualified meetings</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>Lead Generation &amp; List Building</b><small>Verified, ICP-matched contact data</small>
-            </span>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>Cold Calling Teams</b><small>Your scripts, dispositions and CRM</small>
-            </span>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>Appointment Setting</b><small>Scheduling with no-show recovery</small>
-            </span>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>Email Outreach &amp; Campaigns</b><small>Sequences, deliverability, replies</small>
-            </span>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>Virtual Sales Teams</b><small>Full-cycle reps, through close</small>
-            </span>
-        </div>
-          <a className={styles['xs-cat-more']} href='/services/sales-and-revenue'>Full Sales and Revenue page →</a>
+        <details className={styles['xs-cat']} id='sales-revenue' name='directory' open>
+          <summary className={styles['xs-cat-head']}>
+              <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m4 17 5-5 4 3 6-7' /><path d='M15 8h4v4' /></svg></span>
+              <span className={styles['xs-cat-txt']}>
+                <h2>Sales &amp; Revenue</h2>
+                <p>Pipeline built and worked by dedicated reps.</p>
+              </span>
+              <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
+          </summary>
+          <div className={styles['xs-panel']}>
+            <div className={styles['xs-rows']}>
+                <a className={styles['xs-row']} href='/services/sdr-as-a-service'>
+                  <b>SDR as a Service</b><small>Outbound reps booking qualified meetings</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>Lead Generation &amp; List Building</b><small>Verified, ICP-matched contact data</small>
+                </span>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>Cold Calling Teams</b><small>Your scripts, dispositions and CRM</small>
+                </span>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>Appointment Setting</b><small>Scheduling with no-show recovery</small>
+                </span>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>Email Outreach &amp; Campaigns</b><small>Sequences, deliverability, replies</small>
+                </span>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>Virtual Sales Teams</b><small>Full-cycle reps, through close</small>
+                </span>
+            </div>
+            <a className={styles['xs-cat-more']} href='/services/sales-and-revenue'>Full Sales and Revenue page →</a>
+          </div>
+        </details>
+
+        <details className={styles['xs-cat']} id='customer-experience' name='directory'>
+          <summary className={styles['xs-cat-head']}>
+              <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 17v-5a8 8 0 0 1 16 0v5' /><path d='M20 18a2 2 0 0 1-2 2h-.8a1.8 1.8 0 0 1-1.8-1.8v-2.4A1.8 1.8 0 0 1 17.2 14H20zM4 18a2 2 0 0 0 2 2h.8a1.8 1.8 0 0 0 1.8-1.8v-2.4A1.8 1.8 0 0 0 6.8 14H4z' /></svg></span>
+              <span className={styles['xs-cat-txt']}>
+                <h2>Customer Experience</h2>
+                <p>The front line, covered across your hours.</p>
+              </span>
+              <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
+          </summary>
+          <div className={styles['xs-panel']}>
+            <div className={styles['xs-rows']}>
+                <a className={styles['xs-row']} href='/services/customer-service-agents'>
+                  <b>Inbound Customer Support</b><small>Voice, chat and email coverage</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/customer-service-agents'>
+                  <b>Technical Support</b><small>Product-trained agents who resolve</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>Order &amp; Fulfillment Support</b><small>Order entry, tracking and returns</small>
+                </span>
+            </div>
+            <a className={styles['xs-cat-more']} href='/services/customer-service-agents'>Full Customer Experience page →</a>
+          </div>
+        </details>
+
+        <details className={styles['xs-cat']} id='finance' name='directory'>
+          <summary className={styles['xs-cat-head']}>
+              <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 10h18M6 6h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z' /><path d='M9 15h4' /></svg></span>
+              <span className={styles['xs-cat-txt']}>
+                <h2>Finance &amp; Accounting</h2>
+                <p>Clean books, closed on time, with an audit trail.</p>
+              </span>
+              <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
+          </summary>
+          <div className={styles['xs-panel']}>
+            <div className={styles['xs-rows']}>
+                <a className={styles['xs-row']} href='/services/finance-and-accounting'>
+                  <b>Bookkeeping &amp; Accounting</b><small>Reconciliation and month-end close</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/finance-and-accounting'>
+                  <b>Accounts Payable &amp; Receivable</b><small>Invoices, vendors and collections</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/finance-and-accounting'>
+                  <b>Payroll Processing</b><small>Multi-state runs, filings, records</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+            </div>
+            <a className={styles['xs-cat-more']} href='/services/finance-and-accounting'>Full Finance and Accounting page →</a>
+          </div>
+        </details>
+
+        <details className={styles['xs-cat']} id='back-office' name='directory'>
+          <summary className={styles['xs-cat-head']}>
+              <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 6h16M4 12h16M4 18h10' /></svg></span>
+              <span className={styles['xs-cat-txt']}>
+                <h2>Back Office</h2>
+                <p>The work that keeps operations running behind the front line.</p>
+              </span>
+              <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
+          </summary>
+          <div className={styles['xs-panel']}>
+            <div className={styles['xs-rows']}>
+                <a className={styles['xs-row']} href='/services/virtual-back-office-team'>
+                  <b>Data Entry &amp; Processing</b><small>High-volume, accuracy-audited work</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>Document Management</b><small>Digitization, indexing, transcription</small>
+                </span>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>Claims &amp; Application Processing</b><small>Intake, verification and routing</small>
+                </span>
+                <a className={styles['xs-row']} href='/services/virtual-back-office-team'>
+                  <b>Executive &amp; Virtual Assistants</b><small>Dedicated admin in your workflow</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+            </div>
+            <a className={styles['xs-cat-more']} href='/services/virtual-back-office-team'>Full Back Office page →</a>
+          </div>
+        </details>
+
+        <details className={styles['xs-cat']} id='managed-it' name='directory'>
+          <summary className={styles['xs-cat-head']}>
+              <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='3' y='4' width='18' height='7' rx='2' /><rect x='3' y='13' width='18' height='7' rx='2' /><path d='M7 7.5h.01M7 16.5h.01' /></svg></span>
+              <span className={styles['xs-cat-txt']}>
+                <h2>Managed IT</h2>
+                <p>Your digital backbone, monitored and maintained.</p>
+              </span>
+              <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
+          </summary>
+          <div className={styles['xs-panel']}>
+            <div className={styles['xs-rows']}>
+                <a className={styles['xs-row']} href='/services/managed-it'>
+                  <b>Managed IT Services</b><small>Endpoints, networks and monitoring</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>IT Help Desk</b><small>Tier 1 and Tier 2 support</small>
+                </span>
+                <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
+                  <b>Cybersecurity &amp; Compliance</b><small>Threat monitoring and access control</small>
+                </span>
+                <a className={styles['xs-row']} href='/services/managed-it'>
+                  <b>Cloud &amp; Infrastructure</b><small>Migration, backup and recovery</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+            </div>
+            <a className={styles['xs-cat-more']} href='/services/managed-it'>Full Managed IT page →</a>
+          </div>
+        </details>
+
+        <details className={styles['xs-cat']} id='hr-recruiting' name='directory'>
+          <summary className={styles['xs-cat-head']}>
+              <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='9' cy='8' r='3.4' /><path d='M3 20v-1.4A4.6 4.6 0 0 1 7.6 14h2.8a4.6 4.6 0 0 1 4.6 4.6V20' /><path d='M16.5 4.6a3.4 3.4 0 0 1 0 6.6M21 20v-1.4a4.6 4.6 0 0 0-3.2-4.4' /></svg></span>
+              <span className={styles['xs-cat-txt']}>
+                <h2>HR &amp; Recruiting</h2>
+                <p>An extension of your people team.</p>
+              </span>
+              <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
+          </summary>
+          <div className={styles['xs-panel']}>
+            <div className={styles['xs-rows']}>
+                <a className={styles['xs-row']} href='/services/hr-and-recruiting'>
+                  <b>Recruiting Support</b><small>Sourcing, screening, scheduling</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/hr-and-recruiting'>
+                  <b>HR Administration</b><small>Onboarding, records, benefits admin</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+            </div>
+            <a className={styles['xs-cat-more']} href='/services/hr-and-recruiting'>Full HR and Recruiting page →</a>
+          </div>
+        </details>
+
+        <details className={styles['xs-cat']} id='industry' name='directory'>
+          <summary className={styles['xs-cat-head']}>
+              <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='3' y='7' width='18' height='13' rx='2' /><path d='M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18' /></svg></span>
+              <span className={styles['xs-cat-txt']}>
+                <h2>Industry-Specific</h2>
+                <p>Regulated, specialist work handled by agents trained for it.</p>
+              </span>
+              <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
+          </summary>
+          <div className={styles['xs-panel']}>
+            <div className={styles['xs-rows']}>
+                <a className={styles['xs-row']} href='/services/industry-specific'>
+                  <b>Medical Billing &amp; RCM</b><small>Claims, denials, appeals, A/R recovery</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/industry-specific'>
+                  <b>Insurance Back Office</b><small>Submissions, servicing and renewals</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/industry-specific'>
+                  <b>Legal Process Outsourcing</b><small>Document review, intake, case files</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/industry-specific'>
+                  <b>Logistics &amp; Dispatch Support</b><small>Load ops and freight billing</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+            </div>
+            <a className={styles['xs-cat-more']} href='/services/industry-specific'>Full Industry-Specific page →</a>
+          </div>
+        </details>
+
+        <details className={styles['xs-cat']} id='marketing' name='directory'>
+          <summary className={styles['xs-cat-head']}>
+              <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 10v4l12 5V5z' /><path d='M16 9a3 3 0 0 1 0 6' /></svg></span>
+              <span className={styles['xs-cat-txt']}>
+                <h2>Marketing &amp; Content</h2>
+                <p>The go-to-market motion, staffed as one pod.</p>
+              </span>
+              <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
+          </summary>
+          <div className={styles['xs-panel']}>
+            <div className={styles['xs-rows']}>
+                <a className={styles['xs-row']} href='/services/gtm-teams'>
+                  <b>GTM Teams</b><small>A marketing ops pod hired as one unit</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/marketing-and-content'>
+                  <b>Marketing Support</b><small>SEO, social, print and campaigns</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/marketing-and-content'>
+                  <b>Content &amp; Brand Management</b><small>Content and identity across platforms</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/marketing-and-content'>
+                  <b>Research &amp; Analysis</b><small>Market and product research</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+            </div>
+            <a className={styles['xs-cat-more']} href='/services/marketing-and-content'>Full Marketing and Content page →</a>
+          </div>
+        </details>
+
+        <details className={styles['xs-cat']} id='ai-automation' name='directory'>
+          <summary className={styles['xs-cat-head']}>
+              <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m12 3 1.7 4.4 4.4 1.7-4.4 1.7L12 15.2l-1.7-4.4L5.9 9.1l4.4-1.7z' /><path d='m18.5 15.5.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z' /></svg></span>
+              <span className={styles['xs-cat-txt']}>
+                <h2>AI &amp; Automation</h2>
+                <p>Software does the volume; our agents keep the judgment calls.</p>
+              </span>
+              <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
+          </summary>
+          <div className={styles['xs-panel']}>
+            <div className={styles['xs-rows']}>
+                <a className={styles['xs-row']} href='/services/ai-and-automation'>
+                  <b>AI Automations</b><small>Automate repetitive workflows</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/ai-and-automation'>
+                  <b>AI Implementation</b><small>Guided rollout into your operations</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/ai-and-automation'>
+                  <b>AI Agents &amp; Chatbots</b><small>Inbound chat, FAQs, qualification</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/ai-and-automation'>
+                  <b>Workflow &amp; Systems Integration</b><small>Connect your stack end to end</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+                <a className={styles['xs-row']} href='/services/ai-and-automation'>
+                  <b>AI-Assisted Back Office</b><small>AI does volume, agents do judgment</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
+                </a>
+            </div>
+            <a className={styles['xs-cat-more']} href='/services/ai-and-automation'>Full AI and Automation page →</a>
+          </div>
+        </details>
       </div>
     </section>
   
   
     
-  <section id='customer-experience' className={styles['xs-cat']}>
-      <div className={styles['xs-wrap']}>
-        <a className={styles['xs-cat-head']} href='#customer-experience'>
-          <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 17v-5a8 8 0 0 1 16 0v5' /><path d='M20 18a2 2 0 0 1-2 2h-.8a1.8 1.8 0 0 1-1.8-1.8v-2.4A1.8 1.8 0 0 1 17.2 14H20zM4 18a2 2 0 0 0 2 2h.8a1.8 1.8 0 0 0 1.8-1.8v-2.4A1.8 1.8 0 0 0 6.8 14H4z' /></svg></span>
-          <span className={styles['xs-cat-txt']}>
-            <h2>Customer Experience</h2>
-            <p>The front line, covered across your hours.</p>
-          </span>
-          <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
-        </a>
-        <div className={styles['xs-rows']}>
-            <a className={styles['xs-row']} href='/services/customer-service-agents'>
-              <b>Inbound Customer Support</b><small>Voice, chat and email coverage</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/customer-service-agents'>
-              <b>Technical Support</b><small>Product-trained agents who resolve</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>Order &amp; Fulfillment Support</b><small>Order entry, tracking and returns</small>
-            </span>
-        </div>
-          <a className={styles['xs-cat-more']} href='/services/customer-service-agents'>Full Customer Experience page →</a>
-      </div>
-    </section>
-  
   
     
-  <section id='finance' className={styles['xs-cat']}>
-      <div className={styles['xs-wrap']}>
-        <a className={styles['xs-cat-head']} href='#finance'>
-          <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 10h18M6 6h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z' /><path d='M9 15h4' /></svg></span>
-          <span className={styles['xs-cat-txt']}>
-            <h2>Finance &amp; Accounting</h2>
-            <p>Clean books, closed on time, with an audit trail.</p>
-          </span>
-          <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
-        </a>
-        <div className={styles['xs-rows']}>
-            <a className={styles['xs-row']} href='/services/finance-and-accounting'>
-              <b>Bookkeeping &amp; Accounting</b><small>Reconciliation and month-end close</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/finance-and-accounting'>
-              <b>Accounts Payable &amp; Receivable</b><small>Invoices, vendors and collections</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/finance-and-accounting'>
-              <b>Payroll Processing</b><small>Multi-state runs, filings, records</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-        </div>
-          <a className={styles['xs-cat-more']} href='/services/finance-and-accounting'>Full Finance and Accounting page →</a>
-      </div>
-    </section>
-  
-  
-    
-  <section id='back-office' className={styles['xs-cat']}>
-      <div className={styles['xs-wrap']}>
-        <a className={styles['xs-cat-head']} href='#back-office'>
-          <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 6h16M4 12h16M4 18h10' /></svg></span>
-          <span className={styles['xs-cat-txt']}>
-            <h2>Back Office</h2>
-            <p>The work that keeps operations running behind the front line.</p>
-          </span>
-          <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
-        </a>
-        <div className={styles['xs-rows']}>
-            <a className={styles['xs-row']} href='/services/virtual-back-office-team'>
-              <b>Data Entry &amp; Processing</b><small>High-volume, accuracy-audited work</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>Document Management</b><small>Digitization, indexing, transcription</small>
-            </span>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>Claims &amp; Application Processing</b><small>Intake, verification and routing</small>
-            </span>
-            <a className={styles['xs-row']} href='/services/virtual-back-office-team'>
-              <b>Executive &amp; Virtual Assistants</b><small>Dedicated admin in your workflow</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-        </div>
-          <a className={styles['xs-cat-more']} href='/services/virtual-back-office-team'>Full Back Office page →</a>
-      </div>
-    </section>
-  
-  
-    
-  <section id='managed-it' className={styles['xs-cat']}>
-      <div className={styles['xs-wrap']}>
-        <a className={styles['xs-cat-head']} href='#managed-it'>
-          <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='3' y='4' width='18' height='7' rx='2' /><rect x='3' y='13' width='18' height='7' rx='2' /><path d='M7 7.5h.01M7 16.5h.01' /></svg></span>
-          <span className={styles['xs-cat-txt']}>
-            <h2>Managed IT</h2>
-            <p>Your digital backbone, monitored and maintained.</p>
-          </span>
-          <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
-        </a>
-        <div className={styles['xs-rows']}>
-            <a className={styles['xs-row']} href='/services/managed-it'>
-              <b>Managed IT Services</b><small>Endpoints, networks and monitoring</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>IT Help Desk</b><small>Tier 1 and Tier 2 support</small>
-            </span>
-            <span className={`${styles['xs-row']} ${styles['xs-row--flat']}`}>
-              <b>Cybersecurity &amp; Compliance</b><small>Threat monitoring and access control</small>
-            </span>
-            <a className={styles['xs-row']} href='/services/managed-it'>
-              <b>Cloud &amp; Infrastructure</b><small>Migration, backup and recovery</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-        </div>
-          <a className={styles['xs-cat-more']} href='/services/managed-it'>Full Managed IT page →</a>
-      </div>
-    </section>
-  
-  
-    
-  <section id='hr-recruiting' className={styles['xs-cat']}>
-      <div className={styles['xs-wrap']}>
-        <a className={styles['xs-cat-head']} href='#hr-recruiting'>
-          <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='9' cy='8' r='3.4' /><path d='M3 20v-1.4A4.6 4.6 0 0 1 7.6 14h2.8a4.6 4.6 0 0 1 4.6 4.6V20' /><path d='M16.5 4.6a3.4 3.4 0 0 1 0 6.6M21 20v-1.4a4.6 4.6 0 0 0-3.2-4.4' /></svg></span>
-          <span className={styles['xs-cat-txt']}>
-            <h2>HR &amp; Recruiting</h2>
-            <p>An extension of your people team.</p>
-          </span>
-          <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
-        </a>
-        <div className={styles['xs-rows']}>
-            <a className={styles['xs-row']} href='/services/hr-and-recruiting'>
-              <b>Recruiting Support</b><small>Sourcing, screening, scheduling</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/hr-and-recruiting'>
-              <b>HR Administration</b><small>Onboarding, records, benefits admin</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-        </div>
-          <a className={styles['xs-cat-more']} href='/services/hr-and-recruiting'>Full HR and Recruiting page →</a>
-      </div>
-    </section>
-  
-  
-    
-  <section id='industry' className={styles['xs-cat']}>
-      <div className={styles['xs-wrap']}>
-        <a className={styles['xs-cat-head']} href='#industry'>
-          <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='3' y='7' width='18' height='13' rx='2' /><path d='M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18' /></svg></span>
-          <span className={styles['xs-cat-txt']}>
-            <h2>Industry-Specific</h2>
-            <p>Regulated, specialist work handled by agents trained for it.</p>
-          </span>
-          <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
-        </a>
-        <div className={styles['xs-rows']}>
-            <a className={styles['xs-row']} href='/services/industry-specific'>
-              <b>Medical Billing &amp; RCM</b><small>Claims, denials, appeals, A/R recovery</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/industry-specific'>
-              <b>Insurance Back Office</b><small>Submissions, servicing and renewals</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/industry-specific'>
-              <b>Legal Process Outsourcing</b><small>Document review, intake, case files</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/industry-specific'>
-              <b>Logistics &amp; Dispatch Support</b><small>Load ops and freight billing</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-        </div>
-          <a className={styles['xs-cat-more']} href='/services/industry-specific'>Full Industry-Specific page →</a>
-      </div>
-    </section>
-  
-  
-    
-  <section id='marketing' className={styles['xs-cat']}>
-      <div className={styles['xs-wrap']}>
-        <a className={styles['xs-cat-head']} href='#marketing'>
-          <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 10v4l12 5V5z' /><path d='M16 9a3 3 0 0 1 0 6' /></svg></span>
-          <span className={styles['xs-cat-txt']}>
-            <h2>Marketing &amp; Content</h2>
-            <p>The go-to-market motion, staffed as one pod.</p>
-          </span>
-          <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
-        </a>
-        <div className={styles['xs-rows']}>
-            <a className={styles['xs-row']} href='/services/gtm-teams'>
-              <b>GTM Teams</b><small>A marketing ops pod hired as one unit</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/marketing-and-content'>
-              <b>Marketing Support</b><small>SEO, social, print and campaigns</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/marketing-and-content'>
-              <b>Content &amp; Brand Management</b><small>Content and identity across platforms</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/marketing-and-content'>
-              <b>Research &amp; Analysis</b><small>Market and product research</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-        </div>
-          <a className={styles['xs-cat-more']} href='/services/marketing-and-content'>Full Marketing and Content page →</a>
-      </div>
-    </section>
-  
-  
-    
-  <section id='ai-automation' className={styles['xs-cat']}>
-      <div className={styles['xs-wrap']}>
-        <a className={styles['xs-cat-head']} href='#ai-automation'>
-          <span className={styles['xs-cat-ico']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m12 3 1.7 4.4 4.4 1.7-4.4 1.7L12 15.2l-1.7-4.4L5.9 9.1l4.4-1.7z' /><path d='m18.5 15.5.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z' /></svg></span>
-          <span className={styles['xs-cat-txt']}>
-            <h2>AI &amp; Automation</h2>
-            <p>Software does the volume; our agents keep the judgment calls.</p>
-          </span>
-          <span className={styles['xs-cat-toggle']} aria-hidden='true'><svg viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg></span>
-        </a>
-        <div className={styles['xs-rows']}>
-            <a className={styles['xs-row']} href='/services/ai-and-automation'>
-              <b>AI Automations</b><small>Automate repetitive workflows</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/ai-and-automation'>
-              <b>AI Implementation</b><small>Guided rollout into your operations</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/ai-and-automation'>
-              <b>AI Agents &amp; Chatbots</b><small>Inbound chat, FAQs, qualification</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/ai-and-automation'>
-              <b>Workflow &amp; Systems Integration</b><small>Connect your stack end to end</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-            <a className={styles['xs-row']} href='/services/ai-and-automation'>
-              <b>AI-Assisted Back Office</b><small>AI does volume, agents do judgment</small><svg className={styles['xs-row-go']} viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-            </a>
-        </div>
-          <a className={styles['xs-cat-more']} href='/services/ai-and-automation'>Full AI and Automation page →</a>
-      </div>
-    </section>
-  
-  
-    
-  
-    
+
+    <InterviewRail
+      surface="paper"
+      eyebrow="Meet the bench"
+      title={<>Whichever desk you pick, <span>these are the people.</span></>}
+      lede="Clips from our screening interviews, one from five different desks — the same recordings that come with a shortlist, so you can hear how someone explains their work before a call is booked."
+      seats={interviewsFor('extra-services')}
+    />
+
   <section className={styles['xs-plain']}>
       <div className={styles['xs-wrap']}>
         <p className={styles['xs-eyebrow']}>How to choose</p>
@@ -472,6 +493,14 @@ export default function Page() {
     
   
     
+
+    <BlogRail
+      surface="paper"
+      eyebrow="From the blog"
+      title={<>How to decide <span>which seat to staff first.</span></>}
+      lede="Guides on scoping the role, ramping it, and knowing which of these desks is actually your bottleneck — written by the people who source and manage these seats."
+    />
+
   <section id='book' style={{ background: "var(--brand-navy)" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
         <h2 style={{ margin: "0 auto 16px", fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 700, color: "#fff" }}>Build a mixed team</h2>
