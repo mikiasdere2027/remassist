@@ -68,7 +68,7 @@ export default function Image() {
         />
 
         <div style={{ display: 'flex', alignItems: 'center', padding: '64px 72px 0' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- Satori, not the browser. next/image does not exist inside an ImageResponse; a data: URI on a plain img is the documented way to place a bitmap here. */}
+          {/* Plain <img> on purpose: Satori, not the browser. next/image does not exist inside an ImageResponse; a data: URI on a plain img is the documented way to place a bitmap here. no-img-element is switched off for this file in eslint.config.mjs rather than inline — see the note there. */}
           <img src={`data:image/png;base64,${mark}`} height={128} alt="" />
           <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 28 }}>
             <div style={{ fontSize: 46, color: '#ffffff', letterSpacing: -1 }}>{SITE_NAME}</div>

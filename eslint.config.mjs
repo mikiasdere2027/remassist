@@ -33,6 +33,23 @@ const eslintConfig = [
     rules: { '@next/next/no-img-element': 'off' },
   },
   {
+    /* Satori, not the browser. `next/image` does not exist inside an
+       ImageResponse — a data: URI on a plain <img> is the documented way to
+       place a bitmap here, so the rule is categorically inapplicable to this
+       file rather than merely inconvenient.
+
+       This is a file-level `off` and NOT an inline eslint-disable-next-line,
+       deliberately. Under Node 20 (what the VPS runs) ESLint applies such a
+       directive but still reports it as "Unused eslint-disable directive";
+       under Node 24 (dev machines) it does not. `npm run lint` is
+       --max-warnings=0 and the deploy gate runs the lint ON the server, so the
+       inline form passed locally and failed every deploy — same bytes, same
+       eslint 9.39.4, same eslint-config-next 15.5.24. A file-scoped rule state
+       cannot be miscounted, so this form is identical on both runtimes. */
+    files: ['app/opengraph-image.tsx'],
+    rules: { '@next/next/no-img-element': 'off' },
+  },
+  {
     // Auto-generated static page ports (Phase 01 §7.1 + §7.2). The prose comes
     // verbatim from the trusted .dc.html artboards, so straight quotes and
     // apostrophes in rendered text are intentional (React handles them fine

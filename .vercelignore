@@ -1,0 +1,13 @@
+# The interview clips are Git LFS objects, and Vercel does not support Git LFS.
+# A Vercel checkout gets the ~130-byte pointer files, not the video, so shipping
+# public/uploads would put corrupt data behind the hero <video> and the interview
+# rail — a broken player rather than an honest missing asset.
+#
+# Excluding them is safe on this host: HomeHero.tsx already renders
+# /images/interviews/kalkidan.jpg as the poster, so the hero degrades to a still
+# image instead of a dead element.
+#
+# Production is unaffected. The VPS never gets these bytes from git either —
+# tools/deploy.sh ships them once into /srv/remassist/shared/uploads, which lives
+# outside every release, and nginx serves them off disk (deploy/README.md).
+public/uploads
