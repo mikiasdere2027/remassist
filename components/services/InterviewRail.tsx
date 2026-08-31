@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState, type ReactNode } from 'react';
+import { track } from '@/lib/analytics/events';
 import type { InterviewSeat } from '@/lib/interviews';
 import styles from './InterviewRail.module.css';
 import { useRail } from './useRail';
@@ -29,7 +30,7 @@ interface Props {
 
 export default function InterviewRail({ eyebrow, title, lede, seats, surface }: Props) {
   const [playing, setPlaying] = useState<string | null>(null);
-  const { railRef, fill, onScroll, nudge, hold } = useRail({ paused: playing !== null });
+  const { railRef, progressRef, onScroll, nudge, hold } = useRail({ paused: playing !== null });
 
   return (
     <section className={`${styles.section} ${styles[`section--${surface}`]}`} id="interviews">
@@ -87,7 +88,7 @@ export default function InterviewRail({ eyebrow, title, lede, seats, surface }: 
                     <button
                       type="button"
                       className={styles.trigger}
-                      onClick={() => { hold(); setPlaying(s.slug); }}
+                      onClick={() => { hold(); setPlaying(s.slug); track('video_play', { video_id: s.slug }); }}
                       aria-label={`Play the ${s.length} interview with ${s.name}, ${s.position}`}
                     />
                     <span className={styles.disc} aria-hidden="true">
@@ -102,7 +103,7 @@ export default function InterviewRail({ eyebrow, title, lede, seats, surface }: 
 
         <div className={styles.controls}>
           <div className={styles.progress}>
-            <span className={styles.progressFill} style={{ width: `${fill}%` }} />
+            <span className={styles.progressFill} ref={progressRef} style={{ width: '8%' }} />
           </div>
           <button type="button" className={styles.arrow} onClick={() => nudge(-1)} aria-label="Scroll interviews left">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M19 12H5m6 6-6-6 6-6" /></svg>

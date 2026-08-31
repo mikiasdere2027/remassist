@@ -16,6 +16,13 @@ export interface Post {
   excerpt: string;
   /** ISO date — the artboard's display strings are derived from this. */
   date: string;
+  /**
+   * ISO date of the last substantive edit, when there has been one. Left unset
+   * until an article is actually revised: BlogPostingJsonLd and the article's
+   * og:modified_time both fall back to `date`, and claiming a modification
+   * that did not happen is a freshness signal Google learns to discount.
+   */
+  updated?: string;
   readTime: string;
   category: string;
   image: string;

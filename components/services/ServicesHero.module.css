@@ -1,0 +1,88 @@
+/* ServicesHero — the /services opening, as one full-height section.
+   The page's headline block and the three featured lines used to be two
+   stacked navy sections with a seam between them. They are one now: the
+   photograph and its scrim run the whole height, the headline sits in the top
+   half, and the three cards close the fold — so the first screen states what
+   the page is AND shows where to start, instead of spending all of itself on
+   a title. */
+
+.hero { position: relative; overflow: hidden; background: var(--brand-navy);
+  min-height: calc(100vh - var(--header-h)); display: flex; }
+.media { position: absolute; inset: 0; }
+.media img { object-fit: cover; object-position: 50% 34%; filter: grayscale(1); }
+
+/* The scrim, after the media in tree order so it paints over the photograph
+   without a negative z-index anywhere in the stack. Carried over unchanged
+   from the section this replaces — it is what buys the text its contrast. */
+.hero::after { content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 5, 67, 0.78) 0%, rgba(0, 5, 67, 0.88) 58%, rgba(0, 5, 67, 0.96) 100%),
+    linear-gradient(102deg, rgba(0, 71, 179, 0.55) 0%, rgba(81, 141, 224, 0.16) 58%, transparent 100%); }
+
+/* Headline and cards are centred in the viewport as one block, with a fixed
+   gap between them. The spacer used to grow to fill whatever height was left,
+   which on a tall screen opened a canyon between the lede and the cards; the
+   leftover space belongs above and below the pair, not inside it. Padding is
+   top-heavy because the header floats over this section. */
+.inner { position: relative; z-index: 2; width: 100%; max-width: 1200px; margin: 0 auto;
+  padding: 92px 24px 44px; display: flex; flex-direction: column; justify-content: center; }
+.gap { flex: none; height: 32px; }
+
+/* ---------- top half ---------- */
+
+.eyebrow { display: block; font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: var(--brand-blue); }
+.h1 { margin: 16px 0 0; font-family: var(--font-display); font-weight: 700;
+  letter-spacing: -0.025em; line-height: 1.08; font-size: clamp(34px, 5.4vw, 56px);
+  color: #fff; text-wrap: balance; max-width: 18ch; }
+/* The brand blue, not a lightened tint of it. #b9d4ff and #9ec5ff were picked
+   when the scrim was lighter and #518de0 could not clear AA on it; the scrim is
+   deeper now, so the real brand colour carries — and it is the colour every
+   other accent on the site uses, which a one-off tint was not. */
+.h1 span { color: var(--brand-blue); }
+.lede { margin: 20px 0 0; font-size: 17.5px; line-height: 1.7; max-width: 56ch;
+  color: rgba(255, 255, 255, 0.88); }
+
+/* Three proof points under the lede, divided by hairlines. Not cards — they
+   are a caption row, and boxing them would compete with the three real cards
+   directly below. */
+.trust { list-style: none; margin: 26px 0 0; padding: 0; display: flex; flex-wrap: wrap;
+  gap: 14px 0; }
+.trust li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px;
+  align-items: center; padding: 0 26px; }
+.trust li:first-child { padding-left: 0; }
+.trust li + li { border-left: 1px solid rgba(255, 255, 255, 0.16); }
+.trustIco { width: 30px; height: 30px; display: grid; place-items: center; }
+.trustIco svg { width: 26px; height: 26px; fill: none; stroke: var(--blue-300);
+  stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.trust b { display: block; font-family: var(--font-display); font-size: 14.5px;
+  font-weight: 700; line-height: 1.3; color: #fff; }
+.trust em { display: block; margin-top: 2px; font-style: normal; font-size: 13px;
+  line-height: 1.4; color: rgba(255, 255, 255, 0.72); }
+
+/* ---------- bottom half ---------- */
+
+/* The three featured lines moved into FeaturedCarousel, which brings its own
+   card, roles and controls. What is left here is the headline half and the
+   scroll cue. */
+
+
+/* ---------- responsive ---------- */
+
+/* The 100vh lock comes off below the three-column break: stacked, this content
+   is well over a screen tall, and pinning it to the viewport would only add
+   dead space above a section that already overflows. */
+@media (max-width: 980px) {
+  .hero { min-height: 0; }
+  .inner { padding: 84px 24px 44px; }
+  .gap { height: 28px; }
+  /* Stacked, with the dividers turned from vertical rules into horizontal
+     ones — three of these side by side below 980px give each about 100px. */
+  .trust { flex-direction: column; gap: 0; margin-top: 26px; }
+  .trust li { padding: 12px 0; }
+  .trust li + li { border-left: 0; border-top: 1px solid rgba(255, 255, 255, 0.16); }
+}
+@media (max-width: 720px) {
+  .inner { padding: 84px 20px 44px; }
+}
+

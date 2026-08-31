@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import Image from 'next/image';
 import styles from './page.module.css';
 
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
   description:
     'Hiring guides, cost breakdowns and operating templates from the team that sources, onboards and manages dedicated remote staff.',
   alternates: { canonical: '/blog' },
-  openGraph: { url: '/blog' },
+  openGraph: pageOg('/blog'),
 };
 
 /* The three cards below the featured post are the artboard's own copy. Their
@@ -29,10 +30,6 @@ export default function Page() {
             <span className={styles['bk-eyebrow']}><i></i>REM Resources</span>
             <h1 className={styles['bk-h1']}>Playbooks for building a remote team that <span className={styles['hl']}>actually delivers.</span></h1>
             <p className={styles['bk-lede']}>Hiring guides, cost breakdowns and operating templates from the team that sources, onboards and manages dedicated remote staff every day.</p>
-            <form className={styles['bk-search']} role='search'>
-              <svg viewBox='0 0 24 24' fill='none' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'><circle cx='11' cy='11' r='7' /><line x1='16' y1='7' x2='20.5' y2='20' /></svg>
-              <input type='search' placeholder='Search guides and articles…' aria-label='Search resources' />
-            </form>
           </div>
   
           <a href='/blog/hiring-offshore-without-losing-quality-control' className={styles['bk-featured']}>
@@ -110,17 +107,6 @@ export default function Page() {
   
         </div>
   
-        <div className={styles['bk-newsletter']}>
-          <div>
-            <span className={styles['bk-eyebrow']}><i></i>The REM Brief</span>
-            <h2>One useful email a month. Nothing else.</h2>
-            <p>Salary benchmarks, hiring templates and the occasional teardown of what worked for a client last quarter.</p>
-          </div>
-          <form className={styles['bk-news-form']}>
-            <input type='email' placeholder='you@company.com' aria-label='Work email' />
-            <button type='submit'>Subscribe</button>
-          </form>
-        </div>
   
       </div>
     </section>

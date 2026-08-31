@@ -1,4 +1,4 @@
-import QuizLogic from '@/components/quiz/QuizLogic';
+import FitFinderQuiz from './FitFinderQuiz';
 import shared from './HomeSections.module.css';
 
 /**
@@ -6,6 +6,10 @@ import shared from './HomeSections.module.css';
  * Section furniture only: the quiz itself is the same QuizLogic component
  * /qualify renders, per the de-duplication in MIGRATION-PLAN §8.
  * The result itself is one portalled popup now, the same on both pages.
+ *
+ * Stays a server component — the furniture below is all static. The quiz goes
+ * through FitFinderQuiz, which is the client boundary that lets it load on
+ * approach rather than on page load; see the note in that file.
  */
 export default function FitFinder() {
   return (
@@ -41,7 +45,7 @@ export default function FitFinder() {
             </p>
           </div>
         </div>
-        <QuizLogic />
+        <FitFinderQuiz />
       </div>
     </section>
   );

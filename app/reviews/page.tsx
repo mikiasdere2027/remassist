@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
@@ -6,7 +7,7 @@ export const metadata: Metadata = {
   description:
     'Reviews left on our Trustpilot profile, shown verbatim and linked to the original so you can verify them yourself.',
   alternates: { canonical: '/reviews' },
-  openGraph: { url: '/reviews' },
+  openGraph: pageOg('/reviews'),
 };
 
 export default function Page() {
@@ -26,6 +27,7 @@ export default function Page() {
         <div className={styles['tp-band']}>
           <div className={styles['tp-summary']}>
             <div className={styles['tp-summary-left']}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- SVG source. next/image needs the dangerouslyAllowSVG flag to touch one, and has nothing to optimise in a vector: no resize, no format conversion. */}
               <img className={styles['tp-logo']} src='/images/trustpilot-logo.svg' alt='Trustpilot' width='120' height='32' />
               <div className={styles['tp-score']}>
                 <b>5.0</b>
@@ -107,6 +109,7 @@ export default function Page() {
             <h3>Independently audited</h3>
             <p>ISO 9001 quality management and ISO 27001 information security, audited by a third party rather than asserted on a page.</p>
             <span className={styles['rs-iso']}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- SVG source. next/image needs the dangerouslyAllowSVG flag to touch one, and has nothing to optimise in a vector: no resize, no format conversion. */}
               <img src='/images/ISO_9001-2015.svg' alt='ISO 9001:2015 certified' />
             </span>
           </div>

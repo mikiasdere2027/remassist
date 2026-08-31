@@ -28,6 +28,18 @@ export default function ConsentBanner() {
     setDecided(readConsent() !== null);
   }, []);
 
+  /* The Ask widget launcher is fixed bottom-right at z-index 90000, this
+     banner at 9000 — so on a phone the launcher sits on top of the Accept
+     button and swallows about 37px of it. Lift the launcher while a decision
+     is outstanding. A custom property rather than a shared class because CSS
+     Modules drops :global() rules from AskRemAssist.module.css entirely. */
+  useEffect(() => {
+    if (decided !== false) return;
+    const el = document.documentElement;
+    el.style.setProperty('--consent-lift', '84px');
+    return () => { el.style.removeProperty('--consent-lift'); };
+  }, [decided]);
+
   if (decided !== false) return null;
 
   function decide(granted: boolean) {

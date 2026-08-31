@@ -10,11 +10,18 @@ import styles from './not-found.module.css';
 export const metadata: Metadata = {
   title: 'Page not found',
   description: 'That page has moved or no longer exists.',
+  /* The root layout declares `alternates: { canonical: '/' }` and Next
+     inherits it into every segment that does not override — so this page was
+     telling crawlers that a 404 is a duplicate of the home page while also
+     asking them not to index it. The two instructions contradict, and the
+     canonical is the one that gets believed. null removes the tag entirely,
+     which is what a noindex page wants. */
+  alternates: { canonical: null },
   robots: { index: false, follow: true },
 };
 
 const LINKS = [
-  { href: '/services/extra-services', label: 'All services', note: 'Every seat we staff' },
+  { href: '/services', label: 'All services', note: 'Every seat we staff' },
   { href: '/pricing', label: 'Pricing', note: 'Two published rates' },
   { href: '/how-it-works', label: 'How it works', note: 'First call to working pod' },
   { href: '/qualify', label: 'Get an estimate', note: 'Five questions, two minutes' },

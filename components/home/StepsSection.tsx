@@ -1,10 +1,23 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import shared from './HomeSections.module.css';
 import styles from './StepsSection.module.css';
 
 /**
- * StepsSection — "From consult to coverage in four simple steps" (index.html,
- * Phase 02). Uses the same steps data the home DCLogic defined.
+ * StepsSection — "From consult to coverage in four simple steps".
+ *
+ * Scroll-progress animation:
+ *   • Step 1 reveals the moment the top of the section crosses the bottom of
+ *     the viewport (i.e. as soon as you finish scrolling past the tech-stack
+ *     section above it).
+ *   • Steps 2–4 reveal evenly spaced as you scroll through the section.
+ *   • Step 4 finishes animating right as the section's bottom edge reaches the
+ *     bottom of the viewport — "when you reach the bottom of How It Works".
+ *
+ * The scroll handler is passive and self-removes once all four cards are shown.
+ * `prefers-reduced-motion` shows all cards instantly without animation.
  */
 
 const STEPS = [
@@ -13,8 +26,7 @@ const STEPS = [
     step: 'Step 1',
     title: 'Free consultation',
     desc: 'Tell us the services you need and expected interaction volume. Always free.',
-    icon:
-      /* lucide message-circle */ <><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></>,
+    icon: /* lucide message-circle */ <><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></>,
   },
   {
     n: '02',
@@ -39,11 +51,72 @@ const STEPS = [
   },
 ];
 
+/**
+ * Scroll-progress thresholds at which each card should reveal.
+ * Progress 0 = section top at viewport bottom (section just entered).
+ * Progress 1 = section bottom at viewport bottom (user is at the end).
+ *
+ * Step 1 fires immediately at 0 so it starts exactly when the section appears.
+ * Steps 2–4 are spread across the remaining scroll depth so step 4 finishes
+ * when the bottom of the section reaches the viewport bottom.
+ */
+const THRESHOLDS = [0, 0.32, 0.62, 0.90] as const;
+
 const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
 
 export default function StepsSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [revealed, setRevealed] = useState<boolean[]>([false, false, false, false]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    /* Respect reduced-motion — reveal all immediately */
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setRevealed([true, true, true, true]);
+      return;
+    }
+
+    function onScroll() {
+      const rect = section!.getBoundingClientRect();
+      const vh = window.innerHeight;
+
+      /*
+       * progress = how far the section has scrolled into the viewport,
+       * measured from 0 (section top at viewport bottom) to 1 (section bottom
+       * at viewport bottom). Clamped so we never go negative or above 1.
+       */
+      const progress = Math.min(1, Math.max(0, (vh - rect.top) / rect.height));
+
+      setRevealed((prev) => {
+        let changed = false;
+        const next = prev.map((wasRevealed, i) => {
+          if (!wasRevealed && progress >= THRESHOLDS[i]) {
+            changed = true;
+            return true;
+          }
+          return wasRevealed;
+        });
+        return changed ? next : prev;
+      });
+
+      /* Self-remove once step 4 is triggered */
+      if (progress >= THRESHOLDS[3]) {
+        window.removeEventListener('scroll', onScroll);
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    /* Check immediately in case the page loaded mid-section */
+    onScroll();
+
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       className={styles.section}
       style={{
         backgroundImage:
@@ -52,7 +125,6 @@ export default function StepsSection() {
     >
       <div className={styles.wrap}>
         <span className={`${shared.eyebrow} ${shared.eyebrowDark}`}>How It Works</span>
-        {/* the artboard uses the shared header here with its dark modifier */}
         <div className={`${shared.head} ${shared.headDark}`}>
           <h2 className={shared.title}>
             From consult to coverage<br />in four simple steps
@@ -67,8 +139,11 @@ export default function StepsSection() {
 
         <div className={styles.stage}>
           <div className={styles.grid}>
-            {STEPS.map((s) => (
-              <div key={s.n} className={styles.card}>
+            {STEPS.map((s, i) => (
+              <div
+                key={s.n}
+                className={`${styles.card} ${revealed[i] ? styles.cardVisible : ''}`}
+              >
                 <span className={styles.bignum}>{s.n}</span>
                 <span className={styles.icon}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

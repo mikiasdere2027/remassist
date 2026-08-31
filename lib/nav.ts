@@ -18,7 +18,7 @@ export interface NavLink {
 /** The service directory — the "Services" mega panel on desktop. */
 export const SERVICE_LINKS: NavLink[] = [
   { href: '/services/sales-and-revenue', label: 'Sales & Revenue', blurb: 'SDRs, lead gen, cold calling, outreach' },
-  { href: '/services/customer-service-agents', label: 'Customer Experience', blurb: 'Voice, chat, email, technical support' },
+  { href: '/services/customer-service-agents', label: 'Customer Service', blurb: 'Voice, chat, email, technical support' },
   { href: '/services/finance-and-accounting', label: 'Finance & Accounting', blurb: 'Bookkeeping, AP/AR, payroll' },
   { href: '/services/virtual-back-office-team', label: 'Back Office', blurb: 'Data entry, documents, claims, EAs' },
   { href: '/services/managed-it', label: 'Managed IT', blurb: 'Endpoints, help desk, security, cloud' },
@@ -26,7 +26,7 @@ export const SERVICE_LINKS: NavLink[] = [
   { href: '/services/industry-specific', label: 'Industry-Specific', blurb: 'Medical, insurance, legal, logistics' },
   { href: '/services/marketing-and-content', label: 'Marketing & Content', blurb: 'GTM pods, campaigns, content, research' },
   { href: '/services/ai-and-automation', label: 'AI & Automation', blurb: 'Workflows, agents, integration' },
-  { href: '/services/extra-services', label: 'Everything we staff', blurb: 'The full directory in one place' },
+  { href: '/services', label: 'Everything we staff', blurb: 'The full directory in one place' },
 ];
 
 /** The "Resources" mega panel. Case Studies is deliberately absent — the

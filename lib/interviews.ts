@@ -87,7 +87,7 @@ const POSITIONS: Record<string, string[]> = {
   /* The directory page is not one desk, so its five seats deliberately come
      from five different ones — the subject of that page is the range itself,
      and five variations on a single role would misrepresent it. */
-  'extra-services': [
+  'services': [
     'Sales Development Representative',
     'Voice Support Agent',
     'Bookkeeper',
@@ -108,7 +108,7 @@ const ROTATION: Record<string, number> = {
   /* There are five clips and six pages, so one shift has to repeat. The
      directory shares with Sales & Revenue rather than with a desk page a
      visitor is likely to open in the same session from here. */
-  'extra-services': 0,
+  'services': 0,
 };
 
 /**

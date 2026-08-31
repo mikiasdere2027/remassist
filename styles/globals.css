@@ -1,7 +1,7 @@
 /* ============================================================
    Rem Assist — global stylesheet (Next.js app)
    ------------------------------------------------------------
-   Brand tokens: source of truth is assets/colors_and_type.css.
+   Brand tokens: source of truth is RemAssist-Html/assets/colors_and_type.css.
    1. The :root block below is ported VERBATIM so any markup that
       references var(--ink-900), var(--r-md), etc. keeps working
       while the Phase 01 static pages are being ported.
@@ -106,11 +106,19 @@
 }
 
 /* ============================================================
-   Raw brand tokens — ported VERBATIM from assets/colors_and_type.css
+   Raw brand tokens — ported VERBATIM from RemAssist-Html/assets/colors_and_type.css
    (:root block). Phase 01 markup still references these by name
    (var(--ink-900) etc.), so do not rename or "tidy" them here.
    ============================================================ */
 :root {
+  /* ---------- Layout ----------
+     The site header is position: sticky, so it occupies flow space rather than
+     floating over the page. Any section that means to fill exactly one screen
+     has to subtract it — 100vh alone overshoots the fold by this much, which
+     is what pushed the /services carousel controls under the bottom edge.
+     Measured from the rendered header; keep in step if its padding changes. */
+  --header-h: 73px;
+
   /* ---------- Brand colors ---------- */
   --navy-900: #000543;
   --navy-800: #000543;        /* primary brand navy */
@@ -270,7 +278,7 @@
 
 /* ============================================================
    Semantic typography classes / element defaults
-   — ported VERBATIM from assets/colors_and_type.css
+   — ported VERBATIM from RemAssist-Html/assets/colors_and_type.css
    ============================================================ */
 
 html, body {

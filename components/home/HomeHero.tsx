@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import HomeTrustBar from './HomeTrustBar';
-import { hasConsent, onConsentChange } from '@/lib/analytics/consent';
+import { track } from '@/lib/analytics/events';
 import styles from './HomeHero.module.css';
 
 /**
@@ -18,25 +18,13 @@ import styles from './HomeHero.module.css';
  *
  * The DCLogic behaviour ported here: autoplay the muted hero video (pausing it
  * when it scrolls out of view), toggle sound, play/pause on click, and reveal a
- * chip's tip card on hover while the orbit float freezes. The clip is now a
- * YouTube embed rather than a self-hosted file, so all four of those run
- * through the player's postMessage API instead of HTMLMediaElement.
+ * chip's tip card on hover while the orbit float freezes. The clip is served
+ * locally from /uploads/Interviews/kalkidan.mp4 with an instant poster frame,
+ * ensuring zero black screen on load and immediate smooth autoplay.
  */
 
 const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
-/* The Kalkidan interview, now served by YouTube rather than as the 9.5 MB file
-   this repo ships through Git LFS — which is also what made the clip 404 on any
-   host that does not resolve LFS. `youtube-nocookie` is the domain that holds
-   YouTube's identifiers back until playback actually begins, which is what
-   makes the consent gate below worth having rather than decorative. */
-const YT_ID = '7zD8nVXq78I';
-const YT_ORIGIN = 'https://www.youtube-nocookie.com';
-/* The still the rail already uses for this clip. It is painted as the disc's
-   ground state and the player covers it, rather than being a fallback that
-   swaps in on error — so every case where no video runs degrades to a
-   photograph instead of an empty hole. That is not the rare case it sounds
-   like: reduced-motion and save-data visitors are never sent the player, and
-   neither is anyone who has not accepted cookies. */
+const VIDEO = '/uploads/Interviews/kalkidan.mp4';
 const POSTER = '/images/interviews/kalkidan.jpg';
 
 /* Offsets and delays are the artboard's, relative to the 500x500 orbit box.
@@ -79,73 +67,46 @@ function popClass(pop: string) {
 }
 
 export default function HomeHero() {
-  const discRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<HTMLIFrameElement>(null);
-  /* `armed` is whether the player exists at all. It starts false, so a visitor
-     who has not accepted cookies causes no request to YouTube whatsoever — the
-     disc is a still photograph until either consent or a deliberate press. */
-  const [armed, setArmed] = useState(false);
-  const [paused, setPaused] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [paused, setPaused] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
   const [hover, setHover] = useState(-1);
-  /* Set when the visitor arms the clip from the sound pill rather than the play
-     button: the player can only be unmuted once it exists, so the wish is held
-     here and replayed against the iframe's load event. */
-  const wantSound = useRef(false);
 
-  /* Driving the player without loading Google's iframe_api script. The
-     postMessage protocol below is the same one that script wraps, and doing it
-     directly keeps a second Google origin — and 60 KB of it — off the page. */
-  const command = useCallback((func: string, args: unknown[] = []) => {
-    frameRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args }),
-      YT_ORIGIN,
-    );
-  }, []);
-
-  /* Who gets the player, and when.
-
-     Two groups are never sent it on load: anyone who asked for reduced motion,
-     and anyone on a metered or slow connection. Both still get the play button,
-     which is the same control everyone else has.
-
-     Everyone else waits on consent. An embed is a third-party vendor that
-     writes to the visitor's device, so by the rule the rest of this site
-     follows it cannot load before they agree — see lib/analytics/consent.ts.
-     Accepting while the hero is still on screen starts it without a reload. */
+  /* Autoplay muted on mount with scroll-intersection observer */
   useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.loop = true;
+    v.playsInline = true;
+
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    // Chromium-only, and deliberately not typed by lib.dom — absence means
-    // "no signal", which is treated as a normal connection.
     const conn = (navigator as Navigator & {
       connection?: { saveData?: boolean; effectiveType?: string };
     }).connection;
     const frugal = Boolean(conn?.saveData) || /^(slow-)?2g$/.test(conn?.effectiveType ?? '');
-    if (reduced || frugal) return;
 
-    if (hasConsent('marketing')) { setArmed(true); setPaused(false); return; }
-    return onConsentChange((state) => {
-      if (state.marketing) { setArmed(true); setPaused(false); }
+    if (reduced || frugal) {
+      v.preload = 'none';
+      setPaused(true);
+      return;
+    }
+
+    void v.play().catch(() => {
+      setPaused(true);
     });
-  }, []);
 
-  /* The scroll observer, unchanged in behaviour: off screen the clip mutes and
-     pauses, back on screen it resumes unless the visitor paused it deliberately.
-     It watches the disc rather than the player, because until the clip is armed
-     there is no player to watch. */
-  useEffect(() => {
-    const disc = discRef.current;
-    if (!armed || !disc || !('IntersectionObserver' in window)) return;
+    if (!('IntersectionObserver' in window)) return;
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) {
-            command('mute');
-            command('pauseVideo');
+            v.muted = true;
+            v.pause();
             setSoundOn(false);
           } else {
             setPaused((wasPaused) => {
-              if (!wasPaused) command('playVideo');
+              if (!wasPaused) void v.play().catch(() => {});
               return wasPaused;
             });
           }
@@ -153,57 +114,38 @@ export default function HomeHero() {
       },
       { threshold: 0.1 },
     );
-    io.observe(disc);
+    io.observe(v);
     return () => io.disconnect();
-  }, [armed, command]);
+  }, []);
 
-  /* Pressing play is itself a request for the clip, so it arms the player even
-     when consent is absent — the visitor is asking for this one thing, which is
-     the narrow case ePrivacy allows without a prior yes. */
   function toggleVideo() {
-    if (!armed) { setArmed(true); setPaused(false); return; }
-    if (paused) { command('playVideo'); setPaused(false); }
-    else { command('pauseVideo'); setPaused(true); }
-  }
-
-  /* soundOn drives the disc's colour as well as the pill's label: the clip is
-     greyscale while muted and blooms to colour when the visitor turns sound on
-     (see .discLive). That makes it the one bit of colour photography on the
-     page, which is the point — it marks the clip as live. */
-  function toggleSound() {
-    if (!armed) {
-      wantSound.current = true;
-      setArmed(true); setPaused(false); setSoundOn(true);
-      return;
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) {
+      void v.play().catch(() => {});
+      setPaused(false);
+      track('video_play', { video_id: 'kalkidan' });
+    } else {
+      v.pause();
+      setPaused(true);
     }
-    if (soundOn) { command('mute'); setSoundOn(false); }
-    else { command('unMute'); command('setVolume', [100]); setSoundOn(true); }
   }
 
-  /* Commands sent before the player initialises are dropped, so the opening
-     state is carried by the src's own parameters and postMessage is only used
-     once the frame has loaded. This is the one exception: arming from the sound
-     pill has to unmute a player that did not exist when the pill was pressed. */
-  function onFrameLoad() {
-    if (!wantSound.current) return;
-    wantSound.current = false;
-    command('unMute');
-    command('setVolume', [100]);
-  }
-
-  /* A function, not a const: `origin` needs the window, and a client component
-     still renders once on the server. Called from inside the `armed` branch, it
-     runs only where a player is actually being built — as a const it would be
-     evaluated on every render, server included, and throw there.
-     `loop` needs `playlist` naming the same video: that is the documented way
-     to loop a single clip, not a workaround. */
-  function playerSrc() {
-    return `${YT_ORIGIN}/embed/${YT_ID}?${new URLSearchParams({
-      autoplay: '1', mute: '1', loop: '1', playlist: YT_ID,
-      controls: '0', modestbranding: '1', rel: '0', playsinline: '1',
-      disablekb: '1', fs: '0', iv_load_policy: '3',
-      enablejsapi: '1', origin: window.location.origin,
-    })}`;
+  function toggleSound() {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.muted) {
+      v.muted = false;
+      v.volume = 1;
+      setSoundOn(true);
+      if (v.paused) {
+        void v.play().catch(() => {});
+        setPaused(false);
+      }
+    } else {
+      v.muted = true;
+      setSoundOn(false);
+    }
   }
 
   return (
@@ -230,7 +172,7 @@ export default function HomeHero() {
             A hyper-efficient outsourcing team, delivered in pods and <br />built to the exact shape of your operation.
           </p>
           <div className={styles.cta}>
-            <a className={styles.ctaPrimary} href={BOOK} target="_blank" rel="noopener">Book a Call</a>
+            <a className={styles.ctaPrimary} data-book-placement="home_hero" href={BOOK} target="_blank" rel="noopener">Book a Call</a>
             <a className={styles.ctaGhost} href="/pricing">See pricing</a>
           </div>
         </div>
@@ -245,8 +187,6 @@ export default function HomeHero() {
                 <div
                   key={c.label}
                   className={styles.chip}
-                  /* hover lives on the wrapper, not the card, so the tip stays
-                     open while the pointer travels down onto it */
                   onMouseEnter={() => setHover(i)}
                   onMouseLeave={() => setHover(-1)}
                   style={{
@@ -256,7 +196,7 @@ export default function HomeHero() {
                     '--chip-play': hover === -1 ? 'running' : 'paused',
                   } as CSSProperties}
                 >
-                  <a className={styles.chipCard} href={BOOK} target="_blank" rel="noopener">
+                  <a className={styles.chipCard} data-book-placement="home_hero_chip" href={BOOK} target="_blank" rel="noopener">
                     <span className={styles.chipPlay}><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"></path></svg></span>
                     <span className={styles.chipLabel}>{c.label}</span>
                   </a>
@@ -265,7 +205,7 @@ export default function HomeHero() {
                       <div className={styles.popT}>{c.tipTitle}</div>
                       <p className={styles.popB}>{c.tip}</p>
                       <div className={styles.popRow}>
-                        <a className={styles.popBtn} href={BOOK} target="_blank" rel="noopener">Click to play</a>
+                        <a className={styles.popBtn} data-book-placement="home_hero_pop" href={BOOK} target="_blank" rel="noopener">Click to play</a>
                         <span className={styles.popWave} aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
                       </div>
                     </div>
@@ -275,23 +215,21 @@ export default function HomeHero() {
             </div>
           </div>
 
-          <div ref={discRef} className={`${styles.disc} ${soundOn ? styles.discLive : ''}`}>
+          <div className={`${styles.disc} ${soundOn ? styles.discLive : ''}`}>
             <div className={styles.media}>
-              {/* eslint-disable-next-line @next/next/no-img-element -- the disc
-                  is a fixed 420px circle, so next/image would add a layout pass
-                  and a srcset for one size that never changes. */}
-              <img className={styles.poster} src={POSTER} alt="" aria-hidden="true" />
-              {armed && (
-                <iframe
-                  ref={frameRef}
-                  className={styles.frame}
-                  src={playerSrc()}
-                  title="Kalkidan — team interview"
-                  onLoad={onFrameLoad}
-                  allow="autoplay; encrypted-media"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                />
-              )}
+              <video
+                ref={videoRef}
+                className={styles.video}
+                src={VIDEO}
+                poster={POSTER}
+                loop
+                muted
+                playsInline
+                autoPlay
+                preload="auto"
+                onPlay={() => setPaused(false)}
+                onPause={() => setPaused(true)}
+              />
             </div>
             <button type="button" className={styles.playBtn} aria-label="Play or pause video" onClick={toggleVideo}>
               <span className={styles.playDisc}>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 /**
  * The service-page rail behaviour, shared by InterviewRail and BlogRail and
@@ -27,7 +27,15 @@ export function useRail<T extends HTMLElement = HTMLDivElement>(
 ) {
   const railRef = useRef<T>(null);
   const resumeAt = useRef(0);
-  const [fill, setFill] = useState(8);
+  /**
+   * The progress bar is written to directly rather than held in state.
+   * `onScroll` fires for every frame of a drag or a smooth scroll — dozens of
+   * events per gesture — and each one used to setState, re-rendering the whole
+   * rail (every card, every image) to move one inline width. Nothing else in
+   * the subtree depends on the value, so React never needed to know it.
+   * Same approach as the loader's progress bar in components/loader/RemLoader.tsx.
+   */
+  const progressRef = useRef<HTMLSpanElement>(null);
 
   /** One card plus the gap — measured, since the card width is responsive. */
   const step = useCallback(() => {
@@ -41,9 +49,11 @@ export function useRail<T extends HTMLElement = HTMLDivElement>(
 
   const onScroll = useCallback(() => {
     const el = railRef.current;
-    if (!el) return;
+    const bar = progressRef.current;
+    if (!el || !bar) return;
     const max = el.scrollWidth - el.clientWidth;
-    setFill(max > 0 ? Math.max(8, Math.min(100, (el.scrollLeft / max) * 100)) : 8);
+    const pct = max > 0 ? Math.max(8, Math.min(100, (el.scrollLeft / max) * 100)) : 8;
+    bar.style.width = `${pct}%`;
   }, []);
 
   const nudge = useCallback((dir: -1 | 1) => {
@@ -100,5 +110,5 @@ export function useRail<T extends HTMLElement = HTMLDivElement>(
     };
   }, [advanceMs, hold, paused, step]);
 
-  return { railRef, fill, onScroll, nudge, hold };
+  return { railRef, progressRef, onScroll, nudge, hold };
 }

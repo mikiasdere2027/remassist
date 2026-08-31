@@ -42,7 +42,7 @@
   .cx-proof span { display: block; margin-top: 5px; font-size: 12.5px; line-height: 1.45; color: var(--ink-500); }
 
   /* hero art: a composed panel rather than photography. The agent shots in
-     assets/images/Agents are only 150px square, so anything larger than a small
+     RemAssist-Html/assets/images/Agents are only 150px square, so anything larger than a small
      avatar upscales and goes soft - the faces are used at 60px, where they stay
      sharp even at 2x, and the panel carries the weight instead. */
   .cx-art { background: #fff; border: 1px solid var(--border-default); border-radius: 20px;

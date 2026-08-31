@@ -70,7 +70,7 @@ describe('navigation data', () => {
       }
     }
     const orphans = ROUTES.map((r) => r.path)
-      .filter((p) => p.startsWith('/services/'))
+      .filter((p) => p === '/services' || p.startsWith('/services/'))
       .filter((p) => !linked.has(p));
     expect(orphans).toEqual([]);
   });

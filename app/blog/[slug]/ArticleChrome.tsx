@@ -30,28 +30,68 @@ export default function ArticleChrome() {
         .map((a) => document.getElementById(String(a.getAttribute('href')).slice(1)))
         .filter((el): el is HTMLElement => Boolean(el));
 
+      /* Geometry, cached. Every one of these reads forces the browser to flush
+         layout, and they were all inside the scroll handler: the article's
+         offsetTop and offsetHeight once, plus a getBoundingClientRect per TOC
+         section — on every scroll event, for the whole length of a long
+         article. None of it changes as you scroll, only as the page is
+         re-laid-out, so it is measured then instead.
+
+         Positions are stored document-absolute (rect.top + scrollY) rather
+         than as offsetTop, which is relative to the nearest positioned
+         ancestor and would be wrong inside the article's own containers. */
+      let articleStart = 0;
+      let articleSpan = 0;
+      let sectionTops: number[] = [];
+
+      const measure = () => {
+        if (article) {
+          articleStart = article.getBoundingClientRect().top + window.scrollY;
+          articleSpan = article.offsetHeight - window.innerHeight;
+        }
+        sectionTops = sections.map((s) => s.getBoundingClientRect().top + window.scrollY);
+      };
+
+      /* Only touch the DOM when the active entry actually changes — the
+         handler runs on every scroll event and the answer is the same for
+         most of them. */
+      let activeId: string | null | undefined;
+
       const onScroll = () => {
+        const y = window.scrollY;
         if (bar && article) {
-          const start = article.offsetTop;
-          const span = article.offsetHeight - window.innerHeight;
-          const pct = span > 0 ? (window.scrollY - start) / span : 0;
+          const pct = articleSpan > 0 ? (y - articleStart) / articleSpan : 0;
           bar.style.width = `${Math.min(100, Math.max(0, pct * 100))}%`;
         }
         let current: string | null = null;
-        for (const s of sections) {
-          if (s.getBoundingClientRect().top <= 130) current = s.id;
+        for (let i = 0; i < sections.length; i++) {
+          if (sectionTops[i] - y <= 130) current = sections[i].id;
         }
+        if (current === activeId) return;
+        activeId = current;
         for (const a of tocLinks) {
           a.classList.toggle(styles['is-active'], a.getAttribute('href') === `#${current}`);
         }
       };
+
+      const remeasure = () => { measure(); onScroll(); };
       window.addEventListener('scroll', onScroll, { passive: true });
-      window.addEventListener('resize', onScroll);
+      window.addEventListener('resize', remeasure);
+      measure();
       onScroll();
       cleanups.push(() => {
         window.removeEventListener('scroll', onScroll);
-        window.removeEventListener('resize', onScroll);
+        window.removeEventListener('resize', remeasure);
       });
+
+      /* The cache has to survive the article growing after mount — a late
+         image, a webfont settling. A ResizeObserver on the article catches
+         both without guessing at which event to listen for. */
+      if (article && typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(remeasure);
+        ro.observe(article);
+        cleanups.push(() => ro.disconnect());
+      }
 
       // Mobile contents drawer. `.bp-toc-panel` is display:none below the
       // breakpoint until `.open` lands on the aside.

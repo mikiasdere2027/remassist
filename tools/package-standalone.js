@@ -27,12 +27,33 @@ const COPIES = [
   [path.join(ROOT, '.next', 'static'), path.join(STANDALONE, '.next', 'static')],
 ];
 
+/*
+ * Directories under public/ that must NOT travel in the release.
+ *
+ * public/uploads is 142 MB of interview video. It is deployed once into
+ * shared/uploads and symlinked into each release (see deploy/remote-deploy.sh),
+ * because it is the same footage every time and re-uploading it per deploy
+ * makes a 300 KB code change cost 142 MB over the wire.
+ *
+ * remote-deploy.sh already deletes it from the release after unpacking, which
+ * is far too late: it is packed, transferred and unpacked first. Excluding it
+ * at the source is where the saving actually happens, and it also means the
+ * tarball this produces is the same shape as what lands on the server.
+ *
+ * Paths are relative to public/ and matched exactly.
+ */
+const EXCLUDE = new Set(['uploads']);
+
 const WARN_ONLY = process.argv.includes('--warn-only');
 
-function copyDir(src, dest) {
+function copyDir(src, dest, skip) {
   fs.mkdirSync(dest, { recursive: true });
   let copied = 0;
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (skip && skip.has(entry.name)) {
+      console.log(`  skipped ${entry.name}/ (deployed separately, see EXCLUDE)`);
+      continue;
+    }
     const s = path.join(src, entry.name);
     const d = path.join(dest, entry.name);
     if (entry.isDirectory()) copied += copyDir(s, d);
@@ -48,7 +69,9 @@ for (const [src, dest] of COPIES) {
     ok = false;
     continue;
   }
-  const n = copyDir(src, dest);
+  /* Only the top level of public/ is filtered — EXCLUDE names are its own
+     children, not a pattern to apply at every depth. */
+  const n = copyDir(src, dest, src.endsWith('public') ? EXCLUDE : null);
   console.log(`copied ${n} file(s) → ${path.relative(ROOT, dest)}`);
 }
 

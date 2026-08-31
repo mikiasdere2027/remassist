@@ -11,24 +11,22 @@ import styles from './Footer.module.css';
  * ported in Phase 02 (widgets), not here.
  */
 
-const linkStyle: CSSProperties = {
-  color: 'var(--ink-200)',
-  fontSize: 14,
-  textDecoration: 'none',
-};
+/* Base styles moved out of an inline object and into Footer.module.css so a
+   breakpoint can grow the tap target — see the .link rules there. */
+const linkClass = `${styles.link} hover:text-white`;
 
 function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   // Internal app routes use next/link (client-side nav); everything else
   // (mailto:, tel:, external profiles) stays a plain anchor.
   if (href.startsWith('/') && !href.startsWith('//')) {
     return (
-      <Link href={href} style={linkStyle} className="hover:text-white">
+      <Link href={href} className={linkClass}>
         {children}
       </Link>
     );
   }
   return (
-    <a href={href} style={linkStyle} className="hover:text-white">
+    <a href={href} className={linkClass}>
       {children}
     </a>
   );
@@ -120,8 +118,8 @@ export default function Footer() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
+          <div className={styles.col}>
+            <div className={styles.colHead} style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
               Services
             </div>
             <FooterLink href="/services/sales-and-revenue">Sales &amp; Revenue</FooterLink>
@@ -131,16 +129,21 @@ export default function Footer() {
             <FooterLink href="/services/sdr-as-a-service">SDR as a Service</FooterLink>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
+          <div className={styles.col}>
+            <div className={styles.colHead} style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
               Company
             </div>
             <FooterLink href="/">Home</FooterLink>
             <FooterLink href="/pricing">Pricing</FooterLink>
-            <FooterLink href="/privacy-policy">Privacy Policy</FooterLink>
+            {/* Named, not linked — see .linkSoon in Footer.module.css. */}
+            <span className={styles.linkSoon} aria-disabled="true">
+              Case Studies <i className={styles.soon}>soon</i>
+            </span>
+            <FooterLink href="/reviews">Reviews</FooterLink>
+            <FooterLink href="/blog">Blog &amp; Guides</FooterLink>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
+          <div className={styles.col}>
+            <div className={styles.colHead} style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-on-dark-muted)', marginBottom: 4 }}>
               Contact
             </div>
             <FooterLink href="tel:+18322302194">(832) 230-2194</FooterLink>
@@ -161,11 +164,11 @@ export default function Footer() {
         </div>
       <div style={{ paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 13, color: 'var(--fg-on-dark-muted)' }}>Copyright © 2026 Rem Assist. All rights reserved.</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-            <a href="/privacy-policy" style={{ color: 'var(--ink-200)', fontSize: 13, textDecoration: 'none' }} className="hover:text-white">
+          <span className={styles.legal}>
+            <a href="/privacy-policy" className={`${styles.legalLink} hover:text-white`}>
               Privacy Policy
             </a>
-            <a href="/terms-of-service" style={{ color: 'var(--ink-200)', fontSize: 13, textDecoration: 'none' }} className="hover:text-white">
+            <a href="/terms-of-service" className={`${styles.legalLink} hover:text-white`}>
               Terms of Service
             </a>
           </span>

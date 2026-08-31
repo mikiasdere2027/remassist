@@ -3,8 +3,8 @@
  *
  * Single source for the loader. The same artwork exists as a flat image at
  * `public/images/rem-loader-logo.svg` (the loader's static fallback) and is
- * duplicated inline in `assets/website-loader.js` and the standalone
- * `legacy-html/RemAssist Logo Icon Web-loader.html`; those two are the retired
+ * duplicated inline in `RemAssist-Html/assets/website-loader.js` and the standalone
+ * `RemAssist-Html/RemAssist Logo Icon Web-loader.html`; those two are the retired
  * three.js implementation and are kept only as reference. This file is the copy
  * the app builds from.
  *

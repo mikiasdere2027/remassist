@@ -184,6 +184,7 @@ export default function ArticleBody() {
               </div>
   
               <figure>
+                {/* eslint-disable-next-line @next/next/no-img-element -- SVG source. next/image needs the dangerouslyAllowSVG flag to touch one, and has nothing to optimise in a vector: no resize, no format conversion. */}
                 <div className={styles['bp-figure-art']}><img className={styles['bp-figure-pic']} src='/images/blog/total-cost-breakdown.svg' alt='Stacked bar showing the six components of total cost of employment: base pay, payroll taxes, benefits, tools and software, management time, and onboarding and ramp.' loading='lazy' /></div>
                 <figcaption>Total cost of employment, broken into the six components most budgets leave out.</figcaption>
               </figure>

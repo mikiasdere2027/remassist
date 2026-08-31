@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import shared from './HomeSections.module.css';
 import styles from './TeamRail.module.css';
 
@@ -35,7 +35,10 @@ const HOLD_MS = 8000;
 export default function TeamRail() {
   const railRef = useRef<HTMLDivElement>(null);
   const resumeAt = useRef(0);
-  const [fill, setFill] = useState(8);
+  /* Written to directly, not held in state — onScroll fires for every frame of
+     a drag, and re-rendering nine cards with their images to move one inline
+     width is work nothing asked for. Mirrors components/services/useRail.ts. */
+  const progressRef = useRef<HTMLSpanElement>(null);
 
   /** One card plus the gap — measured, since the card width is responsive. */
   const step = useCallback(() => {
@@ -49,9 +52,11 @@ export default function TeamRail() {
 
   function onScroll() {
     const el = railRef.current;
-    if (!el) return;
+    const bar = progressRef.current;
+    if (!el || !bar) return;
     const max = el.scrollWidth - el.clientWidth;
-    setFill(max > 0 ? Math.max(8, Math.min(100, (el.scrollLeft / max) * 100)) : 8);
+    const pct = max > 0 ? Math.max(8, Math.min(100, (el.scrollLeft / max) * 100)) : 8;
+    bar.style.width = `${pct}%`;
   }
 
   function nudge(dir: -1 | 1) {
@@ -156,7 +161,7 @@ export default function TeamRail() {
 
         <div className={styles.controls}>
           <div className={styles.progress}>
-            <span className={styles.progressFill} style={{ width: `${fill}%` }} />
+            <span className={styles.progressFill} ref={progressRef} style={{ width: '8%' }} />
           </div>
           <button type="button" className={styles.arrow} onClick={() => nudge(-1)} aria-label="Scroll team left">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M19 12H5m6 6-6-6 6-6" /></svg>

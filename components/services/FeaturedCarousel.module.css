@@ -1,0 +1,138 @@
+/* FeaturedCarousel — the three featured lines, one at a time, in the hero.
+
+   Replaces three side-by-side cards. At three-up each card had about 380px to
+   hold a title, a blurb, four roles and a link, which is why the roles ran to
+   a single cramped column; one card at a time gets the full width, so the
+   roles sit two-up and the right half can carry a photograph. */
+
+.wrap { position: relative; }
+
+/* All three slides share one grid cell, so the frame is the height of the
+   tallest and does not resize as you page through — and every slide stays in
+   the HTML for crawlers. visibility (not the `hidden` attribute) does the
+   hiding: Tailwind's preflight sets [hidden]{display:none!important}, which
+   would collapse the box and defeat the stacking. */
+.stack { display: grid; border-radius: 18px; overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 10, 68, 0.62);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+
+.slide { grid-area: 1 / 1; display: grid; grid-template-columns: 1fr 1fr;
+  scroll-margin-top: 96px;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 260ms var(--ease-out), visibility 0s linear 260ms; }
+.slideOn { opacity: 1; visibility: visible; pointer-events: auto;
+  transition: opacity 300ms var(--ease-out), visibility 0s; }
+
+/* ---------- left half ---------- */
+
+.body { padding: 26px 26px 24px; display: flex; flex-direction: column; }
+
+/* The card's foot: counter left, link right. */
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.count { display: flex; align-items: baseline; gap: 9px; margin: 0;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.countNow { display: grid; place-items: center; min-width: 38px; height: 30px;
+  padding: 0 9px; border-radius: 9px; background: var(--brand-blue); color: #fff; }
+.countAll { color: rgba(255, 255, 255, 0.5); }
+
+/* center, not start. Top-aligned, the 58px tile and the 65px text block left
+   0px above the title and 7px below the blurb — the tile visibly sat high
+   against the copy. Centring splits the difference, so the gap above the
+   title equals the gap under the blurb whatever the title wraps to.
+   gap 18px matches the directory panel's head next door. */
+.head { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 18px;
+  align-items: center; }
+/* The site's icon chip: blue tint, blue stroke, blue border — the same
+   treatment every other icon box on this site uses. */
+.ico { width: 58px; height: 58px; border-radius: 14px; display: grid; place-items: center;
+  background: rgba(81, 141, 224, 0.18); border: 1px solid rgba(81, 141, 224, 0.42); }
+.ico svg { width: 28px; height: 28px; fill: none; stroke: var(--brand-blue);
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.name { margin: 0; font-family: var(--font-display); font-size: clamp(21px, 2.3vw, 27px);
+  font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; color: #fff; }
+.blurb { margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: rgba(255, 255, 255, 0.8); }
+
+/* Two columns, as the reference lays them out — the whole reason one card at a
+   time is worth doing. */
+.roles { list-style: none; margin: 18px 0 0; padding: 18px 0 0;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14); }
+.roles li { display: grid; grid-template-columns: 15px minmax(0, 1fr); gap: 10px;
+  align-items: start; font-size: 13.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.88); }
+.roles svg { width: 15px; height: 15px; margin-top: 2px; fill: none; stroke: var(--brand-blue);
+  stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* 30px, not 16: the spacer only grows when a slide is shorter than the tallest
+   one, so on the tallest slide it collapses to its minimum — and 16px put the
+   counter and the link hard against the last row of roles. */
+.spacer { flex: 1 1 auto; min-height: 30px; }
+.go { display: inline-flex; align-items: center; gap: 8px; flex: none;
+  font-size: 14.5px; font-weight: 700; color: var(--brand-blue); text-decoration: none;
+  transition: color 150ms; }
+.go:hover { color: #fff; }
+.go svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; transition: transform 150ms; }
+.go:hover svg { transform: translateX(3px); }
+
+/* ---------- right half ---------- */
+
+.media { position: relative; min-height: 310px; }
+.media img { object-fit: cover; }
+/* A navy veil so the photograph sits behind the card rather than competing
+   with it, matching how the hero treats its own backdrop. */
+.media::after { content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(0, 10, 68, 0.72) 0%, rgba(0, 10, 68, 0.22) 42%, rgba(0, 10, 68, 0.1) 100%); }
+
+/* ---------- controls ---------- */
+
+/* Overlaid on the photograph rather than sitting under the card: dots at its
+   top-right, arrows at its bottom-right. That is where the reference puts
+   them, and it also buys back the ~62px of column height they used to take
+   below the frame — which is what was pushing the arrows off a short
+   viewport. The wrapper is inert to the pointer so the slide underneath keeps
+   its own hover; only the two groups take clicks. */
+.controls { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+
+/* No dot indicators. Three bars restating a count the card already prints as
+   "01 / 09" was the same information twice, and the arrows are the control. */
+
+.arrows { position: absolute; right: 20px; bottom: 18px; display: flex; align-items: center;
+  gap: 10px; pointer-events: auto; }
+.arrow { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+  cursor: pointer; background: rgba(0, 10, 68, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.28); color: #fff;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  transition: background 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+.arrow:hover { background: rgba(0, 10, 68, 0.78); border-color: rgba(255, 255, 255, 0.5); }
+.arrow:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.arrowNext { background: var(--brand-blue); border-color: var(--brand-blue); }
+.arrowNext:hover { background: var(--blue-700); border-color: var(--blue-700); }
+.arrow svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 980px) {
+  .slide { grid-template-columns: minmax(0, 1fr); }
+  /* Photo first, then the copy — a 300px image below the roles would be the
+     last thing on a very long card and read as an afterthought. */
+  .media { grid-row: 1; min-height: 200px; }
+  .media::after { background: linear-gradient(180deg, rgba(0, 10, 68, 0.2) 0%, rgba(0, 10, 68, 0.75) 100%); }
+  .body { padding: 22px 20px 20px; }
+  /* Back into the flow: stacked, the photo is a 200px band at the top and an
+     overlay pinned bottom-right would sit on the roles instead of the image. */
+  .controls { position: static; display: flex; align-items: center;
+    justify-content: flex-end; gap: 16px; margin-top: 16px; pointer-events: auto; }
+  .arrows { position: static; }
+  /* Counter above the link once the card is one column — side by side at 360px
+     they would each get about 130px. */
+  .foot { flex-direction: column; align-items: flex-start; gap: 14px; }
+}
+@media (max-width: 720px) {
+  .roles { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .controls { justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide, .slideOn, .arrow, .go, .go svg { transition: none; }
+}

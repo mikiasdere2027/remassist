@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 import SeatTiersSection from '@/components/services/SeatTiers';
 
 export const metadata: Metadata = {
@@ -7,7 +9,7 @@ export const metadata: Metadata = {
   description:
     'Sourcing, screening, interview coordination and onboarding administration, run inside your ATS and HRIS by a seat you interviewed.',
   alternates: { canonical: '/services/hr-and-recruiting' },
-  openGraph: { url: '/services/hr-and-recruiting' },
+  openGraph: pageOg('/services/hr-and-recruiting'),
 };
 
 export default function Page() {
@@ -23,7 +25,7 @@ export default function Page() {
   
         <div>
           <span className={styles['hr-kicker']}>HR &amp; Recruiting</span>
-          <h1 className={styles['hr-h1']}>Open roles move<br /><span>without the chase.</span></h1>
+          <h1 className={styles['hr-h1']}>Recruiting that moves,<br /><span>without the chase.</span></h1>
           <p className={styles['hr-lede']}>Sourcing, screening, interview coordination and onboarding administration —
             run inside your ATS and HRIS by a seat you interviewed. Every hiring decision still lands
             with you.</p>
@@ -511,7 +513,9 @@ export default function Page() {
               least-privilege and scoped per client, the data stays in your systems, and the controls are
               independently audited rather than self-declared.</p>
             <div className={styles['hr-iso']}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- SVG source. next/image needs the dangerouslyAllowSVG flag to touch one, and has nothing to optimise in a vector: no resize, no format conversion. */}
               <img src='/images/ISO_9001-2015.svg' alt='ISO 9001:2015 certified' loading='lazy' decoding='async' />
+              {/* eslint-disable-next-line @next/next/no-img-element -- SVG source. next/image needs the dangerouslyAllowSVG flag to touch one, and has nothing to optimise in a vector: no resize, no format conversion. */}
               <img src='/images/ISO_27001-2022.svg' alt='ISO 27001:2022 certified' loading='lazy' decoding='async' />
             </div>
           </div>
@@ -608,6 +612,8 @@ export default function Page() {
     
   
     
+  <RelatedServices path='/services/hr-and-recruiting' surface='white' />
+
   <section className={styles['hr-close']}>
       <div className={styles['hr-wrap']}>
         <h2>Watch it run on one stuck role first.</h2>

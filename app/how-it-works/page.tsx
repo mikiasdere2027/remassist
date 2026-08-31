@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
@@ -6,7 +7,7 @@ export const metadata: Metadata = {
   description:
     'From first call to a working pod: four phases, roughly two weeks, and you approve the people before they start.',
   alternates: { canonical: '/how-it-works' },
-  openGraph: { url: '/how-it-works' },
+  openGraph: pageOg('/how-it-works'),
 };
 
 export default function Page() {

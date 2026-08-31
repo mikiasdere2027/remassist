@@ -125,42 +125,21 @@
   .vb-faq details[open] summary::after { content: "\2212"; background: var(--brand-blue); color: #fff; }
   .vb-faq p { margin: 0 4px 24px; font-size: 15px; line-height: 1.75; color: var(--ink-600); max-width: 78ch; }
 
-  /* ---------- contact ---------- */
-  .vb-contact { background: var(--brand-navy); padding: 84px 0 92px; }
-  .vb-contact-card { background: #eef4ff; border-radius: 26px; overflow: hidden;
-    display: grid; grid-template-columns: 0.82fr 1.18fr; align-items: stretch;
-    box-shadow: 0 50px 90px -45px rgba(0, 5, 67, 0.7); }
-  .vb-contact-photo { position: relative; min-height: 460px; background: #dbe6fb; }
-  .vb-contact-photo img { position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: cover; object-position: 50% 18%; display: block; }
-  .vb-contact-body { padding: clamp(30px, 3.4vw, 52px); }
-  .vb-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 24px; }
-  .vb-field--full { grid-column: 1 / -1; }
-  .vb-label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-700);
-    margin-bottom: 6px; letter-spacing: 0.01em; }
-  .vb-input { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 15px; color: var(--ink-900);
-    background: #fff; border: 1px solid #cfdcf3; border-radius: 9px; padding: 12px 14px;
-    transition: border-color 150ms, box-shadow 150ms; }
-  .vb-input:focus { outline: none; border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.22); }
-  textarea.vb-input { min-height: 116px; resize: vertical; }
-  .vb-consent { grid-column: 1 / -1; display: flex; gap: 11px; align-items: flex-start; margin-top: 4px; }
-  .vb-consent input { flex: none; width: 17px; height: 17px; margin-top: 2px; accent-color: var(--brand-blue); }
-  .vb-consent label { font-size: 13.5px; line-height: 1.6; color: var(--ink-600); }
-  .vb-form-foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 18px;
-    flex-wrap: wrap; margin-top: 8px; }
-  .vb-form-note { font-size: 13px; color: var(--ink-500); }
+  /* ---------- contact ----------
+     The "Let's Talk Outcomes" band moved to components/services/ContactRail,
+     which owns the section and the brief form (ContactRailForm + ContactRail
+     .module.css). The .vb-contact / .vb-form-* rules that lived here went
+     with them, as did the contact rules in the media queries below. */
 
   /* ---------- responsive ---------- */
   @media (max-width: 1024px) {
     .vb-hero { grid-template-columns: 1fr; gap: 48px; padding: 56px 0 64px; }
     .vb-wall { max-width: 680px; margin: 0 auto; }
     .vb-roles, .vb-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .vb-contact-card { grid-template-columns: 1fr; }
-    .vb-contact-photo { min-height: 320px; }
   }
   @media (max-width: 680px) {
     .vb-section { padding: 62px 0; }
-    .vb-roles, .vb-steps, .vb-tiers, .vb-form-grid { grid-template-columns: 1fr; }
+    .vb-roles, .vb-steps, .vb-tiers { grid-template-columns: 1fr; }
     .vb-wall { height: 420px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .vb-col:nth-of-type(3) { display: none; }
     .vb-wall-badge { white-space: normal; max-width: 84%; }

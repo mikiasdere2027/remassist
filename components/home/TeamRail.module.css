@@ -12,8 +12,18 @@
   padding: 28px 0 24px; margin-top: 4px; cursor: grab;
   margin-right: calc(50% - 50vw);
   scrollbar-width: none; -ms-overflow-style: none;
-  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 440px), transparent 100%);
-  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 440px), transparent 100%); }
+  /* The feather assumes the rail overshoots the 1200px wrap by ~440px, which
+     only happens on a wide viewport. On a phone the rail is 351px, so
+     calc(100% - 440px) resolves to -89px; a gradient stop cannot precede the
+     one before it, so it clamps to 0 and the fade starts at the left edge —
+     washing out the entire rail. Keep 440px where it was designed and drop to
+     a proportionate feather once the rail stops overshooting.
+     -webkit- alias first: after the standard property it deletes both. */
+  --feather: 440px;
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - var(--feather)), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - var(--feather)), transparent 100%); }
+
+@media (max-width: 900px) { .rail { --feather: 72px; } }
 
 .rail::-webkit-scrollbar { display: none; }
 

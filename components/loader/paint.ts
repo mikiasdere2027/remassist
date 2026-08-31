@@ -4,7 +4,7 @@ import { clamp01, type LoaderState } from '@/lib/loader/timeline';
 /**
  * The loader mark, drawn on a 2D canvas.
  *
- * This replaces the three.js renderer in `assets/website-loader.js`. Every
+ * This replaces the three.js renderer in `RemAssist-Html/assets/website-loader.js`. Every
  * effect there has a direct 2D equivalent, so this is a translation rather than
  * an approximation:
  *

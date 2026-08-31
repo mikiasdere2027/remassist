@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import HomeHero from '@/components/home/HomeHero';
 import RemAcronym from '@/components/home/RemAcronym';
 import ServiceGrid from '@/components/home/ServiceGrid';
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   description:
     'Remote teams that match your culture — results-driven, efficient, on target, thoroughly excellent. Expert teams built around your goals.',
   alternates: { canonical: '/' },
-  openGraph: { url: '/' },
+  openGraph: pageOg('/'),
 };
 
 /**

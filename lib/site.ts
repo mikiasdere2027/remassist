@@ -44,10 +44,52 @@ export const ROUTES: Route[] = [
   { path: '/services/managed-it', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/services/ai-and-automation', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/services/industry-specific', priority: 0.8, changeFrequency: 'monthly' },
-  { path: '/services/extra-services', priority: 0.7, changeFrequency: 'monthly' },
+  { path: '/services', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/reviews', priority: 0.7, changeFrequency: 'weekly' },
   { path: '/faq', priority: 0.7, changeFrequency: 'monthly' },
   { path: '/blog', priority: 0.6, changeFrequency: 'weekly' },
   { path: '/privacy-policy', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/terms-of-service', priority: 0.3, changeFrequency: 'yearly' },
 ];
+
+/**
+ * Open Graph defaults for a page.
+ *
+ * Next's `mergeMetadata` REPLACES the whole `openGraph` object when a child
+ * segment declares one — it does not merge field by field. Every page here
+ * declared `openGraph: { url }` to set its own canonical URL, and in doing so
+ * silently discarded `type`, `siteName` and `locale` from the root layout: 22
+ * routes shipped with none of them. Spreading the defaults back in is the
+ * whole fix.
+ *
+ * The og:image IS set here, and has to be. app/opengraph-image.tsx exists and
+ * Next does resolve it through the file convention — but only onto the segment
+ * that owns the file. The home page picked it up (app/page.tsx sits in the same
+ * directory); every other route declared its own `openGraph` object and lost it
+ * along with everything else. Verified in the build output: before this,
+ * /pricing emitted og:title, og:description and og:url and nothing more.
+ *
+ * The route is prerendered to a static PNG, so `/opengraph-image` is a real
+ * URL that serves it — the ?hash query Next appends elsewhere is a cache
+ * buster, not part of the path. metadataBase makes it absolute.
+ */
+export const OG_IMAGE = {
+  url: '/opengraph-image',
+  width: 1200,
+  height: 630,
+  alt: 'Rem Assist — remote teams that match your culture',
+};
+
+/**
+ * Open Graph defaults for a page.
+ */
+export function pageOg(path: string, extra: Record<string, unknown> = {}) {
+  return {
+    type: 'website' as const,
+    siteName: SITE_NAME,
+    locale: 'en_US',
+    url: path,
+    images: [OG_IMAGE],
+    ...extra,
+  };
+}

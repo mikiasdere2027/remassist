@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import Image from 'next/image';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 import SeatTiersSection from '@/components/services/SeatTiers';
 import InterviewRail from '@/components/services/InterviewRail';
 import { interviewsFor } from '@/lib/interviews';
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
   description:
     'Six seats that build the list, work the channels, and put qualified meetings on your calendar — hired as one trained pod, without the recruiting cycle.',
   alternates: { canonical: '/services/sales-and-revenue' },
-  openGraph: { url: '/services/sales-and-revenue' },
+  openGraph: pageOg('/services/sales-and-revenue'),
 };
 
 export default function Page() {
@@ -27,7 +29,7 @@ export default function Page() {
   
         <div>
           <span className={styles['sr-kicker']}>Sales &amp; Revenue</span>
-          <h1 className={styles['sr-h1']}>Pipeline you can<br /><span>actually forecast.</span></h1>
+          <h1 className={styles['sr-h1']}>Sales pipeline you can<br /><span>actually forecast.</span></h1>
           <p className={styles['sr-lede']}>Six seats that build the list, work the channels, and put qualified meetings on
             your calendar — hired as one trained pod, without the recruiting cycle.</p>
   
@@ -73,7 +75,7 @@ export default function Page() {
           <span className={styles['sr-orb-halo']}></span>
   
           <span className={styles['sr-orb-core']}>
-            <span className={styles['sr-orb-faces']}><span><Image src='/images/Agents/sdr-1.jpg' alt='' width={128} height={128} sizes="54px" /></span><span><Image src='/images/Agents/sdr-2.jpg' alt='' width={128} height={128} sizes="54px" /></span><span><Image src='/images/Agents/sdr-3.jpg' alt='' width={128} height={128} sizes="54px" /></span></span>
+            <span className={styles['sr-orb-faces']}><span><Image src='/images/Agents/sdr-1.jpg' alt='' width={128} height={128} sizes="54px" loading="eager" /></span><span><Image src='/images/Agents/sdr-2.jpg' alt='' width={128} height={128} sizes="54px" loading="eager" /></span><span><Image src='/images/Agents/sdr-3.jpg' alt='' width={128} height={128} sizes="54px" loading="eager" /></span></span>
             <b>One dedicated<br />seat</b>
             <small>Owns the loop</small>
           </span>
@@ -253,6 +255,8 @@ export default function Page() {
       title={<>Reading for whoever <span>owns the number.</span></>}
       lede="Playbooks on scoping the seat, ramping it, and keeping the pipeline honest — written by the people who source and manage these reps."
     />
+
+  <RelatedServices path='/services/sales-and-revenue' surface='paper' />
 
   <section className={styles['sr-close']}>
       <div className={styles['sr-wrap']}>

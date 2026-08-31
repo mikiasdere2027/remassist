@@ -8,18 +8,17 @@ const __dirname = dirname(__filename);
 const compat = new FlatCompat({ baseDirectory: __dirname });
 
 // Next.js + TypeScript recommended rules (flat config bridge).
-// Legacy static-site files live outside the Next app and are ignored:
-// linting the DC runtime (support.js) or the artboard HTML buys nothing.
-// The artboards, index.html and partials/ are all under legacy-html/ now.
+// The DC static site this app was ported from has moved out to the standalone
+// static-site repo: artboards, index.html, partials/, assets/, support.js and
+// sync-partials.js all live there now. The 'support.js' and 'legacy-html/**'
+// entries that used to sit below went with it, so nothing from the static site
+// is ignored here any more.
 const eslintConfig = [
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     ignores: [
-      'support.js',
-      'assets/**',
       'tools/**',
       'uploads/**',
-      'legacy-html/**',
       '.next/',
       'next-env.d.ts',
       'package-lock.json',
@@ -44,7 +43,13 @@ const eslintConfig = [
     rules: {
       'react/no-unescaped-entities': 'off',
       '@next/next/no-html-link-for-pages': 'off',
-      '@next/next/no-img-element': 'off',
+      /* `@next/next/no-img-element` used to be off here too, which meant the
+         one rule that catches an unoptimised raster image could not fire on
+         the 20 generated pages — the exact files most likely to grow one, and
+         where nine full-size JPEGs were in fact shipping through plain <img>.
+         It is on now; the handful of legitimate uses left are all SVG sources
+         and carry an inline disable saying so. `npm run lint` also runs with
+         --max-warnings=0, so a new one fails CI rather than scrolling past. */
     },
   },
 ];

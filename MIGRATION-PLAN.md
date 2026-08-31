@@ -35,6 +35,7 @@ Phase 03, and Phase 01 had to be reopened.
 | **04** Admin | not started | Depends on 03 |
 | **05** SEO + redirects | done | Metadata, canonicals, OG, sitemap, robots, JSON-LD, 11 × 301, `/blog/[slug]` |
 | — Website loader | done | Rebuilt on Canvas 2D, home route, once per session — reverses the §7.4 cut |
+| — Static site decommission | done | 2026-08-29 — the DC static site lifted out into the standalone static-site repo; nothing from it remains tracked here (see §15) |
 | **06** Cutover | not started | Needs VPS access |
 
 ### What Phase 01 got wrong
@@ -1431,15 +1432,15 @@ Restore DNS TTL to normal after a week of stability.
 
 Only after a week at parity or better:
 
-- [ ] Delete the 25 `.dc.html` files (they remain in git history)
-- [ ] Delete `support.js` — the DC runtime
-- [ ] Delete `tools/sync-partials.js` — superseded by the React root layout (§5.4)
-- [ ] Delete `assets/website-loader.js`, `assets/image-slot.js`, `RemAssist Logo Icon Web-loader.html`
-- [ ] Delete `partials/` once header/footer are components
+- [x] Delete the 25 `.dc.html` files (they remain in git history) — done 2026-08-29: moved out with the site to the standalone static-site repo
+- [x] Delete `support.js` — the DC runtime — done 2026-08-29: tracked entry removed from the index; survives in git history and the standalone static-site repo
+- [x] Delete `tools/sync-partials.js` — superseded by the React root layout (§5.4) — done 2026-08-29: same lift-out
+- [x] Delete `assets/website-loader.js`, `assets/image-slot.js`, `RemAssist Logo Icon Web-loader.html` — done 2026-08-29
+- [x] Delete `partials/` once header/footer are components — done 2026-08-29
 - [ ] Retire the old `remassistance.com` codebase and its hosting
 - [ ] Update the project memory / deploy notes: **the artboard workflow and the `sync-partials` step
       no longer exist**, and the deploy target is the Hostinger VPS, not Vercel
-- [ ] Decide the fate of `Home v1.dc.html` and `Case Studies.dc.html` per §3.2
+- [x] Decide the fate of `Home v1.dc.html` and `Case Studies.dc.html` per §3.2 — decided 2026-08-29: both moved out with the standalone static-site repo (not deleted; they remain in git history)
 
 ---
 
@@ -1495,3 +1496,11 @@ field. Phases 01 and 04 parallelise across two developers; 05 and 06 do not.
 
 Retained: `assets/images/**`, `uploads/**` (hero video, client logos), `assets/colors_and_type.css`
 (as the token source for §5.3), `assets/booking-modal.js` and `assets/ask-remassist.js` (ported).
+
+> **Status: executed 2026-08-29.** The DC static site — every row above — moved out to the standalone
+> static-site repo. Nothing in this table is tracked or on disk here any more; it all survives in git
+> history (the artboards were committed before the lift-out) and in the standalone repo. `Home v1.dc.html`
+> and `Case Studies.dc.html` are not an open question — they moved with the site, so the §15 "decide
+> their fate" item is resolved (moved, not deleted). The retained items were ported first: the
+> images/SVGs now live under `public/images/` and the widgets under `components/`; only
+> `public/uploads/**` remains tracked from the old static set.

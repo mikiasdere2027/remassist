@@ -48,7 +48,7 @@ export default function Header() {
         <nav className={styles['nav-row']} aria-label="Main">
           {/* Services */}
           <span className={styles['nav-has-menu']}>
-            <Link className={styles['nav-link']} href="/services/extra-services">
+            <Link className={styles['nav-link']} href="/services">
               Services
               <svg className={styles['nav-caret']} viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
             </Link>
@@ -61,7 +61,7 @@ export default function Header() {
                   </Link>
                   <Link className={styles['nav-item']} href="/services/customer-service-agents" prefetch={false}>
                     <span className={styles['nav-ico']}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17v-5a8 8 0 0 1 16 0v5" /><path d="M20 18a2 2 0 0 1-2 2h-.8a1.8 1.8 0 0 1-1.8-1.8v-2.4A1.8 1.8 0 0 1 17.2 14H20zM4 18a2 2 0 0 0 2 2h.8a1.8 1.8 0 0 0 1.8-1.8v-2.4A1.8 1.8 0 0 0 6.8 14H4z" /></svg></span>
-                    <span><b>Customer Experience</b><small>Voice, chat, email, technical support</small></span>
+                    <span><b>Customer Service</b><small>Voice, chat, email, technical support</small></span>
                   </Link>
                   <Link className={styles['nav-item']} href="/services/finance-and-accounting" prefetch={false}>
                     <span className={styles['nav-ico']}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18M6 6h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" /><path d="M9 15h4" /></svg></span>
@@ -96,7 +96,7 @@ export default function Header() {
                 </span>
               </span>
               <span className={styles['nav-mega-foot']}>
-                <Link className={styles['nav-browse']} href="/services/extra-services" prefetch={false}>
+                <Link className={styles['nav-browse']} href="/services" prefetch={false}>
                   Browse every service
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
                 </Link>
@@ -141,7 +141,7 @@ export default function Header() {
                   Read the FAQ
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
                 </Link>
-                <a className={styles['nav-foot-cta']} href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">
+                <a className={styles['nav-foot-cta']} data-book-placement="mega_menu_foot" href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">
                   Book a free consult
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
                 </a>
@@ -152,7 +152,7 @@ export default function Header() {
           <Link className={`${styles['nav-link']} ${styles['nav-secondary']}`} href="/how-it-works">How it Works</Link>
           <Link className={styles['nav-link']} href="/pricing">Pricing</Link>
           <Link className={`${styles['nav-link']} ${styles['nav-secondary']}`} href="/qualify">Qualify</Link>
-          <a className={styles['nav-cta']} href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">Book a Call</a>
+          <a className={styles['nav-cta']} data-book-placement="header" href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">Book a Call</a>
         </nav>
 
         {/* Below 820px the nav row above is hidden and this takes over. */}

@@ -6,7 +6,7 @@
  * all 12 service lines, commercials, delivery, company info, plus an out-of-scope
  * guard so "do you do X?" never lies about a trade we do not perform.
  *
- * The legacy assets/ask-remassist.js is left untouched (static .dc.html target).
+ * RemAssist-Html/assets/ask-remassist.js is left untouched (static .dc.html target).
  */
 
 /* ---- Contact / external constants --------------------------------------- */
@@ -44,7 +44,7 @@ export const LIN: Record<string, string> = {
   industry: '/services/industry-specific',
   marketing: '/services/marketing-and-content',
   ai: '/services/ai-and-automation',
-  extra: '/services/extra-services',
+  extra: '/services',
 
   certs: '/#certifications',
   fit: '/#fit-finder',
@@ -143,7 +143,7 @@ export const KB: KbEntry[] = [
     kw: ['service', 'services', 'what do you do', 'what do you offer', 'offering', 'offerings', 'solutions', 'product', 'products', 'portfolio', 'capabilities', 'outsourcing', 'outsource', 'bpo', 'what you do'],
     title: 'A bench of trained seats, hired as teams',
     text: ['• Sales & Revenue — SDRs, list builders, cold callers, setters, email campaigns',
-           '• Customer Experience — voice, chat & email inside your helpdesk, 24/7',
+           '• Customer Service — voice, chat & email inside your helpdesk, 24/7',
            '• Finance & Accounting — bookkeeping, AP/AR, month-end close',
            '• HR & Recruiting — sourcing, screening, interview coordination',
            '• Marketing & Content — campaigns, SEO, social, brand',
@@ -165,7 +165,7 @@ export const KB: KbEntry[] = [
 
   { id: 'customer_service',
     kw: ['customer service', 'customer support', 'customer experience', 'customer care', 'support agent', 'support team', 'service agent', 'helpdesk agent', 'call center', 'call centre', 'contact center', 'contact centre', 'csat', 'front line', 'voice support', 'live chat', 'email support', 'after sales'],
-    title: 'Customer Experience',
+    title: 'Customer Service',
     text: ['Dedicated agents answering your customers by voice, chat and email — inside your helpdesk, trained on your product, working your macros.',
            '• 24/7 coverage, any timezone',
            '• 100% of interactions QA-reviewed by a named supervisor',
@@ -274,7 +274,7 @@ export const KB: KbEntry[] = [
     kw: ['extra service', 'extra services', 'other service', 'other services', 'additional service', 'more services', 'what else', 'a la carte', 'full bench', 'all services'],
     title: 'Extra Services — the rest of the bench',
     text: ['The same bench covers the rest of a company’s operations. Take a single role or a whole pod.',
-           '• Sales & Revenue, Customer Experience, Finance & Accounting',
+           '• Sales & Revenue, Customer Service, Finance & Accounting',
            '• Back Office, Managed IT, HR & Recruiting',
            '• Industry-Specific staff, Marketing & Content, AI & Automation',
            'Most clients buy a seat, not a service — one trained seat often covers several of these.'],
@@ -425,7 +425,7 @@ export const KB: KbEntry[] = [
     kw: ['research', 'analysis', 'market research', 'competitor analysis', 'data analysis', 'analyst', 'insights', 'survey', 'pricing study'],
     title: 'Research & Analysis',
     text: ['Extensive research and analysis from our agents to enhance your product or service — market and competitor sweeps, pricing studies, and the recurring data pulls nobody has time for.'],
-    links: [['Extra Services', LIN.extra], ['Book a consultation', CONTACT.book]],
+    links: [['All Services', LIN.extra], ['Book a consultation', CONTACT.book]],
     chips: ['leadgen', 'marketing', 'pricing'] },
 
   { id: 'content_brand',

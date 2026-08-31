@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 import InterviewRail from '@/components/services/InterviewRail';
 import { interviewsFor } from '@/lib/interviews';
 import BlogRail from '@/components/services/BlogRail';
@@ -9,7 +11,7 @@ export const metadata: Metadata = {
   description:
     'Endpoints, help desk, security, and cloud — run as one coordinated layer, with the same operational discipline we bring to your sales and support seats.',
   alternates: { canonical: '/services/managed-it' },
-  openGraph: { url: '/services/managed-it' },
+  openGraph: pageOg('/services/managed-it'),
 };
 
 export default function Page() {
@@ -25,7 +27,7 @@ export default function Page() {
   
         <div>
           <span className={styles['it-kicker']}>Managed IT</span>
-          <h1 className={styles['it-h1']}>Your digital backbone,<br /><span>monitored and maintained.</span></h1>
+          <h1 className={styles['it-h1']}>Managed IT for the backbone you run on,<br /><span>monitored and maintained.</span></h1>
           <p className={styles['it-lede']}>Endpoints, help desk, security, and cloud — run as one coordinated layer,
             with the same operational discipline we already bring to your sales, support, and back office.</p>
   
@@ -347,6 +349,8 @@ export default function Page() {
       title={<>Reading for whoever <span>owns the tickets.</span></>}
       lede="Playbooks on scoping the seat, ramping it, and keeping response times honest — written by the people who source and manage these technicians."
     />
+
+  <RelatedServices path='/services/managed-it' surface='white' />
 
   <section className={styles['it-close']}>
       <div className={styles['it-wrap']}>

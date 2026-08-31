@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 import SeatTiersSection from '@/components/services/SeatTiers';
 import InterviewRail from '@/components/services/InterviewRail';
 import { interviewsFor } from '@/lib/interviews';
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
   description:
     'Bookkeepers, AP and AR clerks, and payroll specialists working inside your ledger. Reconciled daily, closed monthly.',
   alternates: { canonical: '/services/finance-and-accounting' },
-  openGraph: { url: '/services/finance-and-accounting' },
+  openGraph: pageOg('/services/finance-and-accounting'),
 };
 
 export default function Page() {
@@ -26,7 +28,7 @@ export default function Page() {
   
         <div>
           <span className={styles['fn-kicker']}>Finance &amp; Accounting</span>
-          <h1 className={styles['fn-h1']}>Books that close<br /><span>on time, every time.</span></h1>
+          <h1 className={styles['fn-h1']}>Bookkeeping that closes<br /><span>on time, every time.</span></h1>
           <p className={styles['fn-lede']}>Bookkeepers, accounts payable and receivable clerks, and payroll specialists
             working inside your ledger. Reconciled daily, closed monthly, every entry carrying its
             support.</p>
@@ -280,6 +282,8 @@ export default function Page() {
       title={<>Reading for whoever <span>signs off the month.</span></>}
       lede="Playbooks on scoping the seat, ramping it, and keeping the controls intact — written by the people who source and manage these desks."
     />
+
+  <RelatedServices path='/services/finance-and-accounting' surface='white' />
 
   <section className={styles['fn-close']}>
       <div className={styles['fn-wrap']}>

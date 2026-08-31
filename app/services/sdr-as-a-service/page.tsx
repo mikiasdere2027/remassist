@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 
 export const metadata: Metadata = {
   title: 'SDR as a Service',
   description:
     'Niche-trained SDRs who build lists, run multi-channel sequences, and book qualified meetings — a full outbound engine without the hiring cycle.',
   alternates: { canonical: '/services/sdr-as-a-service' },
-  openGraph: { url: '/services/sdr-as-a-service' },
+  openGraph: pageOg('/services/sdr-as-a-service'),
 };
 
 export default function Page() {
@@ -20,7 +22,7 @@ export default function Page() {
   <section style={{ backgroundColor: "var(--bg-marketing-paper)", backgroundImage: "url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22240%22%20height%3D%2260%22%20viewBox%3D%220%200%20240%2060%22%3E%3Cpath%20d%3D%22M0%2030c20-20%2040-20%2060%200s40%2020%2060%200%2040-20%2060%200%2040%2020%2060%200%22%20fill%3D%22none%22%20stroke%3D%22rgba(44%2C123%2C229%2C0.20)%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M0%2048c20-20%2040-20%2060%200s40%2020%2060%200%2040-20%2060%200%2040%2020%2060%200%22%20fill%3D%22none%22%20stroke%3D%22rgba(14%2C42%2C74%2C0.10)%22%20stroke-width%3D%221.2%22%2F%3E%3C%2Fsvg%3E'), url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22240%22%20height%3D%2260%22%20viewBox%3D%220%200%20240%2060%22%3E%3Cpath%20d%3D%22M0%2030c20-20%2040-20%2060%200s40%2020%2060%200%2040-20%2060%200%2040%2020%2060%200%22%20fill%3D%22none%22%20stroke%3D%22rgba(44%2C123%2C229%2C0.20)%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M0%2048c20-20%2040-20%2060%200s40%2020%2060%200%2040-20%2060%200%2040%2020%2060%200%22%20fill%3D%22none%22%20stroke%3D%22rgba(14%2C42%2C74%2C0.10)%22%20stroke-width%3D%221.2%22%2F%3E%3C%2Fsvg%3E'), radial-gradient(rgba(44,123,229,0.13) 1.5px, transparent 1.5px)", backgroundSize: "240px 60px, 240px 60px, 26px 26px", backgroundPosition: "0 0, 0 30px, 0 0", animation: "waveShift 26s linear infinite", position: "relative", overflow: "hidden" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px 64px", textAlign: "center" }}>
         <p style={{ margin: "0 0 16px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--brand-blue)" }}>SDR as a Service</p>
-        <h1 style={{ margin: "0 auto 20px", fontFamily: "var(--font-display)", fontSize: "50px", lineHeight: 1.15, fontWeight: 700, color: "var(--brand-navy)", maxWidth: "22ch", textWrap: "balance" }}>Meetings on your calendar, not activity in a dashboard.</h1>
+        <h1 style={{ margin: "0 auto 20px", fontFamily: "var(--font-display)", fontSize: "clamp(30px, 5.4vw, 50px)", lineHeight: 1.15, fontWeight: 700, color: "var(--brand-navy)", maxWidth: "22ch", textWrap: "balance" }}>SDRs who book meetings, not activity in a dashboard.</h1>
         <p style={{ margin: "0 auto 32px", fontSize: "18px", lineHeight: 1.6, color: "var(--ink-600)", maxWidth: "60ch" }}>Niche-trained SDRs who build lists, run multi-channel sequences, and book qualified meetings — a full outbound engine without the hiring cycle.</p>
         <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "center" }}>
           <a href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener' style={{ background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 28px", borderRadius: "6px", transition: "background 150ms" }} className={styles['hv-1']}>Book a Call</a>
@@ -111,6 +113,8 @@ export default function Page() {
     
   
     
+  <RelatedServices path='/services/sdr-as-a-service' surface='white' />
+
   <section id='book' style={{ background: "var(--bg-marketing-paper)" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
         <h2 style={{ margin: "0 auto 16px", fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 700, color: "var(--brand-navy)" }}>Put an SDR on trial — literally</h2>

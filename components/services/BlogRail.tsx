@@ -25,7 +25,7 @@ interface Props {
 }
 
 export default function BlogRail({ eyebrow, title, lede, surface }: Props) {
-  const { railRef, fill, onScroll, nudge } = useRail({ cardWidth: 470 });
+  const { railRef, progressRef, onScroll, nudge } = useRail({ cardWidth: 470 });
 
   return (
     <section className={`${styles.section} ${styles[`section--${surface}`]}`} id="from-the-blog">
@@ -84,7 +84,7 @@ export default function BlogRail({ eyebrow, title, lede, surface }: Props) {
 
         <div className={styles.controls}>
           <div className={styles.progress}>
-            <span className={styles.progressFill} style={{ width: `${fill}%` }} />
+            <span className={styles.progressFill} ref={progressRef} style={{ width: '8%' }} />
           </div>
           <button type="button" className={styles.arrow} onClick={() => nudge(-1)} aria-label="Scroll articles left">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M19 12H5m6 6-6-6 6-6" /></svg>

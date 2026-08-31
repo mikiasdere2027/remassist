@@ -1,14 +1,22 @@
 /* "Ask RemAssist" concierge — chrome matched 1:1 to the static widget in
-   assets/ask-remassist.js (the design index.html ships), with the button count
+   RemAssist-Html/assets/ask-remassist.js (the design index.html ships), with the button count
    deliberately cut back: at most two answer links and three chips per reply,
    no standing three-button handoff row, and no duplicate contact strip under
    the composer. Colours are literal rather than tokenised so the two
    implementations cannot drift apart. */
 
 .root {
-  position: fixed; right: 24px; bottom: 24px; z-index: 90000;
+  position: fixed; right: 24px; z-index: 90000;
+  /* --consent-lift is set on <html> by ConsentBanner while a decision is
+     outstanding. Without it the launcher (z-index 90000) sits on top of the
+     banner (9000) and swallows ~37px of its Accept button on a phone. A
+     variable rather than a :global() selector because CSS Modules drops
+     :global rules from this file entirely. */
+  bottom: calc(24px + var(--consent-lift, 0px));
+  transition: bottom 200ms var(--ease-out);
   font-size: 14px; line-height: 1.5;
 }
+
 .root *, .root *::before, .root *::after { box-sizing: border-box; }
 
 /* ---- launcher ---------------------------------------------------------- */
@@ -40,6 +48,38 @@
 @keyframes remAskPing {
   0%   { opacity: 0.7; transform: scale(0.92); }
   70%, 100% { opacity: 0; transform: scale(1.28); }
+}
+
+/* ---- teaser tooltip --------------------------------------------------- */
+.teaser {
+  position: absolute; right: 74px; bottom: 8px;
+  width: max-content; max-width: 250px;
+  padding: 12px 34px 12px 16px; border-radius: 16px 16px 4px 16px;
+  background: #ffffff; color: #000543;
+  font-size: 13.5px; font-weight: 500; line-height: 1.38; letter-spacing: -0.01em;
+  box-shadow: 0 16px 36px -10px rgba(0, 5, 67, 0.35), 0 0 0 1px rgba(0, 5, 67, 0.06);
+  opacity: 0; transform: translateX(10px) scale(0.96);
+  transition: opacity 300ms cubic-bezier(0.16, 1, 0.3, 1), transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none; cursor: pointer; user-select: none; z-index: 10;
+}
+.teaserShown {
+  opacity: 1; transform: translateX(0) scale(1); pointer-events: auto;
+}
+.teaser:hover {
+  box-shadow: 0 20px 42px -10px rgba(0, 5, 67, 0.42), 0 0 0 1px rgba(0, 5, 67, 0.08);
+}
+.teaserText { display: block; }
+.teaserClose {
+  position: absolute; top: 6px; right: 6px;
+  width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+  border: 0; background: transparent; color: #98a2b3; cursor: pointer;
+  border-radius: 50%; font-size: 18px; line-height: 1; padding: 0;
+  transition: background 150ms, color 150ms;
+}
+.teaserClose:hover { background: #f2f4f7; color: #000543; }
+
+@media (max-width: 520px) {
+  .teaser { max-width: 200px; font-size: 12.5px; padding: 10px 30px 10px 14px; right: 70px; bottom: 6px; }
 }
 
 /* ---- panel ------------------------------------------------------------- */
@@ -244,7 +284,7 @@
 
 /* ---- phones — full screen, as the static widget does ------------------- */
 @media (max-width: 520px) {
-  .root { right: 16px; bottom: 16px; }
+  .root { right: 16px; bottom: calc(16px + var(--consent-lift, 0px)); }
   .panel {
     position: fixed; inset: 0; width: 100vw; max-width: none;
     height: 100dvh; border-radius: 0;

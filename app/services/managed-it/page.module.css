@@ -156,6 +156,14 @@
     .it-node i { width: 26px; height: 26px; }
     .it-node i svg { width: 13px; height: 13px; }
     .it-node b { font-size: 12px; }
+    /* The side nodes are centred on their `left` percentage, so half the pill
+       sits outside it. At 360px the lattice fills the viewport edge to edge
+       and 85% put the right-hand node's trailing edge 5px past it — 6px of
+       horizontal page scroll on the whole route. 20/80 keeps both pills inside
+       with a gutter, and matches what the GTM pod already does at its own
+       breakpoint (app/services/gtm-teams/page.module.css). */
+    .it-node--right { left: 80%; }
+    .it-node--left { left: 20%; }
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,282 @@
+/* ServiceDirectory — the /services directory, as a vertical tab rail beside a
+   content panel. Replaces nine stacked <details> accordions.
+
+   Every value here is an existing brand token. The reference this was built to
+   is a generic SaaS layout; what makes it ours is that the card radius, border,
+   shadow, blue and type all come from the same places BlogRail and
+   RelatedServices draw from, so the three sections read as one system. */
+
+/* Full height, matching the hero above it. Both cards are a fixed size now —
+   the rail is six titles and the panel stack is locked to its tallest panel —
+   so the section has a settled height, and without the lock the top of the
+   next section sat inside the fold under it. Centred rather than top-aligned,
+   so the spare height splits above and below instead of pooling at the
+   bottom. */
+.section { min-height: calc(100vh - var(--header-h)); display: flex; align-items: center;
+  padding: 76px 0; background-color: var(--bg-marketing-paper); }
+.wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* 268px, down from 322: the tabs are titles only now, so the rail no longer
+   needs room for a line of description — and the width it gives back goes to
+   the two-column card grid, which was the tightest thing on the page. */
+/* stretch, not start: the two cards are meant to be the same height whichever
+   category is open, so each column fills whatever the taller one sets. That is
+   also what lets the helper card and the CTA sit on the floor of their own
+   card rather than floating under short content. */
+.grid { display: grid; grid-template-columns: 268px minmax(0, 1fr); gap: 20px; align-items: stretch; }
+
+/* ---------- left rail ---------- */
+
+/* Not sticky any more: a sticky card cannot also be the same height as its
+   neighbour, and matching heights is what the layout asks for. */
+.rail { background: #fff; border: 1px solid var(--border-default); border-radius: 18px;
+  padding: 20px 16px; display: flex; flex-direction: column; }
+.railLabel { display: block; font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-500);
+  font-weight: 600; padding: 0 8px 14px; }
+
+.tabs { display: flex; flex-direction: column; gap: 4px; }
+
+.tab { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 12px;
+  align-items: center; width: 100%; text-align: left; cursor: pointer;
+  font-family: inherit; background: none; border: 1px solid transparent;
+  border-radius: 12px; padding: 11px 12px;
+  transition: background 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+.tab:hover { background: var(--bg-marketing-paper); }
+.tab:focus-visible { outline: 3px solid var(--brand-blue); outline-offset: 2px; }
+
+.tabIco { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+  background: rgba(81, 141, 224, 0.11);
+  transition: background 160ms var(--ease-out); }
+.tabIco svg { width: 19px; height: 19px; fill: none; stroke: var(--brand-blue);
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  transition: stroke 160ms var(--ease-out); }
+
+/* Title only. The one-line description each tab used to carry is the same
+   sentence the panel prints under its heading the moment the tab is chosen —
+   nine of them stacked in the rail said it before it was asked for, and pushed
+   the last two categories below the fold. */
+.tabName { display: block; font-family: var(--font-display); font-size: 15px; font-weight: 700;
+  line-height: 1.3; color: var(--brand-navy); }
+
+/* Active: the tinted ground and filled tile the reference uses, in our blue. */
+.tabOn { background: rgba(81, 141, 224, 0.09); border-color: rgba(81, 141, 224, 0.28); }
+.tabOn:hover { background: rgba(81, 141, 224, 0.12); }
+.tabOn .tabIco { background: var(--brand-blue); }
+.tabOn .tabIco svg { stroke: #fff; }
+
+/* Helper card under the rail — the estimate tool is the honest answer to
+   "which of these do I need", and it is already how RelatedServices closes. */
+.railGap { flex: 1 1 auto; min-height: 18px; }
+/* Stays light on the navy rail. Inverted to a 6% white wash it read as a
+   slightly-less-navy rectangle — present but not offered. Solid paper makes it
+   the one lit thing in the column, which is right: it is the way out for
+   someone who cannot pick from the list above it. */
+.help { background: var(--bg-marketing-paper);
+  border: 1px solid var(--border-default); border-radius: 14px; padding: 16px; }
+.helpTitle { display: block; font-family: var(--font-display); font-size: 14.5px;
+  font-weight: 700; color: var(--brand-navy); }
+.helpText { margin: 6px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-600); }
+.helpLink { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px;
+  font-size: 13.5px; font-weight: 600; color: var(--brand-blue); text-decoration: none; }
+.helpLink:hover { text-decoration: underline; }
+.helpLink svg { width: 15px; height: 15px; fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 150ms; }
+.helpLink:hover svg { transform: translateX(3px); }
+
+/* ---------- right panel ---------- */
+
+/* The card is the wrapper, not the panel: the shared strip below the panels
+   has to sit inside the same white box the reference shows, and nine panels
+   each carrying their own border would have drawn nine boxes. */
+.panelCard { background: #fff; border: 1px solid var(--border-default);
+  border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+/* Every panel occupies the same grid cell, so the stack is as tall as the
+   tallest of the six and the card stops resizing when you switch tabs — AI &
+   Automation has five roles where the others have four, and that one extra row
+   was moving the whole section by 19px on every click.
+
+   The inactive ones are hidden with visibility rather than display, which is
+   what keeps them taking up that space. visibility:hidden still removes them
+   from the accessibility tree and the tab order, so the `hidden` attribute's
+   semantics survive — it just no longer collapses the box. */
+.panelStack { display: grid; }
+.panelBody { grid-area: 1 / 1; padding: 30px 30px 26px; scroll-margin-top: 96px;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 200ms var(--ease-out), visibility 0s linear 200ms; }
+.panelOn { opacity: 1; visibility: visible; pointer-events: auto;
+  transition: opacity 240ms var(--ease-out), visibility 0s; }
+
+/* The switch is the opacity cross-fade on .panelBody/.panelOn above. It
+   replaced a mount-only keyframe, which never replayed because switching tabs
+   does not remount anything — and cannot animate height, because the stack is
+   now a fixed box the size of the tallest panel. */
+
+/* No rule under the head — the gap to the cards does that work now, and a
+   hairline plus a gap was two separators doing one job. */
+.head { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 18px; align-items: start; }
+/* Same 58px tile the icon held, so the head's grid is unchanged — the figure
+   just sits in it instead. Mono, because these are numbers in a sequence. */
+.headNum { width: 58px; height: 58px; border-radius: 14px; display: grid; place-items: center;
+  background: var(--brand-blue); font-family: var(--font-mono);
+  font-size: 20px; font-weight: 600; letter-spacing: 0.01em; color: #fff; }
+.h2 { margin: 0; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em;
+  line-height: 1.14; font-size: clamp(25px, 2.9vw, 34px); color: var(--brand-navy); }
+.blurb { margin: 8px 0 0; font-size: 16px; line-height: 1.6; color: var(--ink-600); max-width: 52ch; }
+
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+  margin-top: 34px; }
+
+/* Icon column + copy column, as the reference lays them out. Grid rather than
+   flex so a two-line title keeps its icon aligned to the first line. */
+.card { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 14px;
+  align-items: start; position: relative;
+  background: #fff; border: 1px solid var(--border-default); border-radius: 14px;
+  padding: 16px 18px; text-decoration: none;
+  transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out),
+    border-color 180ms var(--ease-out); }
+.cardIco { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center;
+  background: rgba(81, 141, 224, 0.09); transition: background 180ms var(--ease-out); }
+.cardIco svg { width: 21px; height: 21px; fill: none; stroke: var(--brand-blue);
+  stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.cardLink:hover .cardIco { background: rgba(81, 141, 224, 0.16); }
+.cardBody { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.cardName { display: block; font-family: var(--font-display); font-size: 15.5px; font-weight: 700;
+  line-height: 1.3; color: var(--brand-navy); }
+.cardDesc { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-600); }
+
+/* Only the rows that actually go somewhere get the affordance. The extra
+   right padding is a gutter for the chevron: it was padding on .cardName
+   alone, which cleared the title but let a two-line description run under
+   the mark once it moved down to the middle of the card. */
+.cardLink { padding-right: 44px; }
+.cardLink:hover { transform: translateY(-2px); box-shadow: var(--shadow-md);
+  border-color: rgba(81, 141, 224, 0.45); }
+.cardLink:focus-visible { outline: 3px solid var(--brand-blue); outline-offset: 2px; }
+/* Centred on the card, not aligned to the title. Sizing up from 17 to 19px
+   because a bare chevron has no shaft to carry weight — at the arrow's size it
+   read faint beside the blue button below it. translateY(-50%) is the resting
+   transform, so the hover nudge has to carry it too or the mark jumps to the
+   top the moment you point at it. */
+.cardGo { position: absolute; top: 50%; right: 16px; width: 19px; height: 19px;
+  transform: translateY(-50%);
+  fill: none; stroke: var(--brand-blue); stroke-width: 2; stroke-linecap: round;
+  stroke-linejoin: round; transition: transform 150ms var(--ease-out); }
+.cardLink:hover .cardGo { transform: translate(3px, -50%); }
+
+/* The panel's foot — a "Full <category> page" button beside a role count —
+   is gone. In all six tab categories one of the cards above already linked to
+   that same page, so the button was a second control to the same destination a
+   few rows below the first. The count moved up to .count under the heading. */
+
+/* ---------- shared strip + CTA (same for every tab) ---------- */
+
+/* The strip sits ON the white card as its own tinted panel, rather than as a
+   full-bleed band with a rule above it — that is what separates it from the
+   CTA below, which stays on plain white. */
+/* margin-top: auto pins the strip and the CTA to the bottom of the card, so a
+   two-role category does not leave them stranded halfway up it. */
+.always { margin-top: auto; padding: 0 30px 26px; }
+
+.alwaysList { list-style: none; margin: 0; padding: 20px 4px;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: rgba(81, 141, 224, 0.07); border: 1px solid rgba(81, 141, 224, 0.16);
+  border-radius: 14px; }
+.alwaysItem { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px;
+  align-items: start; padding: 0 20px; }
+/* Hairlines between the three, as the reference divides them. */
+.alwaysItem + .alwaysItem { border-left: 1px solid rgba(81, 141, 224, 0.22); }
+.alwaysIco { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(81, 141, 224, 0.11); }
+.alwaysIco svg { width: 18px; height: 18px; fill: none; stroke: var(--brand-blue);
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.alwaysItem b { display: block; font-family: var(--font-display); font-size: 14px;
+  font-weight: 700; line-height: 1.3; color: var(--brand-navy); }
+.alwaysItem em { display: block; margin-top: 4px; font-style: normal; font-size: 12.5px;
+  line-height: 1.5; color: var(--ink-600); }
+
+/* No horizontal padding of its own — .always already insets this block by
+   30px, and adding another 30 here pushed the copy and the button 60px in from
+   the card edges instead of sitting flush with the strip above them. */
+.cta { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 14px;
+  align-items: center; padding: 28px 0 0; background: #fff; }
+.ctaIco { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center;
+  background: rgba(81, 141, 224, 0.11); }
+.ctaIco svg { width: 21px; height: 21px; fill: none; stroke: var(--brand-blue);
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ctaTxt b { display: block; font-family: var(--font-display); font-size: 15.5px;
+  font-weight: 700; line-height: 1.3; color: var(--brand-navy); }
+.ctaTxt em { display: block; margin-top: 3px; font-style: normal; font-size: 13.5px;
+  line-height: 1.5; color: var(--ink-600); }
+.ctaBtn { display: inline-flex; align-items: center; gap: 9px; white-space: nowrap;
+  background: var(--brand-blue); color: #fff; font-size: 15px; font-weight: 600;
+  text-decoration: none; padding: 12px 24px; border-radius: 8px;
+  transition: background 150ms, transform 150ms, box-shadow 150ms; }
+.ctaBtn:hover { background: var(--blue-700); color: #fff; transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(81, 141, 224, 0.32); }
+.ctaBtn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; transition: transform 150ms; }
+.ctaBtn:hover svg { transform: translateX(3px); }
+
+/* ---------- responsive ---------- */
+
+/* Below the two-column break the rail becomes a horizontal strip above the
+   panel: same tabs, same order, scrolled sideways instead of stacked. The
+   blurb is dropped because a chip carrying two lines of it would fit three
+   tabs on a phone screen. */
+@media (max-width: 980px) {
+  /* The lock comes off with the two-column layout: stacked, the rail and the
+     panel are well over a screen tall on their own. */
+  .section { min-height: 0; display: block; }
+  .grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .rail { position: static; padding: 16px; }
+  .railLabel { padding-bottom: 12px; }
+  .tabs { flex-direction: row; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
+    padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none;
+    /* Full-bleed to the right so the last chip is not clipped mid-card. */
+    margin-right: -16px; padding-right: 16px; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; scroll-snap-align: start; grid-template-columns: 30px auto;
+    gap: 9px; align-items: center; padding: 9px 14px 9px 10px;
+    border-color: var(--border-default); border-radius: 999px; }
+  .tabIco { width: 30px; height: 30px; border-radius: 50%; }
+  .tabIco svg { width: 16px; height: 16px; }
+  .tabName { font-size: 13.5px; white-space: nowrap; }
+  .railGap { min-height: 14px; }
+  .panelBody { padding: 24px 20px 22px; scroll-margin-top: 84px; }
+  /* Stacked rather than three-up: at this width three columns give each one
+     about 150px, which breaks every title onto three lines. */
+  .always { padding: 0 20px 22px; }
+  .alwaysList { grid-template-columns: minmax(0, 1fr); padding: 6px 4px; }
+  .alwaysItem { padding: 14px 16px; }
+  .alwaysItem + .alwaysItem { border-left: 0;
+    border-top: 1px solid rgba(81, 141, 224, 0.22); }
+  .cta { padding: 22px 0 0; }
+}
+
+@media (max-width: 720px) {
+  .section { padding: 56px 0; }
+  .cards { grid-template-columns: minmax(0, 1fr); }
+  .head { grid-template-columns: 48px minmax(0, 1fr); gap: 14px; }
+  .headIco { width: 48px; height: 48px; border-radius: 12px; }
+  .headIco svg { width: 23px; height: 23px; }
+  /* Single file, no rules: a 320px column cannot carry two of these side by
+     side without the second title wrapping mid-word. */
+  .alwaysList { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .alwaysItem + .alwaysItem { border-left: 0; padding-left: 0; }
+  /* The button drops under the copy and goes full width. */
+  .cta { grid-template-columns: 40px minmax(0, 1fr); gap: 12px 14px; }
+  .ctaBtn { grid-column: 1 / -1; justify-content: center; margin-top: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab, .tabIco, .tabIco svg, .card, .cardIco, .cardGo, .helpLink svg { transition: none; }
+  .panelBody, .panelOn { transition: none; }
+  .panelIn { animation: none; }
+  .cardLink:hover { transform: none; }
+  /* Keep the resting centre — dropping the nudge must not drop translateY(-50%)
+     with it, or the chevron snaps to the top edge on hover. */
+  .cardLink:hover .cardGo { transform: translateY(-50%); }
+  .ctaBtn, .ctaBtn svg { transition: none; }
+  .ctaBtn:hover { transform: none; }
+}

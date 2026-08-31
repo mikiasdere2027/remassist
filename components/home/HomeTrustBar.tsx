@@ -64,6 +64,7 @@ function CellBody({ cell }: { cell: Cell }) {
     case 'logo':
       return (
         <span className={styles.text}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- SVG source. next/image needs the dangerouslyAllowSVG flag to touch one, and has nothing to optimise in a vector: no resize, no format conversion. */}
           <img src={cell.src} alt={cell.alt} className={styles.trustpilot} />
           <span className={styles.sub}>{cell.sub}</span>
         </span>
@@ -73,6 +74,7 @@ function CellBody({ cell }: { cell: Cell }) {
         <>
           <span className={styles.icon}>
             {/* one badge, not both — the label already names both standards */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG source. next/image needs the dangerouslyAllowSVG flag to touch one, and has nothing to optimise in a vector: no resize, no format conversion. */}
             <img src="/images/ISO_9001-2015.svg" alt="" className={styles.iso} />
           </span>
           <span className={styles.text}>

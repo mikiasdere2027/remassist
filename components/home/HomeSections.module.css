@@ -185,8 +185,12 @@
      a wider card sets the copy in fewer lines, so a taller banner here would
      only open a gap above the chips. */
   .levGrid { grid-template-columns: 1fr; gap: 28px; }
-  .teamCard { grid-template-columns: auto 1px auto 1fr auto; }
-  .teamFaces { display: none; }
+  /* The .teamCard / .teamFaces / .teamRail / .teamNum rules that used to sit
+     in these two tiers blocks belonged to the service grid at the top of this
+     file. Being later in the source they won an equal-specificity cascade, so
+     .teamCard got `auto 1px auto 1fr auto` and the 32px numeral was laid into
+     the 1px track at every width from 601px to 1024px. The deliberate rules
+     above govern now; do not re-add them here. */
 }
 @media (max-width: 640px) {
   /* a narrow card cannot carry a 38px numeral beside the name, so the rate
@@ -197,8 +201,6 @@
   .tierPrice { grid-column: 1 / -1; justify-self: start; margin-top: 2px; }
   .tierFoot { flex-direction: column; align-items: flex-start; gap: 12px; }
   .tierGo { align-self: flex-end; }
-  .teamCard { grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; gap: 12px; }
-  .teamRail, .teamNum { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tier { transition: none; }

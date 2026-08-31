@@ -35,9 +35,12 @@ export interface Redirect {
 
 export const redirects: Redirect[] = [
   // --- Pages with a direct equivalent -------------------------------------
-  // The old services index listed every subservice and industry use case;
-  // "Everything we staff, in one place" is the same page in the new IA.
-  { source: '/services', destination: '/services/extra-services', permanent: true },
+  // The services directory now lives AT /services, where the old WordPress
+  // index was — so that URL no longer redirects, it resolves. What redirects is
+  // the interim path the page sat on during the port: /services/extra-services
+  // was live, canonical and in the sitemap, so it keeps a 301 rather than
+  // becoming a 404 for anything that already links or indexed it.
+  { source: '/services/extra-services', destination: '/services', permanent: true },
   { source: '/pricing-2', destination: '/pricing', permanent: true },
   { source: '/terms-of-use', destination: '/terms-of-service', permanent: true },
 
@@ -45,7 +48,7 @@ export const redirects: Redirect[] = [
   // Both render nav + footer only. /rem-ai has a clear topical home; /saas was
   // one of the industry use cases on the old services index, so it goes there.
   { source: '/rem-ai', destination: '/services/ai-and-automation', permanent: true },
-  { source: '/saas', destination: '/services/extra-services', permanent: true },
+  { source: '/saas', destination: '/services', permanent: true },
   // "Our team section Inspirations" — the team rail lives on the home page.
   { source: '/inspirations', destination: '/#team', permanent: true },
 

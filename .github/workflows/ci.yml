@@ -15,6 +15,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # public/uploads/Interviews/*.mp4 are LFS-tracked (.gitattributes). Without
+          # this the checkout leaves 128-byte pointer files, and the build plus the
+          # standalone package guard both pass against them.
+          lfs: true
 
       - name: Setup Node ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -41,11 +46,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      # The static artboard sync guard ran `tools/sync-partials.js --check`
-      # here. The artboards, index.html and partials/ now live together under
-      # legacy-html/, which is gitignored, so a CI checkout has nothing to
-      # check and the step could only ever fail. Partial drift is a local
-      # concern until Phase 15 decommissions the static site outright.
+      - name: Bundle budget
+        # The root-layout chunk is paid on every route, and nothing was reading
+        # the sizes the build prints — which is how 42 KB of chat knowledge base
+        # came to be parsed on all 23 routes for a widget that starts closed.
+        # Budgets and the rationale for each live in the script.
+        run: node tools/check-bundle-budget.mjs
 
       - name: Standalone package guard
         # Standalone does not copy public/ or .next/static; the pack step is

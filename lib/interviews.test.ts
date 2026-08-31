@@ -24,7 +24,7 @@ const SERVICES = [
   'finance-and-accounting',
   'virtual-back-office-team',
   'managed-it',
-  'extra-services',
+  'services',
 ];
 
 describe('interview clips exist on disk', () => {

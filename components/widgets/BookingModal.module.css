@@ -1,4 +1,4 @@
-/* "Book a Call" modal — ported from assets/booking-modal.js (Phase 02). */
+/* "Book a Call" modal — ported from RemAssist-Html/assets/booking-modal.js (Phase 02). */
 /* Backdrop and panel size are deliberately the fit-finder result's — the two
    popups sit in the same flow and should not look like different products. */
 .overlay { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center;

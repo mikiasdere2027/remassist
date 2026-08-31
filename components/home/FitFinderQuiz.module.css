@@ -1,0 +1,17 @@
+/* Placeholder for the deferred quiz. Deliberately the same shell as
+   QuizLogic.module.css .card — same radius, border and shadow — so the swap
+   reads as the card filling in rather than one box replacing another.
+
+   The height is reserved because the quiz mounts below the fold and would
+   otherwise push the FAQ section down as it arrives. 548px is the first
+   step's measured height (question, help text and five options) at desktop
+   width; the shorter figures below match the same step as the options wrap. */
+.skeleton { margin: 40px auto 0; min-height: 548px; background: #fff;
+  border: 1px solid var(--border-default); border-radius: 22px;
+  box-shadow: 0 44px 90px -46px rgba(0, 5, 67, 0.46); overflow: hidden; }
+
+/* The 4px progress rail the real card opens with, so the top edge matches. */
+.skeleton::before { content: ""; display: block; height: 4px; background: var(--ink-100); }
+
+@media (max-width: 900px) { .skeleton { min-height: 604px; } }
+@media (max-width: 560px) { .skeleton { min-height: 660px; } }

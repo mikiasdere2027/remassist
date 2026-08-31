@@ -21,3 +21,67 @@
   .rgrid-4 { grid-template-columns: minmax(0, 1fr); }
   .rgrid-5 { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- hero art ----------
+   Replaces a 380px dashed box reading "Drop a team-at-work photo" that was
+   live on this route. Built to the same shape as the Sales & Revenue orb
+   (app/services/sales-and-revenue/page.module.css .sr-orb): a core the copy
+   already names, satellite nodes for the roles, and flow lines running inward.
+   Sized by aspect-ratio rather than a fixed height so it survives 390px. */
+.gtm-pod { position: relative; width: 100%; max-width: 470px; margin: 0 auto; aspect-ratio: 1; }
+.gtm-pod-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.gtm-pod-rail { fill: none; stroke: rgba(81, 141, 224, 0.3); stroke-width: 2; stroke-linecap: round; }
+.gtm-pod-flow { fill: none; stroke: var(--blue-300); stroke-width: 2.5; stroke-linecap: round;
+  stroke-dasharray: 24 76; animation: gtmFlow 2.6s linear infinite; }
+.gtm-pod-flow--b { animation-delay: .6s; }
+.gtm-pod-flow--c { animation-delay: 1.2s; }
+.gtm-pod-flow--out { stroke-dasharray: 30 70; animation-delay: 1.8s; }
+@keyframes gtmFlow { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+
+.gtm-pod-halo { position: absolute; left: 50%; top: 50%; width: 62%; aspect-ratio: 1;
+  transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle, rgba(81, 141, 224, 0.32), transparent 68%);
+  animation: gtmBreathe 6s var(--ease-out) infinite; }
+.gtm-pod-halo::after { content: ""; position: absolute; inset: 12%; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14); }
+@keyframes gtmBreathe { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+
+.gtm-pod-core { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  z-index: 2; text-align: center; width: 46%; }
+.gtm-pod-faces { display: flex; justify-content: center; margin-bottom: 8px; }
+.gtm-pod-faces > span { width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+  border: 2px solid var(--brand-navy); background: var(--navy-600); }
+.gtm-pod-faces > span + span { margin-left: -10px; }
+.gtm-pod-faces img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+.gtm-pod-core b { display: block; font-family: var(--font-display);
+  font-size: clamp(15px, 1.7vw, 19px); line-height: 1.2; color: #fff; }
+.gtm-pod-core small { display: block; margin-top: 5px; font-size: 10.5px;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--fg-on-dark-muted); }
+
+.gtm-pod-node { position: absolute; transform: translate(-50%, -50%); z-index: 3;
+  display: flex; align-items: center; gap: 9px; padding: 9px 13px; border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px); white-space: nowrap; }
+.gtm-pod-node i { flex: none; width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(81, 141, 224, 0.22); }
+.gtm-pod-node svg { width: 15px; height: 15px; fill: none; stroke: var(--blue-300);
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.gtm-pod-node b { display: block; font-size: 12.5px; font-weight: 700; color: #fff; }
+.gtm-pod-node em { display: block; font-size: 10.5px; font-style: normal;
+  color: var(--fg-on-dark-muted); }
+.gtm-pod-node--out { left: 19.5%; top: 32%; }
+.gtm-pod-node--ops { left: 80.5%; top: 32%; }
+.gtm-pod-node--crm { left: 50%; top: 82.5%; }
+
+@media (max-width: 860px) {
+  .gtm-pod { max-width: 360px; }
+  .gtm-pod-node { padding: 7px 10px; gap: 7px; }
+  .gtm-pod-node i { width: 24px; height: 24px; }
+  .gtm-pod-node--out { left: 22%; }
+  .gtm-pod-node--ops { left: 78%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gtm-pod-flow { animation: none; stroke-dasharray: none; opacity: .55; }
+  .gtm-pod-halo { animation: none; }
+}

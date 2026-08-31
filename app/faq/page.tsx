@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
@@ -6,7 +7,7 @@ export const metadata: Metadata = {
   description:
     'The questions from every service page, collected and answered in one place — including the ones with awkward answers.',
   alternates: { canonical: '/faq' },
-  openGraph: { url: '/faq' },
+  openGraph: pageOg('/faq'),
 };
 
 export default function Page() {
@@ -148,7 +149,7 @@ export default function Page() {
             <h2 className={styles['rs-h2']}>Tools and data</h2>
             <p>Whose systems the work happens in, and how access is controlled.</p>
           </div>
-          <a className={styles['rs-source']} href='/services/customer-service-agents'>Customer Experience page →</a>
+          <a className={styles['rs-source']} href='/services/customer-service-agents'>Customer Service page →</a>
         </div>
         <div className={styles['rs-faq']}>
             <details>
@@ -184,7 +185,7 @@ export default function Page() {
             <h2 className={styles['rs-h2']}>Services and scope</h2>
             <p>What one seat can realistically cover, and what we will turn down.</p>
           </div>
-          <a className={styles['rs-source']} href='/services/extra-services'>All services page →</a>
+          <a className={styles['rs-source']} href='/services'>All services page →</a>
         </div>
         <div className={styles['rs-faq']}>
             <details>

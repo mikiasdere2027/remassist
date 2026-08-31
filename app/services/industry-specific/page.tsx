@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 
 export const metadata: Metadata = {
   title: 'Industry Specific',
   description:
     'Medical billing, insurance servicing, legal support and freight dispatch — four desks where a general assistant does not get far.',
   alternates: { canonical: '/services/industry-specific' },
-  openGraph: { url: '/services/industry-specific' },
+  openGraph: pageOg('/services/industry-specific'),
 };
 
 export default function Page() {
@@ -22,7 +24,7 @@ export default function Page() {
   
         <div>
           <span className={styles['iv-kicker']}>Industry-Specific</span>
-          <h1 className={styles['iv-h1']}>Specialist desks,<br /><span>staffed by people who know the work.</span></h1>
+          <h1 className={styles['iv-h1']}>Industry-specific desks,<br /><span>staffed by people who know the work.</span></h1>
           <p className={styles['iv-lede']}>Medical billing, insurance servicing, legal support and freight dispatch —
             four desks where a general assistant does not get far. Agents arrive knowing the forms, the
             systems and the exceptions.</p>
@@ -357,6 +359,8 @@ export default function Page() {
     
   
     
+  <RelatedServices path='/services/industry-specific' surface='white' />
+
   <section className={styles['iv-close']}>
       <div className={styles['iv-wrap']}>
         <h2>Tell us which desk is backing up.</h2>

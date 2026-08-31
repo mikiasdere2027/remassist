@@ -29,7 +29,7 @@ describe('knowledge base health', () => {
       '/services/industry-specific',
       '/services/marketing-and-content',
       '/services/ai-and-automation',
-      '/services/extra-services',
+      '/services',
     ];
     for (const route of expected) {
       expect(serviceLinks).toContain(route);

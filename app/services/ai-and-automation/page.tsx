@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 
 export const metadata: Metadata = {
   title: 'AI & Automation',
   description:
     'We automate the high-volume half of a workflow and staff a trained seat on the half that needs a person — you decide where the line sits.',
   alternates: { canonical: '/services/ai-and-automation' },
-  openGraph: { url: '/services/ai-and-automation' },
+  openGraph: pageOg('/services/ai-and-automation'),
 };
 
 export default function Page() {
@@ -22,7 +24,7 @@ export default function Page() {
   
         <div>
           <span className={styles['ai-kicker']}>AI &amp; Automation</span>
-          <h1 className={styles['ai-h1']}>Work that clears itself,<br /><span>until it shouldn't.</span></h1>
+          <h1 className={styles['ai-h1']}>Automation that clears the work,<br /><span>until a person should.</span></h1>
           <p className={styles['ai-lede']}>We automate the high-volume half of a workflow and staff a trained seat on the
             half that needs a person. You decide where the line between them sits.</p>
   
@@ -465,6 +467,8 @@ export default function Page() {
     
   
     
+  <RelatedServices path='/services/ai-and-automation' surface='white' />
+
   <section className={styles['ai-close']}>
       <div className={styles['ai-wrap']}>
         <h2>Name the workflow. We will map it for free.</h2>

@@ -1,0 +1,43 @@
+# Rem Assist — Next.js standalone server.
+#
+# MIGRATION-PLAN.md §4.4. Deployed to /etc/systemd/system/remassist.service.
+# The copy in the repo is the source of truth; the copy on the box is a
+# deployment detail. If you change one, change the other.
+#
+# ISOLATED variant (shared VPS — deploy/provision-isolated.sh): runs as the
+# dedicated `remassist` system user, NOT `deploy` (uid 1001 on that box runs
+# the remconnect app on :3000). The port is not in this file — it comes from
+# shared/.env (PORT=3002 there). A SINGLE instance, deliberately (§2.2):
+# self-hosted ISR writes its cache to the local filesystem, and a second
+# process would serve stale pages from its own copy. No PM2 cluster mode.
+
+[Unit]
+Description=Rem Assist Next.js
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=remassist
+Group=remassist
+# `current` is a symlink swapped atomically at deploy time (§12.1). systemd
+# resolves it at start, so a restart is what picks up a new release.
+WorkingDirectory=/srv/remassist/current
+EnvironmentFile=/srv/remassist/shared/.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=remassist
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+# The ISR cache and uploads live here and must stay writable.
+ReadWritePaths=/srv/remassist/shared
+
+[Install]
+WantedBy=multi-user.target

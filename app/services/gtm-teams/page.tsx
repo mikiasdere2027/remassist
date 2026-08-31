@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
+import Image from 'next/image';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 
 export const metadata: Metadata = {
   title: 'GTM Teams',
   description:
     'Outbound, marketing ops and CRM administration assembled into a single team that runs your motion end to end — one contract, one report, one weekly standup.',
   alternates: { canonical: '/services/gtm-teams' },
-  openGraph: { url: '/services/gtm-teams' },
+  openGraph: pageOg('/services/gtm-teams'),
 };
 
 export default function Page() {
@@ -34,15 +37,47 @@ export default function Page() {
  <div className={styles['rgrid-1']} style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px 72px", alignItems: "center" }}>
         <div>
           <p style={{ margin: "0 0 16px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--blue-300)" }}>GTM Teams</p>
-          <h1 style={{ margin: "0 0 20px", fontFamily: "var(--font-display)", fontSize: "48px", lineHeight: 1.15, fontWeight: 700, color: "#fff", textWrap: "balance" }}>A go-to-market pod, hired as one unit.</h1>
+          <h1 style={{ margin: "0 0 20px", fontFamily: "var(--font-display)", fontSize: "clamp(30px, 5.2vw, 48px)", lineHeight: 1.15, fontWeight: 700, color: "#fff", textWrap: "balance" }}>A go-to-market pod, hired as one unit.</h1>
           <p style={{ margin: "0 0 32px", fontSize: "18px", lineHeight: 1.6, color: "var(--ink-200)", maxWidth: "54ch" }}>Skip six hiring cycles. We assemble outbound, marketing ops, and CRM administration into a single team that runs your motion end to end — under one contract, one report, one weekly standup.</p>
           <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
             <a href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener' style={{ background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 28px", borderRadius: "6px", transition: "background 150ms" }} className={styles['hv-2']}>Book a Call</a>
             <a href='/pricing' style={{ color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 20px", borderRadius: "6px", border: "1px solid var(--navy-500)" }} className={styles['hv-3']}>See pricing</a>
           </div>
         </div>
-        <div style={{ height: "380px", minWidth: 0, width: "100%", overflow: "hidden", borderRadius: "10px" }}>
-          <div style={{ width: "100%", height: "380px", display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-marketing-paper)', border: '1px dashed var(--border-strong)', borderRadius: '8px', color: 'var(--ink-400)', fontSize: '13px', boxSizing: 'border-box' }}>Drop a team-at-work photo</div>
+        <div className={styles['gtm-pod']} aria-hidden='true'>
+          <svg className={styles['gtm-pod-svg']} viewBox='0 0 400 400'>
+            <path className={styles['gtm-pod-rail']} d='M78 128 Q120 158 132 172' />
+            <path className={styles['gtm-pod-rail']} d='M322 128 Q280 158 268 172' />
+            <path className={styles['gtm-pod-rail']} d='M200 330 L200 292' />
+            <path className={`${styles['gtm-pod-flow']} ${styles['gtm-pod-flow--b']}`} pathLength='100' d='M78 128 Q120 158 132 172' />
+            <path className={`${styles['gtm-pod-flow']} ${styles['gtm-pod-flow--c']}`} pathLength='100' d='M322 128 Q280 158 268 172' />
+            <path className={`${styles['gtm-pod-flow']} ${styles['gtm-pod-flow--out']}`} pathLength='100' d='M200 330 L200 292' />
+          </svg>
+
+          <span className={styles['gtm-pod-halo']}></span>
+
+          <span className={styles['gtm-pod-core']}>
+            <span className={styles['gtm-pod-faces']}>
+              <span><Image src='/images/Agents/gtm-1.jpg' alt='' width={128} height={128} sizes="34px" loading="eager" /></span>
+              <span><Image src='/images/Agents/gtm-2.jpg' alt='' width={128} height={128} sizes="34px" loading="eager" /></span>
+              <span><Image src='/images/Agents/gtm-3.jpg' alt='' width={128} height={128} sizes="34px" loading="eager" /></span>
+            </span>
+            <b>One pod,<br />one contract</b>
+            <small>One weekly standup</small>
+          </span>
+
+          <span className={`${styles['gtm-pod-node']} ${styles['gtm-pod-node--out']}`}>
+            <i><svg viewBox='0 0 24 24'><path d='M4 6h16v12H4z' /><path d='m4 7 8 6 8-6' /></svg></i>
+            <span><b>Outbound</b><em>Pipeline built</em></span>
+          </span>
+          <span className={`${styles['gtm-pod-node']} ${styles['gtm-pod-node--ops']}`}>
+            <i><svg viewBox='0 0 24 24'><path d='M4 19V9M10 19V5M16 19v-6' /><path d='M2 19h20' /></svg></i>
+            <span><b>Marketing ops</b><em>Campaigns shipped</em></span>
+          </span>
+          <span className={`${styles['gtm-pod-node']} ${styles['gtm-pod-node--crm']}`}>
+            <i><svg viewBox='0 0 24 24'><rect x='3' y='4' width='18' height='16' rx='2' /><path d='M3 9h18M8 14h8' /></svg></i>
+            <span><b>CRM admin</b><em>Data kept clean</em></span>
+          </span>
         </div>
       </div>
     </section>
@@ -136,6 +171,8 @@ export default function Page() {
     
   
     
+  <RelatedServices path='/services/gtm-teams' surface='white' />
+
   <section id='book' style={{ background: "var(--brand-navy)" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
         <h2 style={{ margin: "0 auto 16px", fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 700, color: "#fff" }}>Scope your pod in one free consult</h2>

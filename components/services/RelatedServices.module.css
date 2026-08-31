@@ -1,0 +1,52 @@
+/* RelatedServices — the cross-link band above each service page's closing CTA.
+   Heading rules match BlogRail.module.css character for character so the two
+   sections that sit next to each other read as one system. */
+
+.section { padding: 76px 0; border-top: 1px solid var(--border-default);
+  background-color: var(--bg-marketing-paper); }
+.section--white { background-color: #fff; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+.kicker { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--brand-blue); font-weight: 600; }
+.h2 { margin: 14px 0 0; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em;
+  line-height: 1.12; font-size: clamp(26px, 3vw, 36px); color: var(--brand-navy); }
+.h2 span { color: var(--brand-blue); }
+
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 30px; }
+
+.card { display: flex; flex-direction: column; gap: 8px; min-height: 132px;
+  background: #fff; border: 1px solid var(--border-default); border-radius: 14px;
+  padding: 20px 22px; text-decoration: none;
+  transition: transform 190ms var(--ease-out), box-shadow 190ms var(--ease-out), border-color 190ms; }
+.section--white .card { background: var(--bg-marketing-paper); }
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md);
+  border-color: rgba(81, 141, 224, 0.45); }
+.card:focus-visible { outline: 3px solid var(--brand-blue); outline-offset: 3px; }
+
+.name { display: flex; align-items: center; gap: 9px; font-family: var(--font-display);
+  font-size: 17px; font-weight: 700; color: var(--brand-navy); line-height: 1.25; }
+.name svg { flex: none; width: 16px; height: 16px; fill: none; stroke: var(--brand-blue);
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 150ms; }
+.card:hover .name svg { transform: translateX(3px); }
+.blurb { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--ink-600); }
+
+/* The estimate link. Sits under the grid rather than in it — it is a
+   different kind of destination, and six of these pages had no path to
+   /qualify at all. */
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 26px;
+  font-size: 15.5px; line-height: 1.6; color: var(--ink-600); }
+.quiz { display: inline-flex; align-items: center; gap: 9px; color: var(--brand-blue);
+  font-weight: 600; text-decoration: none; }
+.quiz:hover { text-decoration: underline; }
+.quiz svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .card { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .name svg { transition: none; }
+  .card:hover { transform: none; }
+}

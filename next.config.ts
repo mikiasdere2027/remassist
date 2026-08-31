@@ -32,6 +32,14 @@ const config: NextConfig = {
   },
   images: {
     formats: ['image/avif', 'image/webp'],
+    /* Next caches an optimised image for `max(minimumCacheTTL, upstreamMaxAge)`
+       and puts that same value in the response's Cache-Control. Files served
+       out of public/ leave the box as `max-age=0`, so every /_next/image
+       response was going out as `max-age=60, must-revalidate` — a re-fetch of
+       every image on the site, once a minute, forever. One year: the URL is
+       already keyed by source, width and quality, so a changed image is a
+       changed URL. */
+    minimumCacheTTL: 31536000,
   },
   async redirects() {
     // `permanent: true` makes Next emit 308, not the 301 §11.3 specifies. Both
@@ -53,6 +61,19 @@ const config: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
         ],
+      },
+      {
+        /* Raw public/ assets, served without going through the optimiser —
+           the loader logo, the certification marks, the partner logos. These
+           had no Cache-Control at all, so they revalidated on every navigation.
+
+           This is also what lifts the optimiser's own TTL: the value above is
+           a floor, and Next takes the larger of it and whatever the upstream
+           asset declares. 30 days rather than a year because these are
+           overwritten in place under the same filename — unlike /_next/image
+           URLs, nothing here is content-addressed. */
+        source: '/images/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }],
       },
     ];
   },

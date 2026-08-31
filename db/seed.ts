@@ -36,7 +36,7 @@ const SERVICES = [
   { key: 'back', name: 'Virtual Back Office Team', slug: 'virtual-back-office-team', navBlurb: 'The seats that keep operations running behind the front line', sortOrder: 1 },
   { key: 'gtm', name: 'GTM Team', slug: 'gtm-teams', navBlurb: 'A go-to-market pod, hired as one unit', sortOrder: 2 },
   { key: 'sdr', name: 'SDR as a Service', slug: 'sdr-as-a-service', navBlurb: 'Meetings on your calendar, not activity in a dashboard', sortOrder: 3 },
-  { key: 'mixed', name: 'Blended pod', slug: 'extra-services', navBlurb: 'Everything we staff, in one place', sortOrder: 4 },
+  { key: 'mixed', name: 'Blended pod', slug: 'services', navBlurb: 'Everything we staff, in one place', sortOrder: 4 },
 ];
 
 async function main() {

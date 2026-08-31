@@ -8,3 +8,47 @@
 @media (max-width: 560px) {
   .dc-footer-grid { grid-template-columns: 1fr; gap: 30px; }
 }
+/* ---------- link columns ----------
+   These were styled inline (`linkStyle`, and `gap: 10` on each column div),
+   which put them out of reach of every media query. A 14px label in a 1.5
+   line box is ~21px tall, so adjacent targets sat 31px apart — under the 44px
+   WCAG 2.5.5 target, and the densest tap area on the site.
+
+   Desktop keeps the ported spacing exactly. Below the two-column breakpoint
+   the padding grows the target to 44px and the column gap drops to 0 to pay
+   for it, so the block occupies the same height it always did. */
+.col { display: flex; flex-direction: column; gap: 10px; }
+.link { color: var(--ink-200); font-size: 14px; text-decoration: none; }
+
+@media (max-width: 900px) {
+  .col { gap: 0; }
+  /* 21px line box + 2 x 11.5px = 44px. */
+  .link { padding: 11.5px 0; }
+  /* The heading keeps its own 4px, so the first link is not flush against it. */
+  .colHead { margin-bottom: 0; }
+}
+
+/* The bottom bar's two legal links are 13px and 18px apart horizontally —
+   fine for a mouse, half a target for a thumb. Widen the hit box without
+   moving the text by paying for the padding out of the gap. */
+.legal { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.legalLink { color: var(--ink-200); font-size: 13px; text-decoration: none; }
+@media (max-width: 900px) {
+  .legal { gap: 4px; }
+  .legalLink { padding: 12px 7px; }
+}
+
+/* Case Studies is listed but not linked — the page is live and honest about
+   being empty, and lib/site.ts deliberately keeps it out of the sitemap for
+   that reason ("advertising ~119 words of placeholder to crawlers is thin
+   content"). A sitewide footer link would have undone that on every page, so
+   the entry names the destination without pointing at it. Mirrors the header's
+   own treatment (.nav-soon in Header.module.css). Same box as .link so the
+   column keeps one rhythm, including the 44px touch target below 900px. */
+.linkSoon { color: var(--fg-on-dark-muted); font-size: 14px; cursor: default; }
+.soon { font-style: normal; font-family: var(--font-mono); font-size: 9.5px;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--fg-on-dark-muted);
+  background: rgba(255, 255, 255, 0.07); border: 1px solid var(--navy-700);
+  border-radius: 999px; padding: 2px 6px; margin-left: 6px; vertical-align: 1px; }
+
+@media (max-width: 900px) { .linkSoon { padding: 11.5px 0; } }

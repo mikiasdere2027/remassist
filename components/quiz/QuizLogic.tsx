@@ -26,7 +26,12 @@ import { track } from '@/lib/analytics/events';
  * in a portalled modal. /qualify used to render a second, inline copy of the
  * same figures, which drifted from this one whenever either was touched.
  */
-export default function QuizLogic() {
+interface Props {
+  /** Which of the two placements this instance is. See lib/analytics/events.ts. */
+  quizId?: string;
+}
+
+export default function QuizLogic({ quizId = 'qualify' }: Props) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<Answers>>({});
   const [copied, setCopied] = useState(false);
@@ -40,6 +45,11 @@ export default function QuizLogic() {
   /* One POST per completion. A ref, not state: firing it must not re-render,
      and a restored-from-hash result should not be counted as a new run. */
   const reported = useRef(false);
+  /* quiz_start / quiz_complete, once each per run, for the same reason
+     `reported` is a ref: emitting must not re-render, and restart() has to
+     be able to hand a fresh run its own pair of events. */
+  const started = useRef(false);
+  const completed = useRef(false);
   /* The result is shown in a popup rather than inline, on every page. */
   const [popupOpen, setPopupOpen] = useState(false);
   /* The modal is portalled to <body>, so it cannot be trapped by an
@@ -57,6 +67,8 @@ export default function QuizLogic() {
       setStep(QUIZ.length);
       // A shared link is someone reading a result, not completing the quiz.
       reported.current = true;
+      started.current = true;
+      completed.current = true;
     }
   }, []);
 
@@ -117,8 +129,26 @@ export default function QuizLogic() {
        result. On a first run that is the same as step + 1, but after editing a
        single answer it honours what the chip row offers — "tap any to change it
        and come straight back" — instead of marching through the rest again. */
+    /* On the first *answer*, not on mount. This component renders with the
+       page — on /qualify above the fold, on the home page as soon as the
+       fit finder scrolls into view — so counting a mount would count
+       everyone who arrived, and the start-to-complete rate would measure
+       nothing but how far down the page the section sits. */
+    if (!started.current) {
+      started.current = true;
+      track('quiz_start', { quiz_id: quizId });
+    }
+
     const complete = QUIZ.every((q) => next[q.id] != null);
     setStep(complete ? QUIZ.length : step + 1);
+
+    /* `next`, not `answers` — the state setter above has not landed yet, so
+       scoring `answers` here would drop the answer just given. */
+    if (complete && !completed.current) {
+      completed.current = true;
+      const r = score(next as Answers);
+      track('quiz_complete', { quiz_id: quizId, service: r.service, seats: r.seats });
+    }
   }
 
   function back() {
@@ -134,6 +164,8 @@ export default function QuizLogic() {
     setPopupOpen(false);
     setCapture('idle');
     reported.current = false;
+    started.current = false;
+    completed.current = false;
   }
 
   function changeAnswer(id: keyof Answers) {

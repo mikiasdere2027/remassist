@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
@@ -6,7 +7,7 @@ export const metadata: Metadata = {
   description:
     'How Rem Assistance Inc. collects, uses, shares, and protects your information — written plainly, and kept current with the privacy laws that apply to you.',
   alternates: { canonical: '/privacy-policy' },
-  openGraph: { url: '/privacy-policy' },
+  openGraph: pageOg('/privacy-policy'),
 };
 
 export default function Page() {
@@ -18,7 +19,7 @@ export default function Page() {
   <section style={{ background: "oklch(0.64 0.14 257)", backgroundImage: "radial-gradient(ellipse 900px 520px at 80% 10%, rgba(190,220,255,0.28), transparent 68%)", position: "relative", overflow: "hidden" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "72px 24px 76px", position: "relative" }}>
         <p style={{ margin: "0 0 14px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.85)", animation: "fadeUp 600ms cubic-bezier(0.2,0.8,0.2,1) both" }}>Legal</p>
-        <h1 style={{ margin: "0 0 18px", fontFamily: "var(--font-display)", fontSize: "52px", fontWeight: 700, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#fff", maxWidth: "18ch", textWrap: "pretty", animation: "fadeUp 600ms cubic-bezier(0.2,0.8,0.2,1) 80ms both" }}>Privacy Policy</h1>
+        <h1 style={{ margin: "0 0 18px", fontFamily: "var(--font-display)", fontSize: "clamp(32px, 5.6vw, 52px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#fff", maxWidth: "18ch", textWrap: "pretty", animation: "fadeUp 600ms cubic-bezier(0.2,0.8,0.2,1) 80ms both" }}>Privacy Policy</h1>
         <p style={{ margin: "0 0 28px", fontSize: "18px", lineHeight: 1.6, color: "rgba(255,255,255,0.92)", maxWidth: "60ch", animation: "fadeUp 600ms cubic-bezier(0.2,0.8,0.2,1) 160ms both" }}>How Rem Assistance Inc. collects, uses, shares, and protects your information — written plainly, and kept current with the privacy laws that apply to you.</p>
         <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap", animation: "fadeUp 600ms cubic-bezier(0.2,0.8,0.2,1) 240ms both" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "9px", background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.32)", borderRadius: "9999px", padding: "9px 18px", fontFamily: "var(--font-mono)", fontSize: "13px", color: "#fff" }}>Last updated 10 August 2026</span>

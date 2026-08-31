@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './HomeSections.module.css';
 
 /**
@@ -19,7 +20,7 @@ const SERVICES = [
   {
     href: '/services/customer-service-agents',
     num: '02',
-    title: 'Customer Experience',
+    title: 'Customer Service',
     desc: 'Inbound voice, chat and email, product-trained technical support that resolves instead of escalating, and order and fulfilment cover — your front line staffed across your hours.',
     faces: ['/images/Agents/cs-1.jpg', '/images/Agents/cs-2.jpg', '/images/Agents/cs-3.jpg'],
     checks: ['24/7 coverage', 'Any helpdesk', 'QA on every ticket'],
@@ -114,7 +115,7 @@ export default function ServiceGrid() {
               your goals within reach.
             </p>
             <div style={{ display: 'flex', gap: 12, marginTop: 22, flexWrap: 'wrap' }}>
-              <Link href="/services/extra-services" className={styles.cta}>
+              <Link href="/services" className={styles.cta}>
                 More services
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
               </Link>
@@ -135,7 +136,19 @@ export default function ServiceGrid() {
               <span className={styles.teamRail} />
               <span className={styles.teamFaces}>
                 {s.faces.map((f) => (
-                  <span className={styles.teamFace} key={f}><img src={f} alt="" loading="lazy" decoding="async" /></span>
+                  /* next/image, not <img>: these are 1024x1024 JPEGs (100-850 KB
+                     each) painted into a 64px circle, nine of them. Through the
+                     optimiser at sizes="64px" with AVIF configured they are a
+                     couple of KB apiece. `alt=""` because the name is not
+                     stated anywhere near the face — they are decoration on a
+                     card whose link text already says where it goes.
+
+                     Cost is desktop-only: .teamFaces is display:none below
+                     1024px (HomeSections.module.css) and these stay lazy, so a
+                     phone never requests them either way. */
+                  <span className={styles.teamFace} key={f}>
+                    <Image src={f} alt="" width={128} height={128} sizes="64px" loading="lazy" />
+                  </span>
                 ))}
               </span>
               <span>

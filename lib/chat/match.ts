@@ -3,7 +3,7 @@
  *
  * Scores a user message against the knowledge base and returns the best entry
  * (with runner-up "alts" chips), plus an out-of-scope guard for trades we do not
- * perform. Ported from the legacy assets/ask-remassist.js scoring, in TypeScript
+ * perform. Ported from the RemAssist-Html/assets/ask-remassist.js scoring, in TypeScript
  * so it is unit-testable and shared by any surface that needs an answer.
  */
 import { KB, OUTSIDE, type KbEntry } from './kb';

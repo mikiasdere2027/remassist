@@ -3,14 +3,24 @@ import styles from './TechTicker.module.css';
 /**
  * TechTicker — "Our dedicated tech-stack" (index.html, Phase 02).
  *
- * OPEN ITEM: the artboard sourced every tool mark from Google's favicon
- * service at render time, which is exactly the third-party runtime fetch this
- * migration exists to remove (and it tells Google about every visitor). The
- * URL is built in one place below so vendoring the marks into
- * /public/images/tools/ is a one-line change — see ICON_SRC.
+ * The marks are self-hosted. The artboard sourced all 22 from Google's favicon
+ * service at render time — 22 third-party requests on the home page, every
+ * one of them announcing the visitor to Google, and all of them firing before
+ * the consent banner has been answered. That is the exact runtime dependency
+ * this migration exists to remove, and it was the last one left on this page.
+ *
+ * Files were fetched once from that same service at 64px and committed to
+ * public/images/tools/, named after the domain with dots replaced by hyphens.
+ * They are third-party trademarks either way; self-hosting changes where they
+ * are served from, not that they are shown. To refresh one, or add a tool,
+ * drop a 64px PNG in that directory under the matching name.
+ *
+ * Still a CSS background rather than <img>: these are decorative — the tool's
+ * name is right beside each one in real text — and a background does not need
+ * 22 elements in the accessibility tree saying the same thing twice.
  */
 const ICON_SRC = (domain: string) =>
-  `url('https://www.google.com/s2/favicons?domain=${domain}&sz=64')`;
+  `url('/images/tools/${domain.replace(/\./g, '-')}.png')`;
 
 const TOOLS = [
   { name: 'GoHighLevel', domain: 'gohighlevel.com' },

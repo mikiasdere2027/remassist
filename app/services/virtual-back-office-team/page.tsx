@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import Image from 'next/image';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
+import ContactRail from '@/components/services/ContactRail';
 import SeatTiersSection from '@/components/services/SeatTiers';
 import InterviewRail from '@/components/services/InterviewRail';
 import { interviewsFor } from '@/lib/interviews';
@@ -11,7 +14,7 @@ export const metadata: Metadata = {
   description:
     'The seats that keep operations running behind the front line, hired as one trained unit — you approve every agent before they start.',
   alternates: { canonical: '/services/virtual-back-office-team' },
-  openGraph: { url: '/services/virtual-back-office-team' },
+  openGraph: pageOg('/services/virtual-back-office-team'),
 };
 
 export default function Page() {
@@ -50,7 +53,9 @@ export default function Page() {
           <div className={styles['vb-proof']}>
             <div className={styles['vb-proof-top']}>
               <span className={styles['vb-proof-iso']}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- SVG source. next/image needs the dangerouslyAllowSVG flag to touch one, and has nothing to optimise in a vector: no resize, no format conversion. */}
                 <img src='/images/ISO_9001-2015.svg' alt='ISO 9001:2015 certified' />
+                {/* eslint-disable-next-line @next/next/no-img-element -- SVG source. next/image needs the dangerouslyAllowSVG flag to touch one, and has nothing to optimise in a vector: no resize, no format conversion. */}
                 <img src='/images/ISO_27001-2022.svg' alt='ISO 27001:2022 certified' />
               </span>
               <span className={styles['vb-proof-label']}>Quality and security, independently audited</span>
@@ -238,98 +243,9 @@ export default function Page() {
       lede="Playbooks on scoping the seat, ramping it, and keeping throughput steady — written by the people who source and manage these teams."
     />
 
-  <section id='contact' className={styles['vb-contact']}>
-      <div className={styles['vb-wrap']}>
-        <div style={{ textAlign: "center", marginBottom: "38px" }}>
-          <h2 className={styles['vb-h2']} style={{ color: "#fff" }}>Let’s Talk Outcomes</h2>
-          <p style={{ margin: "12px 0 0", fontSize: "16.5px", lineHeight: 1.7, color: "rgba(255,255,255,0.82)" }}>
-            Connect with us — tell us what needs covering and we will come back with the seats, the rate, and a trial plan.</p>
-        </div>
-  
-        <div className={styles['vb-contact-card']}>
-          <div className={styles['vb-contact-photo']}>
-            <Image src='/images/Agents/Virtual-assitant.jpg' alt='A Rem Assist virtual back office agent at work' width={1152} height={922} sizes="(max-width: 860px) 100vw, 472px" />
-          </div>
-  
-          <div className={styles['vb-contact-body']}>
-            <span className={styles['vb-kicker']}>Connect with us</span>
-            <h3 style={{ margin: "12px 0 0", fontFamily: "var(--font-display)", fontSize: "clamp(23px,2.3vw,30px)", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--brand-navy)", lineHeight: 1.2 }}>
-              Book the consult, or send the brief.</h3>
-  
-            
-            <form className={styles['vb-form-grid']} method='post' action=''>
-              <div>
-                <label className={styles['vb-label']} htmlFor='vb-first'>First name</label>
-                <input className={styles['vb-input']} id='vb-first' name='first_name' type='text' autoComplete='given-name' required={true} />
-              </div>
-              <div>
-                <label className={styles['vb-label']} htmlFor='vb-last'>Last name</label>
-                <input className={styles['vb-input']} id='vb-last' name='last_name' type='text' autoComplete='family-name' required={true} />
-              </div>
-              <div>
-                <label className={styles['vb-label']} htmlFor='vb-company'>Company</label>
-                <input className={styles['vb-input']} id='vb-company' name='company' type='text' autoComplete='organization' />
-              </div>
-              <div>
-                <label className={styles['vb-label']} htmlFor='vb-phone'>Phone</label>
-                <input className={styles['vb-input']} id='vb-phone' name='phone' type='tel' autoComplete='tel' />
-              </div>
-              <div>
-                <label className={styles['vb-label']} htmlFor='vb-email'>Business email</label>
-                <input className={styles['vb-input']} id='vb-email' name='email' type='email' autoComplete='email' required={true} />
-              </div>
-              <div>
-                <label className={styles['vb-label']} htmlFor='vb-country'>Country</label>
-                <input className={styles['vb-input']} id='vb-country' name='country' type='text' autoComplete='country-name' list='vb-countries' />
-                <datalist id='vb-countries'>
-                  <option>United States</option><option>Canada</option><option>United Kingdom</option>
-                  <option>Ireland</option><option>Australia</option><option>New Zealand</option>
-                  <option>United Arab Emirates</option><option>Saudi Arabia</option><option>Germany</option>
-                  <option>Netherlands</option><option>Sweden</option><option>South Africa</option>
-                  <option>Kenya</option><option>Nigeria</option><option>Ethiopia</option>
-                  <option>India</option><option>Singapore</option><option>Philippines</option>
-                </datalist>
-              </div>
-              <div className={styles['vb-field--full']}>
-                <label className={styles['vb-label']} htmlFor='vb-service'>What do you need covered?</label>
-                <select className={styles['vb-input']} id='vb-service' name='service'>
-                  <option value=''>Select the closest fit</option>
-                  <option>Order processing</option>
-                  <option>Bookkeeping, AP / AR</option>
-                  <option>Inbox &amp; chat administration</option>
-                  <option>Account administration</option>
-                  <option>Data entry &amp; cleanup</option>
-                  <option>Product &amp; software support</option>
-                  <option>A mix — let us scope it</option>
-                </select>
-              </div>
-              <div className={styles['vb-field--full']}>
-                <label className={styles['vb-label']} htmlFor='vb-message'>How can we help?</label>
-                <textarea className={styles['vb-input']} id='vb-message' name='message' placeholder='Volume, the tools you run, and when you would want coverage to start.'></textarea>
-              </div>
-  
-              <div className={styles['vb-consent']}>
-                <input id='vb-consent' name='consent' type='checkbox' required={true} />
-                <label htmlFor='vb-consent'>I agree that Rem Assist may use the details above to contact me about this
-                  enquiry, as described in the <a href='/privacy-policy'>Privacy Policy</a>.</label>
-              </div>
-  
-              <div className={styles['vb-form-foot']}>
-                <button className={`${styles['vb-btn']} ${styles['hv-9']}`} type='submit'>
-                  Send it over
-                  <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-                </button>
-                <span className={styles['vb-form-note']}>Prefer to talk?
-                  <a href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener' style={{ fontWeight: 600 }}>Book a free consult</a>.</span>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </section>
-  
-  
-  
+  <RelatedServices path='/services/virtual-back-office-team' surface='paper' />
+
+  <ContactRail />
     </main>
   );
 }

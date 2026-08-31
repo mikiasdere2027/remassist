@@ -1,8 +1,8 @@
 /**
  * Website loader — the animation timeline, as pure math.
  *
- * Ported constant-for-constant from `assets/website-loader.js`, which was
- * itself a port of `legacy-html/RemAssist Logo Icon Web-loader.html`. The
+ * Ported constant-for-constant from `RemAssist-Html/assets/website-loader.js`, which was
+ * itself a port of `RemAssist-Html/RemAssist Logo Icon Web-loader.html`. The
  * choreography is unchanged; only the renderer is (WebGL shaders → Canvas 2D,
  * see `components/loader/paint.ts`).
  *
@@ -39,7 +39,7 @@ export const PIECES = 4;
 
 /**
  * The reference choreography, in seconds — the numbers from
- * `assets/website-loader.js`, kept unscaled so the original is still legible.
+ * `RemAssist-Html/assets/website-loader.js`, kept unscaled so the original is still legible.
  *
  * Nothing reads these directly. They are the shape of the animation; TIMELINE
  * below is the shape divided by SPEED.

@@ -70,6 +70,11 @@ describe('legacy redirect map', () => {
       ...redirects.map((r) => r.source),
       ...notRedirected.map((n) => n.source),
       ...AUTO_NORMALISED,
+      /* A legacy URL is equally handled when the app simply serves it. The old
+         WordPress services index lived at /services, and the directory page has
+         moved back onto that exact path — so it resolves now instead of
+         redirecting, which is a better outcome than the 301 it used to get. */
+      ...ROUTES.map((r) => r.path),
     ]);
     expect(audited.filter((u) => !handled.has(u))).toEqual([]);
   });

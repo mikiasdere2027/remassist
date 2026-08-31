@@ -18,9 +18,3 @@ node_modules/
 
 # Dev server log
 dev.log
-
-# Legacy DC static site — every .dc.html artboard, index.html, the web-loader
-# and partials/, collected under one roof and kept out of the push. The Next.js
-# app in app/ serves all of these routes now; the markup stays on disk (and in
-# git history before this commit) as the port's reference.
-legacy-html/

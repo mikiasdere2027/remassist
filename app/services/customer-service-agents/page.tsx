@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import Image from 'next/image';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 import SeatTiersSection from '@/components/services/SeatTiers';
 import InterviewRail from '@/components/services/InterviewRail';
 import { interviewsFor } from '@/lib/interviews';
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
   description:
     'Dedicated agents answering by voice, chat and email inside your helpdesk — trained on your product, working your macros, QA-scored on every contact.',
   alternates: { canonical: '/services/customer-service-agents' },
-  openGraph: { url: '/services/customer-service-agents' },
+  openGraph: pageOg('/services/customer-service-agents'),
 };
 
 export default function Page() {
@@ -26,8 +28,8 @@ export default function Page() {
       <div className={`${styles['cx-wrap']} ${styles['cx-hero']}`}>
   
         <div>
-          <span className={styles['cx-kicker']}>Customer Experience</span>
-          <h1 className={styles['cx-h1']}>Your front line,<br /><span>never unattended.</span></h1>
+          <span className={styles['cx-kicker']}>Customer Service</span>
+          <h1 className={styles['cx-h1']}>Customer support,<br /><span>never unattended.</span></h1>
           <p className={styles['cx-lede']}>Dedicated agents answering by voice, chat and email inside your helpdesk
             — trained on your product, working your macros, and QA-scored on every contact.</p>
   
@@ -256,6 +258,8 @@ export default function Page() {
       title={<>Reading for whoever <span>owns the queue.</span></>}
       lede="Playbooks on scoping the seat, ramping it, and holding service quality steady — written by the people who source and manage these agents."
     />
+
+  <RelatedServices path='/services/customer-service-agents' surface='white' />
 
   <section className={styles['cx-close']}>
       <div className={styles['cx-wrap']}>

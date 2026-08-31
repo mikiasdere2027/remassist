@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BOOK_URL, PRIMARY_LINKS, RESOURCE_LINKS, SERVICE_LINKS } from '@/lib/nav';
@@ -21,6 +22,8 @@ import styles from './MobileNav.module.css';
  */
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -34,10 +37,33 @@ export default function MobileNav() {
   useEffect(() => {
     if (!open) return;
 
+    const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         close();
         buttonRef.current?.focus();
+        return;
+      }
+      /* Trap Tab inside the drawer. aria-modal tells a screen reader the rest
+         of the page is inert, but it does not stop the Tab key — without this
+         the third Tab lands on a link behind the panel that the visitor cannot
+         see, and focus is lost off-screen for the rest of the page. */
+      if (e.key !== 'Tab') return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)]
+        .filter((el) => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !panel.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
       }
     };
     document.addEventListener('keydown', onKey);
@@ -77,16 +103,21 @@ export default function MobileNav() {
         </span>
       </button>
 
-      {open && (
+      {/* Portalled to <body>. The header carries backdrop-filter: blur(8px),
+          which makes it the containing block for any position: fixed
+          descendant — so the drawer resolved top/bottom against the 73px
+          header and rendered as a 72px scrolling sliver instead of a
+          full-height panel. Same escape hatch QuizLogic.tsx uses for its
+          result modal. */}
+      {open && mounted && createPortal(
+        <>
         <div className={styles.backdrop} onClick={close} aria-hidden="true" />
-      )}
 
       {/* Mounted only while open. Keeping it in the DOM translated off-screen
           added 343px (88vw) of horizontal overflow to every page: a fixed
           element pushed past the right edge still extends the scrollable area.
           Conditional mounting also means no inert/aria-hidden juggling to keep
           a shut menu out of the tab order. */}
-      {open && (
       <div
         id="mobile-nav-panel"
         ref={panelRef}
@@ -95,6 +126,14 @@ export default function MobileNav() {
         aria-modal="true"
         aria-label="Site menu"
       >
+        {/* The panel is fixed to the top-right and paints over the header, so
+            the hamburger that opened it is unreachable while it is open. The
+            backdrop closes on tap, but a drawer needs a control the visitor
+            can see. */}
+        <button type="button" className={styles.close} onClick={() => { close(); buttonRef.current?.focus(); }} aria-label="Close menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+        </button>
+
         <nav className={styles.inner} aria-label="Mobile">
           <span className={styles.group}>Services</span>
           <ul className={styles.list}>
@@ -130,11 +169,13 @@ export default function MobileNav() {
             ))}
           </ul>
 
-          <a className={styles.cta} href={BOOK_URL} target="_blank" rel="noopener">
+          <a className={styles.cta} data-book-placement="mobile_nav" href={BOOK_URL} target="_blank" rel="noopener">
             Book a Call
           </a>
         </nav>
       </div>
+        </>,
+        document.body,
       )}
     </>
   );

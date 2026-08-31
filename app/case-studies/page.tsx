@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/case-studies' },
   // Deliberately empty until the first study is signed off — see lib/site.ts.
   robots: { index: false, follow: true },
-  openGraph: { url: '/case-studies' },
+  openGraph: pageOg('/case-studies'),
 };
 
 export default function Page() {
@@ -32,7 +33,7 @@ export default function Page() {
             <div className={styles['rs-cta-row']}>
               <a className={styles['rs-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>Book a free consult
                 <svg width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
-              <a className={`${styles['rs-btn']} ${styles['rs-btn--ghost']}`} href='/services/extra-services'>Browse all 35 services</a>
+              <a className={`${styles['rs-btn']} ${styles['rs-btn--ghost']}`} href='/services'>Browse all 35 services</a>
             </div>
           </div>
         </div>

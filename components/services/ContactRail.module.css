@@ -1,0 +1,526 @@
+/* ---------- contact band ("Let's Talk Outcomes") ---------- */
+.rail {
+  background: #000543;
+  background-image:
+    radial-gradient(ellipse 900px 500px at 50% 0%, rgba(81, 141, 224, 0.16), transparent 70%),
+    linear-gradient(180deg, #000543 0%, #010a26 100%);
+  padding: 64px 0 72px;
+  position: relative;
+  overflow: hidden;
+}
+
+.wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.head {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-size: clamp(30px, 3.2vw, 42px);
+  color: #ffffff;
+}
+
+.title span {
+  color: var(--brand-blue);
+}
+
+.lede {
+  margin: 10px auto 0;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 68ch;
+}
+
+/* ---------- split container card ---------- */
+.card {
+  background: #021235;
+  border-radius: 22px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 32px 70px -20px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* ---------- left dark column ---------- */
+.leftCol {
+  position: relative;
+  background:
+    radial-gradient(ellipse 400px 300px at 15% 45%, rgba(81, 141, 224, 0.22), transparent 70%),
+    linear-gradient(165deg, #02163e 0%, #010c22 100%);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.agentPhotoWrap {
+  position: absolute;
+  /* Pulled well left: at -8px her right shoulder and arm sat across the
+     three points, hiding 'Expert guidance' and 'Quick response' behind her.
+     -110px clears the copy entirely and leaves her reading as a figure at the
+     edge of the panel rather than one standing in the middle of the text. */
+  left: -110px;
+  bottom: 0;
+  top: 0;
+  /* Virtual-assitant.png is a real cutout — 578x922, 4 channels, all four
+     corners at alpha 0, 40% of it transparent. It must never be cropped: it is
+     already the shape it wants to be, and `cover` was masking a transparent
+     PNG into a rectangle and drawing a hard edge where the file has none.
+
+     76% of the column: at a 578/922 aspect that is the width she needs to reach
+     the full 663px height under `contain`. She overlaps the copy, which is the
+     point — z-index puts her in front and her own transparency lets the text
+     read through everywhere she is not. */
+  width: 76%;
+  display: block;
+  z-index: 3;
+  /* pointer-events: none is load-bearing now she is in front of the copy — a
+     transparent PNG still has a full-size box, and without this her empty half
+     would swallow every click and text selection in the column beneath. */
+  pointer-events: none;
+}
+
+
+.agentImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom left;
+  filter: drop-shadow(8px 4px 18px rgba(0, 5, 67, 0.6));
+}
+
+.leftContent {
+  position: relative;
+  z-index: 2;
+  margin-left: 46%;
+  padding: 30px 30px 24px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.leftEyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  color: var(--brand-blue);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.leftHeading {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.24;
+}
+
+.accentLine {
+  width: 46px;
+  height: 3px;
+  background: var(--brand-blue);
+  border-radius: 2px;
+  margin-bottom: 16px;
+}
+
+.pointsList {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-bottom: 20px;
+}
+
+.pointItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.pointIcon {
+  /* The site's icon chip, at the size the reference uses. */
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(81, 141, 224, 0.18);
+  border: 1px solid rgba(81, 141, 224, 0.42);
+  color: var(--brand-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pointIcon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.pointText strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.3;
+  margin-bottom: 5px;
+}
+
+/* Looser than the 1.5 it had: at 13.5px over a photograph, tight leading made
+   the two-line captions read as a block rather than as sentences. */
+.pointText p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.68;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Bottom trust pill */
+/* Pulled left out of the text column. Inside it the badge was 240px wide and
+   the caption wrapped to four lines, interleaving with the avatars — the
+   reference runs it wide across the foot of the panel. The negative margin is
+   the offset .leftContent applies, so the badge starts where the photo's
+   lower body is rather than where the copy does. */
+.trustBadge {
+  /* Positioned against .leftCol, not .leftContent. z-index 4 only beats the
+     cutout's 3 because this element now lives outside the stacking context
+     .leftContent opens — inside it, 4 was resolved against its siblings and
+     the whole group still painted at the parent's 2, under her. */
+  position: absolute;
+  left: auto;
+  right: 22px;
+  bottom: 22px;
+  /* No `right`, so it sizes to its content — stretched edge to edge it read as
+     a bar across the panel rather than a chip sitting at her feet. */
+  max-width: calc(100% - 44px);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(0, 5, 67, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* flex: none — without it the avatars are the first thing squeezed when the
+   caption is long, and their -7px overlaps collapse them into one another. */
+.avatarStack {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.avatarImg {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid #000c26;
+  margin-left: -7px;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarImg:first-child {
+  margin-left: 0;
+}
+
+.trustText {
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.trustText strong {
+  display: block;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12.5px;
+  margin-bottom: 1px;
+}
+
+/* ---------- right white column ---------- */
+.rightCol {
+  /* A blue-tinted ground, not white. The fields are white; with a white panel
+     behind them the whole side read as one flat sheet and the inputs vanished
+     into it. The tint is what makes them look like inputs. */
+  background: linear-gradient(165deg, #e9f1fd 0%, #f4f8ff 58%, #fbfdff 100%);
+  padding: 30px 32px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.rightEyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-blue);
+  margin-bottom: 12px;
+}
+
+/* ---------- form grid ---------- */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 14px;
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-navy);
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 14.5px;
+  color: var(--brand-navy);
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 10px 14px;
+  height: 44px;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.input::placeholder {
+  color: var(--ink-500);
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.16);
+}
+
+/* The native arrow cannot be moved: with appearance:auto the UA draws it at
+   the far right edge and padding-right does not shift it, so it sat hard
+   against the field's rounded border. Drawing our own chevron is the only way
+   to inset it — and it gets the same stroke weight and colour as every other
+   icon on the form. padding-right reserves the room so a long option label
+   never runs under it. */
+select.input {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 42px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667180' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 16px 16px;
+}
+
+textarea.input {
+  min-height: 96px;
+  height: 96px;
+  resize: vertical;
+  padding-top: 8px;
+}
+
+.consent {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 1px;
+}
+
+.consent input {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  accent-color: var(--brand-blue);
+  cursor: pointer;
+}
+
+.consent label {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #475467;
+}
+
+.consent a {
+  color: var(--brand-blue);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.formFoot {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--brand-blue);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 13px 26px;
+  border-radius: 8px;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(81, 141, 224, 0.35);
+  transition: background 150ms, transform 150ms, box-shadow 150ms;
+}
+
+.btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(81, 141, 224, 0.45);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.formNote {
+  font-size: 12px;
+  color: #475467;
+}
+
+.formNote a {
+  color: var(--brand-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.formNote a:hover {
+  text-decoration: underline;
+}
+
+.honey {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.sent {
+  margin-top: 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.sent strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: #166534;
+  margin-bottom: 6px;
+}
+
+.sent p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #15803d;
+}
+
+.sent a {
+  color: #166534;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.error {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #dc2626;
+}
+
+.error a {
+  color: #dc2626;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1024px) {
+  .card {
+    grid-template-columns: 1fr;
+  }
+  .agentPhotoWrap {
+    display: none;
+  }
+  .leftContent {
+    margin-left: 0;
+    padding: 28px 24px;
+  }
+  /* Back into the flow: the photo is hidden below this breakpoint, so there is
+     nothing to paint over and an absolutely-placed badge would just sit on the
+     copy. */
+  .trustBadge {
+    position: static;
+    margin-top: 20px;
+  }
+  .rightCol {
+    border-radius: 0 0 22px 22px;
+    padding: 28px 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .rail {
+    padding: 48px 0 56px;
+  }
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .leftContent {
+    padding: 22px 18px;
+  }
+  .rightCol {
+    padding: 22px 18px;
+  }
+}

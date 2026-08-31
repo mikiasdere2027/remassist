@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
 import { SeatTiers } from '@/components/services/SeatTiers';
 
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
   description:
     'Two rates, published. Most of this industry makes you book a call to find out whether they are in your range — here are the numbers.',
   alternates: { canonical: '/pricing' },
-  openGraph: { url: '/pricing' },
+  openGraph: pageOg('/pricing'),
 };
 
 export default function Page() {
@@ -107,7 +108,7 @@ export default function Page() {
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Add or remove plans anytime</li>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Custom software available</li>
             </ul>
-            <a className={styles['pr-plan-more']} href='/services/extra-services'>Learn more →</a>
+            <a className={styles['pr-plan-more']} href='/services'>Learn more →</a>
           </div>
         </div>
         <p className={styles['pr-plans-note']}>Figures are floors, not quotes — your exact rate depends on hours,
@@ -286,7 +287,7 @@ export default function Page() {
         <p>Tell us the hours and the work and we will give you the exact figure for your engagement,
           plus the profiles of the people who would do it.</p>
         <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "13px", marginTop: "30px" }}>
-          <a className={styles['pr-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+          <a className={styles['pr-btn']} data-book-placement="pricing" href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
             Book a free consult
             <svg width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
           </a>

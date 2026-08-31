@@ -17,7 +17,7 @@ import styles from './RemLoader.module.css';
 /**
  * RemLoader — the brand animation that opens the home route.
  *
- * A port of the loader from `index.html` (`assets/website-loader.js` plus its
+ * A port of the loader from `index.html` (`RemAssist-Html/assets/website-loader.js` plus its
  * overlay markup and inline failsafe), with three deliberate differences:
  *
  *  1. Canvas 2D instead of three.js — see `paint.ts` for why.
@@ -50,9 +50,15 @@ let hasPlayed = false;
 /**
  * Runs during HTML parse, before first paint and before hydration.
  *
- * Two jobs the React bundle cannot do:
+ * Three jobs the React bundle cannot do:
  *  - hide the overlay for a visitor who has already seen it this session,
  *    with no frame of navy in between;
+ *  - hide it outright for a visitor who asked for reduced motion or is on a
+ *    metered or 2G connection. They used to get the identical full-screen
+ *    hold and scroll lock as everyone else, just with a static mark instead
+ *    of the animation — all of the cost of the brand beat and none of it.
+ *    Doing this in React instead would still paint a frame of navy first,
+ *    because the overlay is server-rendered into the HTML on purpose;
  *  - guarantee the overlay clears even if that bundle never arrives.
  *
  * It hides rather than removes, on purpose: removing the node before (or
@@ -63,6 +69,9 @@ const GATE_SCRIPT = `(function(){
 var el=document.getElementById('rem-loader');
 if(!el)return;
 try{if(sessionStorage.getItem('${SESSION_KEY}')){el.style.display='none';return;}}catch(e){}
+var mm=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var cn=navigator.connection||{};
+if(mm||cn.saveData||/^(slow-)?2g$/.test(cn.effectiveType||'')){el.style.display='none';return;}
 document.documentElement.style.overflow='hidden';
 var clear=function(){
 document.documentElement.style.overflow='';
@@ -147,7 +156,17 @@ export default function RemLoader() {
     } catch {
       /* ignore */
     }
-    if (seen) {
+    /* Nothing to animate: either the loader has already played this session
+       (the gate script has hidden the overlay), or this visitor asked for
+       reduced motion / is on a metered connection and the gate script hid it
+       for that reason. Either way, take it out of the tree — `finish()` also
+       releases the scroll lock and cancels the failsafe.
+
+       prefersStill() is the TypeScript twin of the probe inlined in
+       GATE_SCRIPT above; the two have to agree, and if they ever drift the
+       worst case is an already-hidden overlay staying mounted, invisible,
+       for the length of the sequence. */
+    if (seen || prefersStill()) {
       finish();
       return;
     }
@@ -168,20 +187,16 @@ export default function RemLoader() {
     if (document.readyState === 'complete') markReady();
     else document.addEventListener('readystatechange', onReadyStateChange);
 
-    const still = prefersStill();
-    if (still) {
-      /* No canvas at all — the static mark, held. */
-      imgRef.current?.classList.remove(styles.fallbackHidden);
-    } else {
-      try {
-        painter = canvasRef.current ? createPainter(canvasRef.current) : null;
-      } catch {
-        painter = null;
-      }
-      /* Canvas unavailable or the sampling threw: same static mark as the
-         reduced-motion path, rather than an empty navy screen. */
-      if (!painter) imgRef.current?.classList.remove(styles.fallbackHidden);
+    /* The reduced-motion and frugal-connection paths returned above, so the
+       only reason to fall back to the static mark now is that the canvas
+       itself is unavailable — an old browser, a blocked 2D context, or a
+       throw out of the sampling. Better that than an empty navy screen. */
+    try {
+      painter = canvasRef.current ? createPainter(canvasRef.current) : null;
+    } catch {
+      painter = null;
     }
+    if (!painter) imgRef.current?.classList.remove(styles.fallbackHidden);
 
     const onResize = () => painter?.resize();
     window.addEventListener('resize', onResize);

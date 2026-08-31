@@ -1,2 +1,13 @@
+# The interview clips are Git LFS objects — 142 MB of video that must never
+# enter Git history as blobs. These two lines were dropped when the eol rules
+# below were added, and the very next `git add -A` smudged all five pointers
+# into their real binaries and staged 148 MB for the push.
 *.MP4 filter=lfs diff=lfs merge=lfs -text
 *.mp4 filter=lfs diff=lfs merge=lfs -text
+
+# Server-side scripts and configs are consumed by Linux. core.autocrlf=true is
+# set on the dev machine, so without this they come back CRLF on checkout and
+# the shebang line becomes `/usr/bin/env bash\r` — "no such file or directory".
+*.sh            text eol=lf
+deploy/*.conf   text eol=lf
+deploy/*.service text eol=lf

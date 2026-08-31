@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
+import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
+import RelatedServices from '@/components/services/RelatedServices';
 
 export const metadata: Metadata = {
   title: 'Marketing & Content',
   description:
     'A go-to-market pod — lead, outbound, content and RevOps — hired as one unit with one owner, built into the stack you already run.',
   alternates: { canonical: '/services/marketing-and-content' },
-  openGraph: { url: '/services/marketing-and-content' },
+  openGraph: pageOg('/services/marketing-and-content'),
 };
 
 export default function Page() {
@@ -323,6 +325,8 @@ export default function Page() {
     
   
     
+  <RelatedServices path='/services/marketing-and-content' surface='white' />
+
   <section className={styles['mc-close']}>
       <div className={styles['mc-wrap']}>
         <h2>Tell us how you sell. We will scope the pod on the call.</h2>
