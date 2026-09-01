@@ -53,13 +53,17 @@ const PARTNERS = [
   },
 ];
 
-/** Below this the belt would show the same logo more than once at a time. */
+/** Below this the belt would show the same logo more than once at a time —
+    on a desktop viewport. A phone shows one plate at a time, so the belt
+    always drifts there; see the max-width: 767px block in the stylesheet. */
 const DRIFT_THRESHOLD = 6;
 
 export default function TrustedPartners() {
   const drift = PARTNERS.length >= DRIFT_THRESHOLD;
-  // the loop needs the list twice so translateX(-50%) lands on a seam
-  const plates = drift ? [...PARTNERS, ...PARTNERS] : PARTNERS;
+  /* The loop needs the list twice so translateX(-50%) lands on a seam. Both
+     halves are always rendered because mobile always drifts; CSS drops the
+     duplicates on a desktop that is showing a centred static row instead. */
+  const plates = [...PARTNERS, ...PARTNERS];
 
   return (
     <section className={styles.section}>
@@ -76,12 +80,12 @@ export default function TrustedPartners() {
         </div>
       </div>
 
-      <div className={styles.belt}>
+      <div className={`${styles.belt} ${drift ? styles.beltDrift : ''}`}>
         <div className={`${styles.row} ${drift ? styles.rowDrift : ''}`}>
           {plates.map((p, i) => (
             <div
               key={`${p.name}-${i}`}
-              className={styles.plateWrap}
+              className={`${styles.plateWrap}${i >= PARTNERS.length ? ` ${styles.dup}` : ''}`}
               style={{ '--plate-delay': `${(i % PARTNERS.length) * 0.55}s`, '--sheen-delay': `${(i % PARTNERS.length) * 0.85}s` } as CSSProperties}
               aria-hidden={i >= PARTNERS.length || undefined}
             >
@@ -98,7 +102,10 @@ export default function TrustedPartners() {
             </div>
           ))}
         </div>
-        {drift && <><span className={styles.fadeL} aria-hidden="true" /><span className={styles.fadeR} aria-hidden="true" /></>}
+        {/* Always rendered — the mobile belt drifts even when the desktop one
+            does not. CSS hides them on a static desktop row. */}
+        <span className={styles.fadeL} aria-hidden="true" />
+        <span className={styles.fadeR} aria-hidden="true" />
       </div>
     </section>
   );

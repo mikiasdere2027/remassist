@@ -48,7 +48,14 @@ export default function InterviewRail({ eyebrow, title, lede, seats, surface }: 
                 key={s.slug}
               >
                 <div className={styles.poster}>
-                  <Image src={s.poster} alt={`${s.name}, ${s.position}`} fill sizes="288px" />
+                  {/* 108px is the stacked-row tile below 680px; see the
+                      media query in InterviewRail.module.css. */}
+                  <Image
+                    src={s.poster}
+                    alt={`${s.name}, ${s.position}`}
+                    fill
+                    sizes="(max-width: 680px) 108px, 288px"
+                  />
                 </div>
                 <span className={styles.scrim} aria-hidden="true" />
 

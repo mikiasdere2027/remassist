@@ -59,6 +59,44 @@
 .fadeL { left: 0; background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0)); }
 .fadeR { right: 0; background: linear-gradient(270deg, #fff, rgba(255, 255, 255, 0)); }
 
+/* The duplicate half exists only to give a drifting belt a seam to loop on.
+   A centred static row would just show every logo twice. */
+@media (min-width: 768px) {
+  .row:not(.rowDrift) .dup { display: none; }
+  .belt:not(.beltDrift) .fadeL, .belt:not(.beltDrift) .fadeR { display: none; }
+}
+
+/* ── Mobile ─────────────────────────────────────────────────────────────
+   `.row` wraps, so at 375px the 214px plates fell into a single column and
+   five partners became five screens of scrolling. Below 768px the row always
+   drifts, whatever PARTNERS.length is: DRIFT_THRESHOLD guards against the
+   same logo appearing twice at once, and a phone viewport is narrower than a
+   single plate pair, so that cannot happen here.
+
+   The gap moves onto the plate as a margin. `translateX(-50%)` assumes the
+   two halves are exactly equal, and flex `gap` breaks that — the last plate
+   in each half carries no trailing gap, so the loop jumps by half a gap on
+   every cycle. A trailing margin on every plate makes the halves identical. */
+@media (max-width: 767px) {
+  .head { padding: 72px 20px 20px; }
+  .belt { padding: 26px 0 72px; }
+  .row { width: max-content; justify-content: flex-start; flex-wrap: nowrap;
+    gap: 0; animation: beltDrift 34s linear infinite; }
+  .plateWrap { margin-right: 16px; }
+  .plate { width: 168px; height: 100px; }
+  .logo { width: 118px; height: 62px; }
+  .fadeL, .fadeR { width: 48px; }
+}
+
+/* No animation to ride, so the belt becomes something to swipe instead of a
+   row of logos cut off at the viewport edge. */
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .belt { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .belt::-webkit-scrollbar { display: none; }
+  .dup { display: none; }
+  .fadeL, .fadeR { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rowDrift, .plateWrap, .sheen { animation: none !important; }
+  .row, .rowDrift, .plateWrap, .sheen { animation: none !important; }
 }
