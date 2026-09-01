@@ -30,7 +30,7 @@ const SERVICES = [
   'A custom mix — scope in consultation',
 ];
 
-const CONTACT_EMAIL = 'hello@hiblink.com';
+const CONTACT_EMAIL = 'support@remassistance.com';
 const CALENDLY = 'https://calendly.com/j-zemene-remassistance/new-meeting';
 
 interface Brief {
