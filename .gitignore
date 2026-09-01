@@ -18,3 +18,7 @@ node_modules/
 
 # Dev server log
 dev.log
+
+# Browser profile that came along inside the admin UI prototype directory.
+# 7.4MB of extension bundles and per-user browsing state — never a repo artifact.
+Test Admin/.edge-prof/

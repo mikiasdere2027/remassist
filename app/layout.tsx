@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Sora } from 'next/font/google';
 import Header from '@/components/layout/Header';
+import SiteChrome from '@/components/layout/SiteChrome';
 import Footer from '@/components/layout/Footer';
 import AskRemAssist from '@/components/widgets/AskRemAssist';
 import BookingModal from '@/components/widgets/BookingModal';
@@ -101,20 +102,26 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="dns-prefetch" href="https://calendly.com" />
       </head>
       <body>
-        <a className="skip-link" href="#main-content">Skip to content</a>
-        <Header />
+        {/* Everything inside SiteChrome is marketing furniture, and /admin
+            renders none of it — see components/layout/SiteChrome.tsx. */}
+        <SiteChrome>
+          <a className="skip-link" href="#main-content">Skip to content</a>
+          <Header />
+        </SiteChrome>
         {/* Skip-link target. tabIndex -1 so focus can land here without
             adding the wrapper to the tab order. */}
         <div id="main-content" tabIndex={-1}>
           {children}
         </div>
-        <Footer />
-        <AskRemAssist />
-        <BookingModal />
-        <JsonLd />
-        <AttributionCapture />
-        <GoogleTagManager />
-        <ConsentBanner />
+        <SiteChrome>
+          <Footer />
+          <AskRemAssist />
+          <BookingModal />
+          <JsonLd />
+          <AttributionCapture />
+          <GoogleTagManager />
+          <ConsentBanner />
+        </SiteChrome>
       </body>
     </html>
   );

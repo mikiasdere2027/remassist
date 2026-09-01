@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LeadBody, utmFromPage } from './schema';
+import { LeadBody, leadColumns, utmFromPage } from './schema';
 
 /**
  * The validation boundary decides what reaches Postgres, so it is the part
@@ -62,6 +62,40 @@ describe('LeadBody', () => {
     expect(r.success).toBe(true);
   });
 
+  it('accepts the fields the contact form sends discretely', () => {
+    const r = LeadBody.safeParse({
+      ...valid,
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      country: 'United Kingdom',
+      service: 'Virtual Back Office Pod',
+      consent: true,
+      rawFields: { first_name: 'Ada', consent: 'yes' },
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('caps the new field lengths', () => {
+    expect(LeadBody.safeParse({ ...valid, firstName: 'x'.repeat(61) }).success).toBe(false);
+    expect(LeadBody.safeParse({ ...valid, lastName: 'x'.repeat(61) }).success).toBe(false);
+    expect(LeadBody.safeParse({ ...valid, country: 'x'.repeat(81) }).success).toBe(false);
+    expect(LeadBody.safeParse({ ...valid, service: 'x'.repeat(121) }).success).toBe(false);
+  });
+
+  it('fences rawFields, which lands unbounded in a jsonb column otherwise', () => {
+    const keys = (n: number) => Object.fromEntries(
+      Array.from({ length: n }, (_, i) => [`k${i}`, 'v']),
+    );
+    expect(LeadBody.safeParse({ ...valid, rawFields: keys(40) }).success).toBe(true);
+    expect(LeadBody.safeParse({ ...valid, rawFields: keys(41) }).success).toBe(false);
+    expect(LeadBody.safeParse({ ...valid, rawFields: { k: 'x'.repeat(5001) } }).success).toBe(false);
+    expect(LeadBody.safeParse({ ...valid, rawFields: { ['k'.repeat(61)]: 'v' } }).success).toBe(false);
+  });
+
+  it('rejects a non-boolean consent rather than coercing it', () => {
+    expect(LeadBody.safeParse({ ...valid, consent: 'yes' }).success).toBe(false);
+  });
+
   it('rejects null and non-object bodies', () => {
     expect(LeadBody.safeParse(null).success).toBe(false);
     expect(LeadBody.safeParse('nope').success).toBe(false);
@@ -88,5 +122,58 @@ describe('utmFromPage', () => {
 
   it('ignores non-utm query parameters', () => {
     expect(utmFromPage('https://x.com/?ref=twitter&utm_medium=social')).toEqual({ utm_medium: 'social' });
+  });
+});
+
+describe('leadColumns', () => {
+  const at = new Date('2026-09-01T10:00:00Z');
+  const parse = (b: Record<string, unknown>) => {
+    const r = LeadBody.safeParse({ ...valid, ...b });
+    if (!r.success) throw new Error('fixture failed validation');
+    return r.data;
+  };
+
+  it('joins first and last into the display name the webhook renders', () => {
+    expect(leadColumns(parse({ firstName: 'Ada', lastName: 'Lovelace' })).name)
+      .toBe('Ada Lovelace');
+  });
+
+  it('keeps the single name field the quiz sends, which has no first/last', () => {
+    expect(leadColumns(parse({ name: 'Ada Lovelace' })).name).toBe('Ada Lovelace');
+  });
+
+  it('joins what it has when only one half is present', () => {
+    expect(leadColumns(parse({ firstName: 'Ada' })).name).toBe('Ada');
+  });
+
+  it('keeps country and service as columns instead of flattening them into message', () => {
+    // The bug this whole change exists to fix: these two used to be concatenated
+    // into the message string and were unrecoverable as structured data.
+    const c = leadColumns(parse({ country: 'Kenya', service: 'Bookkeeping, AP / AR' }));
+    expect(c.country).toBe('Kenya');
+    expect(c.serviceInterest).toBe('Bookkeeping, AP / AR');
+  });
+
+  it('stamps consent with the server clock when the box was ticked', () => {
+    expect(leadColumns(parse({ consent: true }), at).consentAt).toBe(at);
+  });
+
+  it('leaves consent null when it was not ticked, and when it was never sent', () => {
+    // Null has to mean "no consent recorded" for the admin to tell the truth
+    // about rows written before the column existed.
+    expect(leadColumns(parse({ consent: false }), at).consentAt).toBeNull();
+    expect(leadColumns(parse({}), at).consentAt).toBeNull();
+  });
+
+  it('passes the raw payload through untouched', () => {
+    const raw = { first_name: 'Ada', country: 'Kenya', some_future_field: 'kept' };
+    expect(leadColumns(parse({ rawFields: raw })).rawFields).toEqual(raw);
+  });
+
+  it('leaves absent fields undefined so the columns stay NULL', () => {
+    const c = leadColumns(parse({}));
+    expect(c.country).toBeUndefined();
+    expect(c.serviceInterest).toBeUndefined();
+    expect(c.rawFields).toBeUndefined();
   });
 });

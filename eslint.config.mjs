@@ -22,6 +22,11 @@ const eslintConfig = [
       '.next/',
       'next-env.d.ts',
       'package-lock.json',
+      /* Static UI prototype for the admin, plus (unhelpfully) a checked-in
+         browser profile full of extension bundles. It is a design reference,
+         not application source, and linting it buried the real findings under
+         500+ warnings from third-party JavaScript. */
+      'Test Admin/**',
     ],
   },
   {

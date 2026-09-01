@@ -10,11 +10,21 @@ import { z } from 'zod';
 export const LEAD_SOURCES = ['qualify_quiz', 'ask_widget', 'contact_form', 'pricing_cta'] as const;
 
 export const LeadBody = z.object({
+  /* Sent by the quiz, which only ever asks for a single name field. The contact
+     form sends firstName/lastName instead and the route joins them. */
   name: z.string().trim().max(120).optional(),
+  firstName: z.string().trim().max(60).optional(),
+  lastName: z.string().trim().max(60).optional(),
   email: z.string().trim().toLowerCase().email().max(200),
   phone: z.string().trim().max(40).optional(),
   company: z.string().trim().max(160).optional(),
+  country: z.string().trim().max(80).optional(),
+  service: z.string().trim().max(120).optional(),
   message: z.string().trim().max(5000).optional(),
+  /* Whether the privacy box was ticked. Only ever a flag on the wire — the
+     route stamps the time itself, because a client-supplied consent timestamp
+     is worth nothing as evidence. */
+  consent: z.boolean().optional(),
   page: z.string().url().max(500).optional(),
   source: z.enum(LEAD_SOURCES),
   /* Hidden field. A human never sees it, so anything in it is a bot.
@@ -37,6 +47,14 @@ export const LeadBody = z.object({
       (a) => Object.keys(a.first ?? {}).length <= 20 && Object.keys(a.last ?? {}).length <= 20,
       { message: 'too many attribution keys' },
     )
+    .optional(),
+  /* Every field the form submitted, kept verbatim so nothing is silently
+     dropped when a form grows a field. Client-supplied and unbounded by nature,
+     so it is fenced the same way attribution is above: bounded key length,
+     bounded value length, and a ceiling on the number of keys. */
+  rawFields: z
+    .record(z.string().max(60), z.string().max(5000))
+    .refine((r) => Object.keys(r).length <= 40, { message: 'too many raw fields' })
     .optional(),
   /* Optional quiz payload, sent when source is qualify_quiz. */
   quiz: z
@@ -72,4 +90,36 @@ export function utmFromPage(page: string | undefined): Record<string, string> | 
     if (v) out[k] = v.slice(0, 200);
   }
   return Object.keys(out).length ? out : undefined;
+}
+
+/**
+ * Map a validated body onto the `leads` column set.
+ *
+ * Extracted from the route for the same reason LeadBody is: this is the step
+ * that decides what actually lands in each column, and it is worth testing
+ * without a database or a running server. The route keeps the parts that need
+ * a request — the referrer header, attribution merging, the insert itself.
+ *
+ * `now` is injected so the consent timestamp is assertable.
+ */
+export function leadColumns(d: LeadInput, now: Date = new Date()) {
+  /* The contact form sends first/last; the quiz sends a single name field.
+     Join when we have the parts, otherwise keep what the client called a name. */
+  const joined = [d.firstName, d.lastName].filter(Boolean).join(' ');
+  return {
+    name: joined || d.name,
+    firstName: d.firstName,
+    lastName: d.lastName,
+    email: d.email,
+    phone: d.phone,
+    company: d.company,
+    country: d.country,
+    serviceInterest: d.service,
+    message: d.message,
+    /* Stamped server-side, never read off the wire: a client-supplied consent
+       timestamp is worth nothing as evidence that anyone agreed to anything. */
+    consentAt: d.consent ? now : null,
+    source: d.source,
+    rawFields: d.rawFields,
+  };
 }

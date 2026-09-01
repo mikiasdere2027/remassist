@@ -96,10 +96,23 @@ export default function ContactRailForm() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           email: b.email,
-          name: [b.first, b.last].filter(Boolean).join(' ') || undefined,
+          firstName: b.first || undefined,
+          lastName: b.last || undefined,
           phone: b.phone || undefined,
           company: b.company || undefined,
+          country: b.country || undefined,
+          service: b.service || undefined,
+          /* Still sent alongside the discrete fields: the Slack notification
+             and the mailto fallback both render this as the human summary. */
           message: message || undefined,
+          consent: fd.get('consent') === 'yes',
+          /* Everything the visitor actually submitted, so a field added to this
+             form later is readable in admin without a migration first. */
+          rawFields: Object.fromEntries(
+            [...fd.entries()]
+              .filter(([k]) => k !== 'company_website')
+              .map(([k, v]) => [k, String(v)]),
+          ),
           honey: get('company_website') || undefined,
           source: 'contact_form',
           page: window.location.href,
@@ -226,7 +239,7 @@ export default function ContactRailForm() {
       </div>
 
       <div className={styles.consent}>
-        <input id="cr-consent" name="consent" type="checkbox" required />
+        <input id="cr-consent" name="consent" type="checkbox" value="yes" required />
         <label htmlFor="cr-consent">
           I agree to the <a href="/privacy-policy" target="_blank">Privacy Policy</a> and allow the team to contact me about this inquiry. We respect your privacy.
         </label>

@@ -1,7 +1,7 @@
 import { getDb, isDatabaseConfigured } from '@/db';
 import { leads, quizSubmissions } from '@/db/schema';
 import type { Answers, QuizResult } from '@/lib/quiz/quiz';
-import { LeadBody, utmFromPage } from '@/lib/leads/schema';
+import { LeadBody, leadColumns, utmFromPage } from '@/lib/leads/schema';
 import { mergeAttribution } from '@/lib/analytics/attribution';
 import { rateLimit } from '@/lib/rate-limit';
 import { notifyNewLead } from '@/lib/notify';
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: 'invalid' }, { status: 400 });
   }
 
-  const { honey, page, quiz, attribution, ...d } = parsed.data;
+  const { honey, page, quiz, attribution } = parsed.data;
   // Bots fill the hidden field. Answer 200 so they learn nothing, and write
   // nothing — telling them they were blocked just tells them what to change.
   if (honey) return Response.json({ ok: true });
@@ -48,12 +48,14 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: 'unavailable' }, { status: 503 });
   }
 
+  const cols = leadColumns(parsed.data);
+
   try {
     const db = getDb();
     const [row] = await db
       .insert(leads)
       .values({
-        ...d,
+        ...cols,
         pageUrl: page,
         referrer: req.headers.get('referer'),
         /* Last touch wins over the submitting page's query, and first touch
@@ -75,12 +77,12 @@ export async function POST(req: Request) {
     // Notification failures never fail the request — the lead is already saved.
     void notifyNewLead({
       id: row.id,
-      email: d.email,
-      name: d.name,
-      company: d.company,
-      phone: d.phone,
-      message: d.message,
-      source: d.source,
+      email: cols.email,
+      name: cols.name,
+      company: cols.company,
+      phone: cols.phone,
+      message: cols.message,
+      source: cols.source,
       pageUrl: page,
       quote: quiz?.result?.cost as string | undefined,
       answers: quiz?.answers,
