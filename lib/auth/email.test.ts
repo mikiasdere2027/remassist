@@ -60,7 +60,7 @@ describe('renderSigninEmail', () => {
 
 describe('renderInviteEmail', () => {
   const INVITE_URL = 'https://remassistance.com/admin/invite/abc123';
-  const mail = renderInviteEmail({ url: INVITE_URL, invitedByEmail: 'boss@remconnect.io' });
+  const mail = renderInviteEmail({ url: INVITE_URL, invitedByEmail: 'boss@remassistance.com' });
 
   it('carries the link in both parts', () => {
     for (const body of [mail.html, mail.text]) {
@@ -80,8 +80,8 @@ describe('renderInviteEmail', () => {
   });
 
   it('names the inviter, so a lookalike is recognisable without trusting the link', () => {
-    expect(mail.html).toContain('boss@remconnect.io');
-    expect(mail.text).toContain('boss@remconnect.io');
+    expect(mail.html).toContain('boss@remassistance.com');
+    expect(mail.text).toContain('boss@remassistance.com');
   });
 
   it('states the seven-day expiry and that it is single use', () => {

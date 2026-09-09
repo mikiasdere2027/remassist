@@ -64,6 +64,41 @@
       "when": 1788457223804,
       "tag": "0008_free_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788473923331,
+      "tag": "0009_woozy_mandroid",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788884738515,
+      "tag": "0010_parched_colossus",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788891735985,
+      "tag": "0011_mushy_whizzer",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788891800000,
+      "tag": "0012_article_layout",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788891900000,
+      "tag": "0013_popup_template",
+      "breakpoints": true
     }
   ]
 }

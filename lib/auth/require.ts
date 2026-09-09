@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
-import { sql } from 'drizzle-orm';
 import { auth } from '@/auth';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { users } from '@/db/schema/auth';
+import { isDatabaseConfigured } from '@/db';
+import { findUserByEmail } from '@/lib/auth/lookup';
 import { authorise, type AdminUser } from '@/lib/auth/session';
 import { type Role } from '@/lib/auth/roles';
+import { isLockedForVerification } from '@/lib/auth/verify';
 
 /**
  * The one place authorisation is decided — MIGRATION-PLAN §10.
@@ -36,29 +36,22 @@ export async function currentUser(): Promise<AdminUser | null> {
   const email = session?.user?.email;
   if (!email) return authorise(null, undefined);
 
-  const db = getDb();
-  const [row] = await db
-    .select({
-      id: users.id,
-      email: users.email,
-      name: users.name,
-      role: users.role,
-      emailVerified: users.emailVerified,
-      createdAt: users.createdAt,
-      disabledAt: users.disabledAt,
-      passwordHash: users.passwordHash,
-    })
-    .from(users)
-    .where(sql`lower(${users.email}) = ${email.toLowerCase()}`)
-    .limit(1);
-
-  return authorise(email, row);
+  return authorise(email, await findUserByEmail(email));
 }
 
-/** For pages and layouts: the user, or a redirect to sign-in. */
+/**
+ * For pages and layouts: the user, or a redirect.
+ *
+ * Two different redirects, and the difference matters. No session goes to
+ * sign-in. A session whose address was never proved within the day it had goes
+ * to the activation screen instead — signing them out would be wrong twice
+ * over: they hold a valid session, and the screen that clears the lock is the
+ * one place they still need to reach. See lib/auth/verify.ts.
+ */
 export async function requireUser(): Promise<AdminUser> {
   const user = await currentUser();
   if (!user) redirect('/admin/signin');
+  if (isLockedForVerification(user)) redirect('/admin/verify');
   return user;
 }
 
@@ -75,14 +68,35 @@ export async function requireRole(role: Role): Promise<AdminUser> {
  * redirect from a POST action is not a refusal the caller can act on.
  */
 export async function assertRole(role: Role): Promise<AdminUser> {
-  const user = await currentUser();
-  if (!user) throw new Error('unauthorised');
+  const user = await assertUser();
   if (user.role !== role) throw new Error('forbidden');
   return user;
 }
 
-/** For actions any signed-in user may perform. */
+/**
+ * For actions any signed-in user may perform.
+ *
+ * The activation lock is enforced here and not only in requireUser, and that
+ * is the whole point of it being in two places: a server action is a POST
+ * endpoint with a generated name that renders outside the layout tree, so a
+ * lock applied only at the page would stop a locked account seeing the admin
+ * while leaving it able to write to it.
+ */
 export async function assertUser(): Promise<AdminUser> {
+  const user = await assertUnverifiedUser();
+  if (isLockedForVerification(user)) throw new Error('unverified');
+  return user;
+}
+
+/**
+ * The one exception: actions the activation screen itself needs.
+ *
+ * Sending an activation code is the action that clears the lock, so it cannot
+ * be behind it. Nothing else may use this — it authorises a session whose
+ * address has never been proved, which is exactly what everything above
+ * refuses.
+ */
+export async function assertUnverifiedUser(): Promise<AdminUser> {
   const user = await currentUser();
   if (!user) throw new Error('unauthorised');
   return user;

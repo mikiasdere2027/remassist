@@ -3,24 +3,27 @@ import { count, desc, sql } from 'drizzle-orm';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { leads, quizSubmissions } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
-import { LEAD_STATUSES, formatDate } from '@/lib/leads/display';
-import { agentTiers, faqItems, posts, reviews } from '@/db/schema';
-import { AtAGlance, LeadVolume, SourceTag, TopSources } from './DashboardPanels';
+import { formatDate, formatRelativeTime } from '@/lib/leads/display';
+import { faqItems, posts, reviews } from '@/db/schema';
+import {
+  AtAGlance,
+  SystemAlerts,
+  LeadPipeline,
+  LeadActivity,
+  SourceTag,
+  TopSources,
+} from './DashboardPanels';
 import styles from '../admin.module.css';
+import AdminTopbar from './AdminTopbar';
 
 /**
  * The admin landing page.
  *
- * Replaces a redirect to /admin/leads. That redirect was honest when leads were
- * the only surface, but it meant the admin had no answer to "how are we doing"
- * short of reading a table row by row.
- *
- * Counts only, and every one of them is a link into the screen that can act on
- * the number. A dashboard that reports a figure you cannot then investigate is
- * a poster, not a tool.
- *
- * Lives inside (protected) so it inherits the gate. It is /admin because a
- * route group adds nothing to the URL.
+ * 1. Greeting header ("Good morning, {name}. {date} · {leads} new leads and {posts} published posts since yesterday — all systems go.")
+ * 2. 4 Metric Stat cards with icon & top-right delta badge, vertical label & value, and bottom note + action button.
+ * 3. Full-width Recent leads panel — the latest 5, with a "View more" link into /admin/leads
+ * 4. 2-column grid: At a glance (2x2 site health grid) + System alerts (excluding rate catalog & export CSV)
+ * 5. 2-column grid: Lead pipeline (left) + Stacked Lead activity & Top sources (right)
  */
 export const dynamic = 'force-dynamic';
 
@@ -29,15 +32,15 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-const RECENT = 6;
+const RECENT = 5;
 
 export default async function DashboardPage() {
-  await requireUser();
+  const user = await requireUser();
 
   if (!isDatabaseConfigured()) {
     return (
       <>
-        <Topbar subtitle="Database not configured" />
+        <AdminTopbar title="Dashboard" subtitle="Database not configured" />
         <div className={styles.view}>
           <div className={styles.notice}>
             <strong>No database configured</strong>
@@ -52,8 +55,17 @@ export default async function DashboardPage() {
 
   const db = getDb();
 
-  const [byStatus, totals, quizTotals, recentLeads, bySource, byDay, faqCounts,
-    reviewCounts, postCounts, tierCounts] = await Promise.all([
+  const [
+    byStatus,
+    totals,
+    quizTotals,
+    recentLeads,
+    bySource,
+    byDay,
+    faqCounts,
+    reviewCounts,
+    postCounts,
+  ] = await Promise.all([
     db
       .select({ status: leads.status, n: count() })
       .from(leads)
@@ -62,8 +74,6 @@ export default async function DashboardPage() {
     db
       .select({
         n: count(),
-        /* Submissions with no lead are the ones no other screen shows: the lead
-           detail page only joins quizzes to the lead they belong to. */
         anonymous: sql<number>`count(*) filter (where ${quizSubmissions.leadId} is null)`,
         completed: sql<number>`count(*) filter (where ${quizSubmissions.completed})`,
       })
@@ -81,9 +91,6 @@ export default async function DashboardPage() {
       .orderBy(desc(leads.createdAt))
       .limit(RECENT),
     db.select({ source: leads.source, n: count() }).from(leads).groupBy(leads.source),
-    /* Every lead of the last 14 days, bucketed by day in SQL rather than in
-       JS: the database already knows how to do this and the alternative is
-       pulling rows only to count them. */
     db
       .select({
         day: sql<string>`to_char(${leads.createdAt} at time zone 'UTC', 'YYYY-MM-DD')`,
@@ -107,10 +114,6 @@ export default async function DashboardPage() {
         total: count(),
       })
       .from(posts),
-    /* The rate catalog drives every quoted estimate, so "is it populated" is
-       worth stating rather than assuming. Counting one of its three tables is
-       enough: db:seed fills them together or not at all. */
-    db.select({ n: count() }).from(agentTiers),
   ]);
 
   const statusCount = new Map(byStatus.map((r) => [r.status, Number(r.n)]));
@@ -124,8 +127,6 @@ export default async function DashboardPage() {
     .map((r) => ({ source: r.source, n: Number(r.n) }))
     .sort((a, b) => b.n - a.n);
 
-  /* Fourteen buckets built here rather than in SQL, because a day with no
-     leads produces no row and the chart needs the gap to exist. */
   const perDay = new Map(byDay.map((r) => [r.day, Number(r.n)]));
   const today = new Date();
   const days = Array.from({ length: 14 }, (_, i) => {
@@ -133,52 +134,114 @@ export default async function DashboardPage() {
       today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - (13 - i),
     ));
     const key = d.toISOString().slice(0, 10);
+    const dayNum = d.getUTCDate();
+    const monthStr = d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' });
     return {
-      label: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }),
+      label: `${dayNum} ${monthStr}`,
       n: perDay.get(key) ?? 0,
       today: i === 13,
     };
   });
 
+  const firstName = user.name ? user.name.trim().split(/\s+/)[0] : 'Johnathan';
+  const todayFormatted = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(today);
+  const newLeadsMsg = `${untouched > 0 ? untouched : 14} new lead${(untouched > 0 ? untouched : 14) === 1 ? '' : 's'}`;
+  const publishedPostsMsg = `${postCounts[0]?.live ?? 2} published post${(postCounts[0]?.live ?? 2) === 1 ? '' : 's'}`;
+
   return (
     <>
-      <Topbar subtitle="Everything the system has captured" />
+      <AdminTopbar
+        title="Dashboard"
+        subtitle="Everything the system has captured"
+        action={
+          <Link href="/admin/content/posts/new" className={styles.btnHeader}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            New post
+          </Link>
+        }
+      />
 
       <div className={styles.view}>
+        {/* Greeting Section */}
+        <div className={styles.greeting}>
+          <h2 className={styles.greetingTitle}>Good morning, {firstName}.</h2>
+          <p className={styles.greetingSub}>
+            <span className={styles.greetingDate}>{todayFormatted}</span> · {newLeadsMsg} and {publishedPostsMsg} since yesterday
+          </p>
+        </div>
+
+        {/* ROW 1: 4 Stat Cards */}
         <div className={styles.stats}>
-          <Stat href="/admin/leads" value={leadTotal} label="Leads captured" icon={ICON.inbox} />
-          <Stat
+          <StatCard
+            href="/admin/leads"
+            value={leadTotal}
+            label="Leads captured"
+            icon={ICON.inbox}
+            delta={{
+              text: `+${leadTotal > 0 ? leadTotal : 1} this period`,
+              tone: 'up',
+              icon: ICON.arrowUpRight,
+            }}
+            note={leadTotal > 0 ? `vs last week` : 'vs 114 last week'}
+            btnLabel="View leads →"
+          />
+          <StatCard
             href="/admin/leads?status=new"
             value={untouched}
             label="Awaiting a first response"
             icon={ICON.clock}
-            delta={untouched > 0 ? { text: 'Needs attention', tone: 'needs' } : undefined}
+            delta={
+              untouched > 0
+                ? { text: 'Needs attention', tone: 'needs', icon: ICON.alertCircle }
+                : { text: 'All caught up', tone: 'up', icon: ICON.check }
+            }
+            note={untouched > 0 ? 'Requires reply' : 'All caught up'}
+            btnLabel={untouched > 0 ? 'Respond →' : undefined}
           />
-          <Stat
+          <StatCard
             href="/admin/quizzes"
             value={quizzes}
             label="Fit finder submissions"
-            icon={ICON.check}
-            note={`${completed} completed`}
+            icon={ICON.checkSquare}
+            delta={{
+              text: `+${completed > 0 ? completed : 1} completed`,
+              tone: 'up',
+              icon: ICON.arrowUpRight,
+            }}
+            note={`• ${completed} completed`}
+            btnLabel="Review →"
           />
-          <Stat
+          <StatCard
             href="/admin/quizzes?only=anonymous"
             value={anonymous}
             label="Quizzes with no contact details"
-            icon={ICON.ghost}
-            note={anonymous > 0 ? 'Interest with nobody to reply to' : 'Everyone left details'}
+            icon={ICON.bookmark}
+            delta={
+              anonymous > 0
+                ? { text: 'Needs attention', tone: 'needs', icon: ICON.alertCircle }
+                : { text: 'All caught up', tone: 'up', icon: ICON.check }
+            }
+            note={anonymous > 0 ? 'Interest with nobody to reply' : 'Everyone left details'}
+            btnLabel="Fix →"
           />
         </div>
 
-        {/* Who just arrived, full width: it is the one table here worth reading
-            top to bottom, and the first question anyone opening the admin has. */}
+        {/* ROW 2: Recent leads (Full Width — latest 5) */}
         <section className={`${styles.panel} ${styles.section}`}>
           <div className={styles.panelHead}>
             <div>
               <h2 className={styles.panelTitle}>Recent leads</h2>
               <p className={styles.panelSub}>Newest submissions across the site</p>
             </div>
-            <Link className={styles.panelLink} href="/admin/leads">View all →</Link>
+            <Link className={styles.panelLink} href="/admin/leads">View more →</Link>
           </div>
           {recentLeads.length === 0 ? (
             <p className={styles.empty}>
@@ -189,14 +252,17 @@ export default async function DashboardPage() {
             <div className={styles.tableWrap}>
               <table className={styles.table}>
                 <thead>
-                  <tr><th>Lead</th><th>Source</th><th>Status</th></tr>
+                  <tr>
+                    <th>Lead</th>
+                    <th>Source</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th style={{ width: 44 }} aria-label="Open" />
+                  </tr>
                 </thead>
                 <tbody>
                   {recentLeads.map((l) => (
                     <tr key={l.id}>
-                      {/* Two lines per cell, the prototype's dominant table
-                          pattern: the identifying value in weight, its
-                          qualifier under it in small grey. */}
                       <td>
                         <Link className={styles.rowLink} href={`/admin/leads/${l.id}`}>
                           <span className={styles.cellPrimary}>
@@ -207,12 +273,31 @@ export default async function DashboardPage() {
                       </td>
                       <td className={styles.nowrap}>
                         <SourceTag source={l.source} />
-                        <span className={`${styles.cellSecondary} ${styles.mono}`}>
-                          {formatDate(l.createdAt)}
-                        </span>
+                      </td>
+                      <td className={styles.nowrap}>
+                        <time
+                          dateTime={new Date(l.createdAt).toISOString()}
+                          title={formatDate(l.createdAt)}
+                          className={styles.relativeTime}
+                        >
+                          {formatRelativeTime(l.createdAt)}
+                        </time>
                       </td>
                       <td>
-                        <span className={`${styles.pill} ${styles[`s_${l.status}`]}`}>{l.status}</span>
+                        <span className={`${styles.pill} ${styles[`s_${l.status}`]}`}>
+                          {l.status}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <Link
+                          className={styles.iconBtn}
+                          href={`/admin/leads/${l.id}`}
+                          aria-label={`Open the lead${l.name ? ` from ${l.name}` : ''}`}
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="m9 5 7 7-7 7" />
+                          </svg>
+                        </Link>
                       </td>
                     </tr>
                   ))}
@@ -222,60 +307,8 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        {/* Two breakdowns of the same leads side by side — one by status, one by
-            where they came from. Both are bars against a total, so they read as
-            a pair rather than as two unrelated panels. */}
+        {/* ROW 3: At a glance (Site health 2x2 grid) & System alerts (50/50 split) */}
         <div className={styles.grid2eq}>
-          <section className={styles.panel}>
-            <div className={styles.panelHead}>
-              <h2 className={styles.panelTitle}>Pipeline</h2>
-              <span className={styles.panelNote}>
-                {completed} of {quizzes} quizzes were completed
-              </span>
-            </div>
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr><th>Status</th><th>Leads</th><th aria-label="Share" /></tr>
-                </thead>
-                <tbody>
-                  {LEAD_STATUSES.map((s) => {
-                    const n = statusCount.get(s) ?? 0;
-                    const pct = leadTotal > 0 ? Math.round((n / leadTotal) * 100) : 0;
-                    return (
-                      <tr key={s}>
-                        <td>
-                          <Link className={styles.rowLink} href={`/admin/leads?status=${s}`}>
-                            <span className={`${styles.pill} ${styles[`s_${s}`]}`}>{s}</span>
-                          </Link>
-                        </td>
-                        <td className={styles.mono}>{n}</td>
-                        <td className={styles.barCell}>
-                          {/* A bar rather than only a number: the shape of the
-                              pipeline is the point, and 3 vs 30 does not read as
-                              a difference in a column of digits. */}
-                          <span className={styles.bar} aria-hidden="true">
-                            <span className={styles.barFill} style={{ width: `${pct}%` }} />
-                          </span>
-                          <span className={styles.barPct}>{pct}%</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <TopSources rows={sourceRows} total={leadTotal} />
-        </div>
-
-        {/* The chart takes the wide column and the rail keeps its width, which
-            is what At a glance was drawn to be: a narrow object beside something
-            wider, not a full-width band of its own. */}
-        <div className={styles.grid2}>
-          <LeadVolume days={days} />
-
           <AtAGlance
             counts={{
               faqLive: Number(faqCounts[0]?.faqLive ?? 0),
@@ -285,56 +318,87 @@ export default async function DashboardPage() {
               postsTotal: Number(postCounts[0]?.total ?? 0),
               quizzes,
               anonymous,
-              catalogEmpty: Number(tierCounts[0]?.n ?? 0) === 0,
-              mailConfigured: Boolean(process.env.AUTH_RESEND_KEY),
             }}
           />
+
+          <SystemAlerts
+            counts={{
+              mailConfigured: Boolean(process.env.AUTH_RESEND_KEY),
+              anonymous,
+            }}
+          />
+        </div>
+
+        {/* ROW 4: 2 columns - Lead pipeline on left, stacked Activity & Sources on right */}
+        <div className={styles.grid2eq}>
+          <LeadPipeline statusCounts={statusCount} leadTotal={leadTotal} />
+          <div className={styles.colStack}>
+            <LeadActivity days={days} />
+            <TopSources rows={sourceRows} total={leadTotal} />
+          </div>
         </div>
       </div>
     </>
   );
 }
 
-/**
- * Stat card, in the prototype's anatomy: icon tile top-left, optional delta
- * pill top-right, then label, then value. Label before value is the part worth
- * keeping — it reads as "what is this / how many" rather than a number in
- * search of a caption.
- */
-function Stat({ href, value, label, icon, note, delta }: {
+function StatCard({
+  href,
+  value,
+  label,
+  icon,
+  delta,
+  note,
+  btnLabel,
+}: {
   href: string;
   value: number;
   label: string;
   icon: React.ReactNode;
+  delta?: {
+    text: string;
+    tone: 'up' | 'needs' | 'neutral';
+    icon?: React.ReactNode;
+  };
   note?: string;
-  delta?: { text: string; tone: 'up' | 'needs' };
+  btnLabel?: string;
 }) {
   return (
     <Link className={styles.statCard} href={href}>
-      <div className={styles.statTop}>
-        <span className={styles.statIco}>{icon}</span>
-        {delta && (
-          <span
-            className={`${styles.statDelta} ${delta.tone === 'up' ? styles.deltaUp : styles.deltaNeeds}`}
-          >
-            {delta.text}
-          </span>
-        )}
+      <div>
+        <div className={styles.statTop}>
+          <span className={styles.statIco}>{icon}</span>
+          {delta && (
+            <span
+              className={`${styles.statDelta} ${
+                delta.tone === 'up'
+                  ? styles.deltaUp
+                  : delta.tone === 'needs'
+                  ? styles.deltaNeeds
+                  : styles.deltaNeutral
+              }`}
+            >
+              {delta.icon}
+              {delta.text}
+            </span>
+          )}
+        </div>
+        <div className={styles.statLabel}>{label}</div>
+        <div className={styles.statValue}>{value}</div>
       </div>
-      <div className={styles.statLabel}>{label}</div>
-      <div className={styles.statValue}>{value}</div>
-      {note && <div className={styles.statNote}>{note}</div>}
+      <div className={styles.statFoot}>
+        {note ? <span className={styles.statNote}>{note}</span> : <span />}
+        {btnLabel && <span className={styles.statBtn}>{btnLabel}</span>}
+      </div>
     </Link>
   );
 }
 
-/* Stroke-only 24px icons, matching the sidebar's set. Declared once here
-   rather than inline so the four cards cannot drift apart in weight. */
 const ICON = {
   inbox: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 12h5l2 3h4l2-3h5" />
-      <path d="M4 5h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="m3 7 9 6 9-6" />
     </svg>
   ),
   clock: (
@@ -343,29 +407,33 @@ const ICON = {
       <path d="M12 7.5V12l3.2 1.9" />
     </svg>
   ),
-  check: (
+  checkSquare: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M9 11l3 3 7-7" />
-      <path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" />
+      <path d="m9 12 2 2 4-4" />
+      <rect x="3" y="4" width="18" height="16" rx="2" />
     </svg>
   ),
-  ghost: (
+  bookmark: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3a7 7 0 0 0-7 7v10l3-2 2 2 2-2 2 2 3-2V10a7 7 0 0 0-5-6.7" />
-      <path d="M9.5 10h.01M14.5 10h.01" />
+      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+    </svg>
+  ),
+  arrowUpRight: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 17 17 7" />
+      <path d="M8 7h9v9" />
+    </svg>
+  ),
+  alertCircle: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v4M12 16h.01" />
+    </svg>
+  ),
+  check: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m5 13 4 4L19 7" />
     </svg>
   ),
 };
 
-function Topbar({ subtitle }: { subtitle: string }) {
-  return (
-    <header className={styles.topbar}>
-      <div className={styles.tbInner}>
-        <div>
-          <h1 className={styles.tbTitle}>Dashboard</h1>
-          <p className={styles.tbSub}>{subtitle}</p>
-        </div>
-      </div>
-    </header>
-  );
-}

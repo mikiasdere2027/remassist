@@ -3,9 +3,10 @@ import { and, desc, lt, sql } from 'drizzle-orm';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { leads } from '@/db/schema';
 import { LEAD_SOURCES } from '@/lib/leads/schema';
-import { LEAD_STATUSES, SOURCE_LABELS, formatDate } from '@/lib/leads/display';
+import { LEAD_STATUSES, SOURCE_LABELS, formatDate, formatRelativeTime } from '@/lib/leads/display';
 import { buildLeadFilters, type LeadSearch } from '@/lib/leads/query';
 import { SourceTag } from '../DashboardPanels';
+import AdminTopbar from '../AdminTopbar';
 import styles from '../../admin.module.css';
 
 /**
@@ -25,6 +26,9 @@ export default async function LeadsPage({
   searchParams: Promise<LeadSearch>;
 }) {
   const sp = await searchParams;
+
+  /* Whether any filter is narrowing the list — drives the bold funnel icon. */
+  const filtered = Boolean(sp.q || sp.source || sp.status);
 
   if (!isDatabaseConfigured()) {
     return (
@@ -93,7 +97,7 @@ export default async function LeadsPage({
             <div className={styles.field}>
               <label className={styles.fieldLabel} htmlFor="f-q">Search</label>
               <input
-                className={styles.control}
+                className={`${styles.control} ${styles.controlSearch}`}
                 id="f-q"
                 name="q"
                 type="search"
@@ -101,25 +105,50 @@ export default async function LeadsPage({
                 defaultValue={sp.q ?? ''}
               />
             </div>
+            {/* .selectField rather than a bare .control select, so these match
+                the dropdowns on the FAQ and catalog screens: same box, but the
+                native arrow swapped for an inline chevron that looks the same
+                on every platform. A span, not the <label> those two use — the
+                field already has its own label above it, and a second one
+                wrapping the control would announce the field twice. */}
             <div className={styles.field}>
               <label className={styles.fieldLabel} htmlFor="f-source">Source</label>
-              <select className={styles.control} id="f-source" name="source" defaultValue={sp.source ?? ''}>
-                <option value="">All sources</option>
-                {LEAD_SOURCES.map((s) => (
-                  <option key={s} value={s}>{SOURCE_LABELS[s] ?? s}</option>
-                ))}
-              </select>
+              <span className={`${styles.selectField} ${styles.selectFieldWide}`}>
+                <select id="f-source" name="source" defaultValue={sp.source ?? ''}>
+                  <option value="">All sources</option>
+                  {LEAD_SOURCES.map((s) => (
+                    <option key={s} value={s}>{SOURCE_LABELS[s] ?? s}</option>
+                  ))}
+                </select>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </span>
             </div>
             <div className={styles.field}>
               <label className={styles.fieldLabel} htmlFor="f-status">Status</label>
-              <select className={styles.control} id="f-status" name="status" defaultValue={sp.status ?? ''}>
-                <option value="">All statuses</option>
-                {LEAD_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+              <span className={`${styles.selectField} ${styles.selectFieldWide}`}>
+                <select id="f-status" name="status" defaultValue={sp.status ?? ''}>
+                  <option value="">All statuses</option>
+                  {LEAD_STATUSES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </span>
             </div>
-            <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit">Filter</button>
+            <button
+              className={`${styles.btn} ${styles.btnSoft} ${styles.btnIcon} ${filtered ? styles.filterOn : ''}`}
+              type="submit"
+              aria-label="Filter"
+              title={filtered ? 'Filter is active' : 'Filter'}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+              </svg>
+            </button>
             <Link className={`${styles.btn} ${styles.btnGhost}`} href="/admin/leads">Reset</Link>
           </form>
 
@@ -167,7 +196,15 @@ export default async function LeadsPage({
                       <td>
                         <span className={`${styles.pill} ${styles[`s_${r.status}`]}`}>{r.status}</span>
                       </td>
-                      <td className={`${styles.mono} ${styles.nowrap}`}>{formatDate(r.createdAt)}</td>
+                      <td className={styles.nowrap}>
+                        <time
+                          dateTime={new Date(r.createdAt).toISOString()}
+                          title={formatDate(r.createdAt)}
+                          className={styles.relativeTime}
+                        >
+                          {formatRelativeTime(r.createdAt)}
+                        </time>
+                      </td>
                       <td>
                         <Link
                           className={styles.iconBtn}
@@ -216,28 +253,28 @@ export default async function LeadsPage({
 
 function Topbar({ total, exportQs }: { total: number | null; exportQs?: string }) {
   return (
-    <header className={styles.topbar}>
-      <div className={styles.tbInner}>
-        <div>
-          <h1 className={styles.tbTitle}>Leads</h1>
-          <p className={styles.tbSub}>
-            {total === null ? 'Database not configured' : `${total} captured`}
-          </p>
-        </div>
-        {exportQs !== undefined && (
+    <AdminTopbar
+      title="Leads"
+      subtitle={
+        total === null
+          ? 'Database not configured'
+          : 'Every submission across the site, in one inbox'
+      }
+      action={
+        exportQs !== undefined ? (
           <a
-            className={`${styles.btn} ${styles.btnGhost}`}
+            className={styles.btnHeader}
             href={`/admin/leads/export${exportQs ? `?${exportQs}` : ''}`}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3v12" />
-              <path d="m7 11 5 5 5-5" />
-              <path d="M5 21h14" />
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <path d="m7 10 5 5 5-5" />
+              <path d="M12 15V3" />
             </svg>
             Export CSV
           </a>
-        )}
-      </div>
-    </header>
+        ) : undefined
+      }
+    />
   );
 }

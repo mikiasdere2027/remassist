@@ -121,6 +121,45 @@ ${buttonBlock(safeUrl, 'Or sign in with one click')}`,
 }
 
 /**
+ * The activation code, sent when somebody asks to prove their own address.
+ *
+ * The same token as a sign-in code — see sendVerificationEmail — but not the
+ * same message, because it is not the same request. "Enter this code to finish
+ * signing in" arriving to somebody who is already signed in and looking at a
+ * countdown reads as the wrong email, and an email that reads as the wrong
+ * email is one people leave alone.
+ *
+ * Code and no link, unlike the sign-in message: the person is already sitting
+ * in front of the form. A link here would be a second thing to explain and one
+ * more URL for a mail scanner to spend.
+ */
+export function renderActivationEmail({ code }: { code: string }): AuthEmail {
+  const safeCode = escapeHtml(code);
+
+  const html = card({
+    heading: 'Activate your Rem Assist admin account',
+    lede: `Type this code on the page you just opened to confirm this address.
+      Until it is confirmed, the account is locked out of the admin.`,
+    body: codeBlock(safeCode),
+    footer: `The code expires in ${MINUTES} minutes. If you did not ask to activate
+      an account, you can ignore this message — nothing changes without this code.`,
+  });
+
+  const text = [
+    'Activate your Rem Assist admin account',
+    '',
+    `Your code: ${code}`,
+    '',
+    'Type it on the page you just opened to confirm this address.',
+    'Until it is confirmed, the account is locked out of the admin.',
+    `The code expires in ${MINUTES} minutes.`,
+    'If you did not ask to activate an account, you can ignore this message.',
+  ].join('\n');
+
+  return { subject: `${code} is your Rem Assist activation code`, html, text };
+}
+
+/**
  * The invitation.
  *
  * Link only — no code in this message, and that is the design. The link proves

@@ -76,7 +76,7 @@ describe('sendAuthEmail with no key in production', () => {
     // Silence here would tell somebody to check an inbox that will never
     // receive anything. The caller turns this into a visible message.
     await expect(sendAuthEmail({
-      to: 'a@remconnect.io',
+      to: 'a@remassistance.com',
       subject: 's',
       html: '<p>h</p>',
       text: 't',
@@ -86,7 +86,7 @@ describe('sendAuthEmail with no key in production', () => {
 
   it('does not put the credential preview in the error it throws', async () => {
     const err = await sendAuthEmail({
-      to: 'a@remconnect.io',
+      to: 'a@remassistance.com',
       subject: 's',
       html: '<p>h</p>',
       text: 't',

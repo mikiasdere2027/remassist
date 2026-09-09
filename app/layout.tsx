@@ -9,7 +9,9 @@ import BookingModal from '@/components/widgets/BookingModal';
 import JsonLd from '@/components/layout/JsonLd';
 import AttributionCapture from '@/components/analytics/AttributionCapture';
 import GoogleTagManager from '@/components/analytics/GoogleTagManager';
+import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import ConsentBanner from '@/components/analytics/ConsentBanner';
+import PopupManager from '@/components/popups/PopupManager';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 import '@/styles/globals.css';
 
@@ -20,7 +22,7 @@ import '@/styles/globals.css';
  */
 const sora = Sora({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['300', '400', '500', '600', '700', '800'],
   variable: '--font-sora',
   display: 'swap',
 });
@@ -81,8 +83,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           Three origins this site always ends up talking to, none of them
           discoverable from the HTML until something has already run:
 
-          - googletagmanager.com is injected by a script that only runs after
-            hydration and only after consent;
+          - googletagmanager.com serves both tags — gtm.js for a container and
+            gtag.js for GA4 direct — and either way it is injected by a script
+            that only runs after hydration;
           - youtube-nocookie.com is the hero clip's player, armed on consent or
             a press;
           - calendly.com is the booking iframe, which loads inside a dialog and
@@ -119,8 +122,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <BookingModal />
           <JsonLd />
           <AttributionCapture />
+          {/* Two loaders, at most one of which renders: GoogleAnalytics is
+              null whenever a container id is set. See its header. */}
           <GoogleTagManager />
+          <GoogleAnalytics />
           <ConsentBanner />
+          {/* Inside SiteChrome, so /admin and the sign-in screens never load it.
+              Renders nothing until there is a live, published popup for the
+              page — see components/popups/PopupManager.tsx. */}
+          <PopupManager />
         </SiteChrome>
       </body>
     </html>

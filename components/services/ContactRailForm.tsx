@@ -144,7 +144,7 @@ export default function ContactRailForm() {
   return (
     <form className={styles.formGrid} onSubmit={onSubmit}>
       <div>
-        <label className={styles.label} htmlFor="cr-first">First name</label>
+        <label className={styles.label} htmlFor="cr-first">First name<span className={styles.req} aria-hidden="true">*</span></label>
         <input
           className={styles.input}
           id="cr-first"
@@ -156,7 +156,7 @@ export default function ContactRailForm() {
         />
       </div>
       <div>
-        <label className={styles.label} htmlFor="cr-last">Last name</label>
+        <label className={styles.label} htmlFor="cr-last">Last name<span className={styles.req} aria-hidden="true">*</span></label>
         <input
           className={styles.input}
           id="cr-last"
@@ -190,7 +190,7 @@ export default function ContactRailForm() {
         />
       </div>
       <div>
-        <label className={styles.label} htmlFor="cr-email">Business email</label>
+        <label className={styles.label} htmlFor="cr-email">Business email<span className={styles.req} aria-hidden="true">*</span></label>
         <input
           className={styles.input}
           id="cr-email"

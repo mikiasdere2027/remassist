@@ -176,7 +176,7 @@ export default function HomeHero() {
         <div>
           <div className={styles.eyebrow}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 20v-1.8a3.7 3.7 0 0 0-3.7-3.7H6.7A3.7 3.7 0 0 0 3 18.2V20"></path><circle cx="9.5" cy="7.5" r="3.6"></circle><path d="M21 20v-1.8a3.7 3.7 0 0 0-2.8-3.6"></path><path d="M15.5 4.1a3.7 3.7 0 0 1 0 7"></path></svg>
-            <span className={styles.eyebrowText}>Expert teams. Built around your goals.</span>
+            <span className={styles.eyebrowText}>Fully Managed</span>
           </div>
           <h1 className={styles.h1}>
             Remote Teams for<span className={styles.srOnly}> Specialized Roles</span>

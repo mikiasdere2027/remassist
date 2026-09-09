@@ -8,6 +8,13 @@ import { CODE_TTL_SEC } from './code';
  * token in the emailed link is a credential that creates an account. It is
  * stored hashed, it expires, and it is single-use.
  *
+ * That first sentence was aspirational until 2026-09-09 and is now enforced.
+ * Auth.js creates a user for any address it does not recognise when an emailed
+ * code is redeemed, so anybody with a mailbox on an allowed domain could skip
+ * all of this and mint themselves a manager account by asking for a code. The
+ * account requirement in auth.ts's signIn callback is what makes this module
+ * the only door.
+ *
  * Pure and free of next-auth, next/headers and database imports, matching
  * allowlist.ts and roles.ts, so all of it is unit-testable without a database.
  */

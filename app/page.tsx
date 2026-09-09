@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { pageOg } from '@/lib/site';
 import { HERO_INTERVIEW, interviewPoster } from '@/lib/interviews';
+import { getTeamMembers } from '@/lib/team/content';
 import HomeHero from '@/components/home/HomeHero';
 import RemAcronym from '@/components/home/RemAcronym';
 import ServiceGrid from '@/components/home/ServiceGrid';
@@ -26,7 +27,11 @@ export const metadata: Metadata = {
  * REMOTE cards set up the promise the service grid then proves, and the fit
  * finder has to land after the reader has seen tiers and pricing context.
  */
-export default function Home() {
+export default async function Home() {
+  /* The team rail needs DB-backed members; without a database the loader falls
+     back to the content seed, so this value is never empty on a real build. */
+  const teamMembers = await getTeamMembers();
+
   return (
     <>
       {/* The hero's poster frame is this page's LCP element, and nothing in the
@@ -61,7 +66,7 @@ export default function Home() {
         <TrustedPartners />
         <FitFinder />
         <FaqSection />
-        <TeamRail />
+        <TeamRail members={teamMembers} />
       </main>
     </>
   );

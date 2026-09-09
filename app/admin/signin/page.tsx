@@ -16,6 +16,10 @@ import styles from '../admin.module.css';
  * database access to fix, and because it is the only way in at all while email
  * delivery is still being sorted out.
  *
+ * Neither way in registers anybody. An account has to exist first, created by
+ * the admin's invitation — enforced in auth.ts's signIn callback, which until
+ * 2026-09-09 let a redeemed code create the user it could not find.
+ *
  * Lives under /admin but outside (protected), so a signed-out visitor can
  * actually reach it. robots.txt disallows /admin, which covers this too.
  */
@@ -83,7 +87,20 @@ export default async function SignInPage({
          * known or not. It is worth distinguishing because it tells the person
          * the true thing — mail is broken, use your password.
          */
-        if (err instanceof AuthError) redirect('/admin/signin?error=mail');
+        /**
+         * AccessDenied is not a mail failure, and telling somebody it is would
+         * be the wrong answer twice: it fires when the signIn callback refuses
+         * the address — off the company domain, or no account here — and it
+         * fires BEFORE anything is sent. Reporting "email is not configured"
+         * would send an outsider looking for an administrator to fix a server
+         * that is working exactly as intended, and would tell them the address
+         * itself was fine. It gets the generic credential message instead.
+         */
+        if (err instanceof AuthError) {
+          redirect(err.type === 'AccessDenied'
+            ? '/admin/signin?error=1'
+            : '/admin/signin?error=mail');
+        }
         throw err;
       }
       return;
@@ -134,7 +151,7 @@ export default async function SignInPage({
             id="admin-email"
             name="email"
             type="email"
-            placeholder="you@remconnect.io"
+            placeholder="you@remassistance.com"
             autoComplete="email"
             required
             autoFocus

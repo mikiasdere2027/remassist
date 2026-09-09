@@ -8,9 +8,10 @@
    installed but effectively unused in JSX, and the one surface nobody outside
    the company sees is a poor place to start a second system.
 
-   The mono stack is the one globals.css reserved for "Phase 04 admin tables":
-   emails, UUIDs and timestamps are meaningfully harder to scan and to compare
-   down a column in a proportional face. */
+   The data values in the admin tables (emails, UUIDs, timestamps, percentage
+   figures) render in the brand face — --admin-mono now aliases Sora. The owner
+   asked for the brand font with a light weight instead of a monospace stack,
+   and the token name is kept so every data value switches in one place. */
 .shell {
   --navy-900: #000543;
   --blue-300: #34bdf0;
@@ -29,7 +30,7 @@
   --r-sm: 14px;
   --r-md: 22px;
   --shadow-sm: 0 12px 35px rgba(0, 5, 67, 0.12);
-  --admin-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --admin-mono: var(--font-sans);
 
   /* Copied verbatim from the Test Admin prototype so its components can be
      ported without re-deriving colours by eye. The ones above were already
@@ -160,31 +161,78 @@
 }
 .sidebarFoot {
   flex: none;
-  border-top: 1px solid rgba(244, 246, 251, 0.08);
-  padding-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  border-top: 1px solid rgba(244, 246, 251, 0.08);
+  padding: 12px 10px 6px;
 }
-/* Footer identity block, drawn as in the prototype: initials avatar, then
-   name and "role · email" on the line under it. The role and address share a
-   line so the block stays short enough for the footer to breathe. */
-.adminCard { display: flex; align-items: center; gap: 10px; padding: 6px 8px 10px; }
-.adminName {
-  font-size: 13.5px;
-  font-weight: 700;
+/* The way back to the site the admin edits, stacked above sign-out. Same
+   pill shape as the nav links so the footer reads as one control block. */
+.viewSite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  background: rgba(81, 141, 224, 0.12);
+  border-left: 3px solid var(--blue-300);
   color: var(--fg-on-dark);
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: background 150ms;
 }
-.adminRole {
-  font-size: 11.5px;
-  color: var(--fg-on-dark-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.viewSite:hover { background: rgba(81, 141, 224, 0.2); }
+/* When View site sits above the sign-out divider rather than inside it,
+   give it its own bottom padding so it doesn't crowd the hairline. */
+.viewSiteAboveFoot {
+  margin: 0 0 8px;
+  flex: none;
+}
+
+.viewSite svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Sign-out sits at the very bottom of the rail, under View site. The coral
+   tint keeps it findable among the blue-on-navy texts around it. */
+.signoutRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: #ff9b92;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+.signoutRow:hover { background: rgba(220, 69, 56, 0.14); color: #ffb4ad; }
+.signoutRow svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .avatar {
   width: 34px;
@@ -199,46 +247,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Two compact footer links — one back to the site, one out of the admin. The
-   sign-out keeps the prototype's coral tint so it stays findable among the
-   blue-on-navy texts around it. */
-.sidebarLinks { display: flex; justify-content: space-between; gap: 8px; padding: 0 2px; }
-.sidebarLinks a, .sidebarLinks button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--fg-on-dark-muted);
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  text-decoration: none;
-  padding: 7px 8px;
-  border-radius: 9px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  transition: background 150ms, color 150ms;
-}
-.sidebarLinks a:hover, .sidebarLinks button:hover {
-  background: rgba(81, 141, 224, 0.12);
-  color: #fff;
-}
-.sidebarLinks .signoutLink { color: #ff9b92; }
-.sidebarLinks .signoutLink:hover {
-  background: rgba(220, 69, 56, 0.14);
-  color: #ffb4ad;
-}
-.sidebarLinks svg {
-  width: 14px;
-  height: 14px;
-  flex: none;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 /* ---------- main + topbar ---------- */
@@ -257,11 +265,69 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  padding: 16px 28px;
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 16px 32px;
 }
 .tbTitle { margin: 0; font-size: 22px; font-weight: 700; color: var(--ink-900); line-height: 1.25; }
 .tbSub { margin: 2px 0 0; font-size: 13px; color: var(--ink-500); }
-.view { padding: 24px 28px 56px; }
+.view {
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 24px 32px 56px;
+}
+
+/* The right-hand side of a topbar when it has both an action and the identity
+   chip: hold them together so .tbInner's space-between lands them as one
+   block against the title. */
+.tbRight { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* The identity chip at the top-right of every admin page — initials avatar,
+   name and "role · email", clickable straight through to Settings. Read as
+   one pill, so it reads as a control rather than a stray label. */
+.topbarUser {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  padding: 5px 12px 5px 5px;
+  border-radius: var(--r-sm);
+  background: #fff;
+  border: 1px solid var(--hairline);
+  text-decoration: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.topbarUser:hover {
+  border-color: var(--brand-blue);
+  box-shadow: 0 8px 22px -14px rgba(0, 5, 67, 0.35);
+}
+.topbarUser .avatar { width: 30px; height: 30px; font-size: 11px; }
+.topbarUserText { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.topbarUserName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.topbarUserRole {
+  font-size: 11.5px;
+  color: var(--ink-500);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.topbarUserGear {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  fill: none;
+  stroke: var(--ink-400);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 150ms;
+}
+.topbarUser:hover .topbarUserGear { stroke: var(--blue-700); }
 
 /* ---------- buttons ---------- */
 .btn {
@@ -291,9 +357,116 @@
   stroke-linejoin: round;
 }
 .btnPrimary { background: var(--brand-blue); color: #fff; }
-.btnPrimary:hover { background: var(--blue-700); }
+.btnPrimary:hover { background: #73a9ff; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
 .btnGhost { background: #fff; color: var(--ink-700); border-color: var(--hairline); }
 .btnGhost:hover { border-color: var(--brand-blue); color: var(--blue-700); }
+/* Header action button — solid blue normally, light blue on hover */
+.btnHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: #4c84e8;
+  color: #ffffff;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.btnHeader svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.btnHeader:hover {
+  background: #73a9ff;
+  color: #ffffff;
+}
+.btnSoft {
+  background: rgba(81, 141, 224, 0.13);
+  color: var(--blue-700);
+  border-color: transparent;
+}
+.btnSoft:hover { background: rgba(81, 141, 224, 0.24); color: var(--blue-700); }
+.btnIcon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Topbar search box */
+.tbSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  width: 240px;
+  background: #fff;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  color: var(--ink-400);
+  transition: border-color 150ms, box-shadow 150ms;
+  flex-shrink: 0;
+}
+.tbSearch:focus-within {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(81,141,224,0.14);
+}
+.tbSearch svg { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tbSearch input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  width: 100%;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink-700);
+}
+.tbSearch input::placeholder { color: var(--ink-400); }
+
+/* Bell icon button */
+.tbBell {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--ink-600);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 150ms, color 150ms;
+}
+.tbBell svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.tbBell:hover { background: var(--ink-50); color: var(--ink-900); }
+.tbBellDot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e05151;
+  border: 1.5px solid #fff;
+}
 
 /* ---------- panels ---------- */
 .panel {
@@ -330,14 +503,43 @@
   gap: 6px;
   flex-wrap: wrap;
 }
+/* A soft-blue pill, the same tint-and-blue pairing as .btnSoft on the leads
+   filter — not .btn itself, which is 40px tall to line up with form controls
+   and would outweigh the 12.5px timestamp it sits beside. Label plus trailing
+   arrow on one baseline, never wrapping apart. */
 .panelHeadLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: rgba(81, 141, 224, 0.13);
   color: var(--blue-700);
+  font-size: 13px;
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
   white-space: nowrap;
+  transition: background 150ms, color 150ms;
+  /* Doubles .panelHeadNote's 6px for this one item: a pill needs more air off
+     the timestamp than the Partial tag beside it does, and widening the note's
+     own gap would push that tag off the date it belongs to. */
+  margin-left: 6px;
 }
-.panelHeadLink:hover { color: var(--brand-blue); }
+.panelHeadLink:hover { background: rgba(81, 141, 224, 0.24); color: var(--blue-700); }
+.panelHeadLink:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 2px; }
+.panelHeadLink svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 150ms;
+}
+.panelHeadLink:hover svg { transform: translateX(2px); }
 .panelFoot {
   padding: 14px 22px;
   font-size: 12.5px;
@@ -374,6 +576,7 @@
 .notice code {
   font-family: var(--admin-mono);
   font-size: 12.5px;
+  font-weight: 400;
   background: #f5f7fa;
   padding: 1px 5px;
   border-radius: 5px;
@@ -407,6 +610,11 @@
   color: var(--ink-900);
   min-width: 11rem;
 }
+.controlSearch {
+  min-width: 260px;
+  width: 280px;
+}
+select.control { padding-right: 36px; }
 .control:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 1px; }
 
 /* ---------- table ---------- */
@@ -433,7 +641,23 @@
 .table tbody tr { transition: background 130ms; }
 .table tbody tr:hover { background: rgba(81, 141, 224, 0.05); }
 .table tbody tr:last-child td { border-bottom: 0; }
-.mono { font-family: var(--admin-mono); font-size: 13px; }
+.mono {
+  font-family: var(--admin-mono);
+  font-size: 13px;
+  font-weight: 300;
+}
+.relativeTime {
+  cursor: help;
+  color: var(--ink-700);
+  font-size: 13.5px;
+  text-decoration: underline dotted transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease, color 150ms ease;
+}
+.relativeTime:hover {
+  text-decoration-color: var(--ink-400);
+  color: var(--ink-900);
+}
 .rowLink { color: var(--blue-700); font-weight: 600; text-decoration: none; }
 .rowLink:hover { text-decoration: underline; }
 .muted { color: #98a2b3; }
@@ -448,8 +672,8 @@
   gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  padding: 4px 11px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 8px;
   white-space: nowrap;
 }
 .pill::before {
@@ -459,6 +683,10 @@
   border-radius: 50%;
   background: currentColor;
   opacity: 0.85;
+}
+.pill b {
+  font-weight: 700;
+  color: var(--ink-900);
 }
 .s_new       { background: #f5f7fa; color: #326dda; }
 .s_contacted { background: #fef9e7; color: #92670a; }
@@ -489,16 +717,47 @@
 }
 
 /* ---------- detail ---------- */
-.back {
-  font-size: 13px;
-  color: var(--ink-500);
-  text-decoration: none;
+.statusForm {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  position: relative;
 }
-.back:hover { color: var(--blue-700); }
-.detailGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.statusSelect {
+  height: 40px;
+  min-width: 145px;
+  font-weight: 600;
+  font-size: 13.5px;
+  background: #fff;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--hairline);
+  color: var(--ink-900);
+  cursor: pointer;
+  padding: 0 12px;
+}
+.statusSelect:hover {
+  border-color: var(--brand-blue);
+}
+/* The lead-detail dropdown carries the same status palette as the list's
+   pills, so the current value reads at a glance before the menu is opened.
+   Scoped to .statusSelect so it outranks the control's own white. */
+.statusSelect.s_new { background: #eef4fd; color: var(--blue-700); border-color: #b9caea; }
+.statusSelect.s_contacted { background: var(--medium-50); color: var(--medium-700); border-color: #e5d9a3; }
+.statusSelect.s_qualified { background: var(--high-50); color: var(--high-700); border-color: #efd09e; }
+.statusSelect.s_won { background: var(--low-50); color: var(--low-700); border-color: #a4dbc1; }
+.statusSelect.s_lost { background: var(--critical-50); color: var(--critical-600); border-color: #e5bcb8; }
+.statusSelect.s_spam { background: #f4f4f5; color: var(--ink-500); border-color: #dde0e7; }
+.statusNote {
+  font-size: 12px;
+  color: var(--ink-500);
+  font-weight: 500;
+}
+.statusErr {
+  font-size: 12px;
+  color: var(--critical-600);
+  font-weight: 600;
+}
+.detailGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
 .detailWide { grid-column: 1 / -1; }
 
 /* The review edit page: the transcription form wide on the left, Placement in
@@ -511,6 +770,103 @@
   align-items: start;
 }
 .reviewEditGrid > .section { margin-bottom: 0; }
+
+/* The Team page: invite form and pending invitations share a top row — the
+   narrow 35% invite form on the left, the wider 65% invitation list beside it.
+   Accounts follows full width beneath. */
+.teamTopGrid {
+  display: grid;
+  margin-bottom: 20px;
+  grid-template-columns: minmax(0, 35fr) minmax(0, 65fr);
+  gap: 24px;
+  align-items: stretch;
+}
+.teamTopGrid > .section { margin-bottom: 0; }
+/* Panels inside the teamTopGrid stretch vertically — the invite form panel
+   must fill its column so both panels are always the same height. */
+.teamTopGrid > .panel,
+.teamTopGrid > .section.panel { height: 100%; box-sizing: border-box; }
+
+/* ---------- info tooltip ---------- */
+.infoTooltipWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.infoIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 150ms;
+  line-height: 1;
+  border-radius: 50%;
+}
+.infoIconBtn:hover { opacity: 0.82; }
+.infoIconBtn:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 2px; border-radius: 50%; }
+.infoIconSvg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+/* A filled disc in the brand blue with the glyph knocked out in white, rather
+   than the hairline outline this used to draw — at 17px an outline reads as a
+   smudge next to a panel title, and the point of the icon is to be noticed. */
+.infoIconDisc { fill: var(--brand-blue); }
+.infoIconGlyph { fill: #fff; }
+
+.tooltip {
+  /* Fixed, not absolute: every .panel sets overflow:hidden for its corners, so
+     an absolutely-placed bubble is clipped the moment it leaves the panel.
+     InfoTooltip supplies top/left/right/bottom from the trigger's rect. */
+  position: fixed;
+  z-index: 200;
+  background: var(--navy-900);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.45;
+  padding: 12px 16px;
+  border-radius: 14px;
+  white-space: normal;
+  width: max-content;
+  max-width: 250px;
+  pointer-events: none;
+  box-shadow: 0 10px 28px rgba(0, 5, 67, 0.28);
+}
+/* Arrow via a ::before pseudo. Which edge it sits on comes from the side the
+   component actually resolved (it flips when there is no room); how far along
+   that edge comes from --tail-x / --tail-y, because a clamped bubble no longer
+   starts at a fixed inset from its trigger. */
+.tooltip::before {
+  content: '';
+  position: absolute;
+  border: 7px solid transparent;
+}
+.tooltipSideTop::before {
+  top: 100%;
+  left: var(--tail-x, 13px);
+  border-top-color: var(--navy-900);
+}
+.tooltipSideBottom::before {
+  bottom: 100%;
+  left: var(--tail-x, 13px);
+  border-bottom-color: var(--navy-900);
+}
+.tooltipSideLeft::before {
+  left: 100%;
+  top: var(--tail-y, 13px);
+  border-left-color: var(--navy-900);
+}
+.tooltipSideRight::before {
+  right: 100%;
+  top: var(--tail-y, 13px);
+  border-right-color: var(--navy-900);
+}
+
 
 .dl { margin: 0; display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; }
 .dl > dt {
@@ -544,16 +900,6 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   vertical-align: middle;
-}
-.json {
-  margin: 0;
-  padding: 16px 22px;
-  font-family: var(--admin-mono);
-  font-size: 12.5px;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  color: var(--ink-700);
 }
 
 .qa { margin: 0; padding: 4px 0; }
@@ -590,7 +936,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: 10px;
-  padding: 16px 22px 0;
+  /* Symmetric: the figures sit in a band with the same 16px above them, under
+     the head's hairline, as below them, over the accordion's. */
+  padding: 16px 22px;
 }
 .estimateCard {
   display: flex;
@@ -629,6 +977,10 @@
    toggle is the bottom arrow, so the answers open above it and the arrow is
    always the last thing on the card. */
 .answerAccordion { border-top: 1px solid var(--hairline); margin-top: 4px; }
+/* After the estimate grid the 4px is the grid's own padding-bottom instead —
+   the nudge is there for .panelIntro, whose last line would otherwise sit on
+   the rule. */
+.estimateGrid + .answerAccordion { margin-top: 0; }
 .answerAccordionBodyClosed { display: none; }
 .answerAccordionToggle {
   width: 100%;
@@ -735,6 +1087,33 @@
 
 .iconBtnDanger:hover { background: var(--critical-50); color: var(--critical-600); }
 
+/* The identifying value and its key-tag on one line — "Part-time | PT".
+   One line instead of a label over a grey key keeps the row's height regular,
+   which is what keeps the horizontal rules between rows straight. */
+.rateName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-wrap: wrap;
+}
+.rateLabel { font-weight: 600; color: var(--ink-900); }
+/* The uppercase key, in the brand face (--admin-mono aliases Sora) with a
+   highlight so the code part of the name never reads as body text. */
+.rateTag {
+  font-family: var(--admin-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(81, 141, 224, 0.12);
+  color: var(--blue-700);
+  border-radius: 6px;
+  padding: 2px 8px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
 /* The inline edit form, in the row's own place in the table rather than on a
    page of its own: three fields and a rate is not worth losing your place in a
    list of four for. */
@@ -786,7 +1165,7 @@
   gap: 4px;
   background: #fff;
   padding: 5px;
-  border-radius: 999px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--hairline);
 }
 .fbtn {
@@ -795,7 +1174,7 @@
   font-weight: 600;
   line-height: 1;
   padding: 8px 13px;
-  border-radius: 999px;
+  border-radius: 8px;
   border: 0;
   background: transparent;
   color: var(--ink-600);
@@ -815,10 +1194,72 @@
   font-size: 11px;
   font-weight: 700;
   background: rgba(0, 0, 0, 0.07);
-  border-radius: 999px;
+  border-radius: 6px;
   padding: 1px 7px;
 }
 .fbtnOn .fbtnCount { background: rgba(255, 255, 255, 0.18); }
+
+/* A search box shaped as one of the filter bar's controls — same height and
+   border as the pill group beside it, so the bar reads as one strip rather
+   than as a row of unrelated widgets. It is the topbar's search box wearing
+   the bar's dimensions; the topbar's own is a label, this one is the <form>,
+   because a search that is not in the URL cannot be shared or reloaded. */
+.filterSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  width: 260px;
+  background: #fff;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  color: var(--ink-400);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.filterSearch:focus-within {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.14);
+}
+.filterSearch svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.filterSearch input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  width: 100%;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink-700);
+}
+.filterSearch input::placeholder { color: var(--ink-400); }
+
+/* The funnel icon on the leads filter strip: bold blue when a filter is
+   active so it clearly indicates that filtering is on. */
+.filterOn {
+  border-color: #4c84e8 !important;
+  color: #ffffff !important;
+  background: #4c84e8 !important;
+  box-shadow: 0 2px 8px rgba(76, 132, 232, 0.35);
+}
+.filterOn svg {
+  stroke: #ffffff !important;
+  stroke-width: 2.8;
+}
+.filterOn:hover,
+.filterOn:focus {
+  background: #3b74d6 !important;
+  border-color: #3b74d6 !important;
+  color: #ffffff !important;
+}
 
 /* A select styled as one of the bar's controls. The native arrow is replaced
    by an inline chevron so the control matches the height and border of the
@@ -828,10 +1269,24 @@
   display: inline-flex;
   align-items: center;
   height: 40px;
-  padding: 0 14px;
+  /* No padding of its own: the select carries it instead and fills the box, so
+     a click anywhere in the control opens it. With the padding out here the
+     wrapper had a dead border around the select — and the wrapper is a <span>
+     wherever the field already has a real <label>, so there was nothing to
+     forward the click either. */
+  padding: 0;
   background: #fff;
   border: 1px solid var(--hairline);
   border-radius: var(--r-sm);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.selectField:hover {
+  border-color: rgba(81, 141, 224, 0.45);
+}
+.selectField:focus-within {
+  border-color: var(--brand-blue);
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 1px;
 }
 .selectField select {
   appearance: none;
@@ -841,11 +1296,20 @@
   font: inherit;
   font-size: 13.5px;
   color: var(--ink-700);
-  padding-right: 22px;
+  width: 100%;
+  height: 100%;
+  /* Room on the right for the chevron, which is pointer-events: none and so
+     passes its own clicks down to the select underneath. */
+  padding: 0 34px 0 14px;
   min-width: 8rem;
   cursor: pointer;
 }
-.selectField select:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 3px; }
+/* focus ring is now handled by .selectField:focus-within — suppress the native one */
+.selectField select:focus-visible { outline: none; }
+/* In the leads filter bar the dropdowns sit in labelled .field columns beside a
+   280px search box, so they keep the 11rem the .control select had rather than
+   the 8rem that suits a bare filter pill. */
+.selectFieldWide select { min-width: 11rem; }
 .selectField svg {
   position: absolute;
   right: 12px;
@@ -900,6 +1364,231 @@
   color: #98a2b3;
 }
 
+/* ---------- FAQ accordion ---------- */
+/* The list separated into one accordion per category: a header row that opens
+   exactly one section at a time. The first section is open by default (the
+   client keeps its index), so the page never starts as a wall of headers. */
+/* Each section is its own panel on the page's own ground, not a band inside
+   one white card. Six headers separated only by a hairline read as one long
+   list whose rows happen to be bold; and cards inset into a white panel are
+   no better, because the gutters between them come out white too and the
+   separation goes back to being invisible. On #f5f7fa the gaps are gaps. */
+.faqAccordion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.faqAccordionItem {
+  background: #fff;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+/* The open section's rows sit on white, against the head's tinted band, so the
+   card carries the open/closed state as well as the chevron does. */
+.faqAccordionRows { background: #fff; }
+/* The list's footnote, on the page rather than inside a panel — there is no
+   panel left to put a .panelFoot in. */
+.faqListFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+  padding: 0 22px;
+  font-size: 12.5px;
+  color: var(--ink-500);
+}
+.faqAccordionHead {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 22px;
+  background: #fbfcfe;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  color: var(--ink-900);
+}
+.faqAccordionHead:hover { background: #f3f6fb; }
+.faqAccordionLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.faqAccordionTitle { font-size: 14px; font-weight: 700; }
+.faqAccordionCount { font-size: 12.5px; color: var(--ink-500); }
+.faqAccordionIcon {
+  flex: none;
+  color: var(--ink-500);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.faqAccordionIcon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.faqAccordionHeadOpen .faqAccordionIcon,
+.faqAccordionHeadOpen .faqAccordionTitle { color: var(--blue-700); }
+
+/* ---------- rich body editor (blog) ---------- */
+/* The TipTap editor on the New Post page: a toolbar strip over the
+   contenteditable, both inside one bordered box that highlights on focus. */
+.editorOuter {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.editorOuter:focus-within {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.14);
+}
+.editorBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 8px;
+  border-bottom: 1px solid var(--hairline);
+  background: #fbfcfe;
+}
+.editorBar button {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-600);
+  font: inherit;
+  font-family: var(--admin-mono);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.editorBar button:hover { background: #fff; border-color: var(--hairline); color: var(--ink-900); }
+.editorBar button.editorOn,
+.editorBar button.editorOn:hover {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+  color: #fff;
+}
+.editorBar button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.editorSep {
+  width: 1px;
+  height: 22px;
+  background: var(--hairline);
+  margin: 0 5px;
+  flex: none;
+}
+.editorSelect {
+  font: inherit;
+  font-size: 12.5px;
+  height: 30px;
+  border: 1px solid var(--hairline);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink-600);
+  padding: 0 6px;
+  cursor: pointer;
+}
+.editorMono { font-family: var(--admin-mono); font-size: 14px; }
+.editorClear { margin-left: auto; }
+.editorColor {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hairline);
+  border-radius: 7px;
+  background: #fff;
+  overflow: hidden;
+  cursor: pointer;
+}
+.editorColor input {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+}
+/* The contenteditable itself. *every* element here is produced by TipTap, so
+   each gets scoped prose styles rather than inheriting global <p>/<h2> etc. */
+.editorProse {
+  min-height: 320px;
+  padding: 14px 16px;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-900);
+}
+.editorProse > *:first-child { margin-top: 0; }
+.editorProse p { margin: 0 0 0.8em; }
+.editorProse h2 { font-size: 21px; font-weight: 700; margin: 1.2em 0 0.5em; color: var(--ink-900); }
+.editorProse h3 { font-size: 17px; font-weight: 700; margin: 1.1em 0 0.45em; color: var(--ink-900); }
+.editorProse h4 { font-size: 15px; font-weight: 700; margin: 1em 0 0.4em; color: var(--ink-900); }
+.editorProse ul, .editorProse ol { margin: 0 0 0.8em; padding-left: 1.4em; }
+.editorProse li { margin: 0.15em 0; }
+.editorProse blockquote {
+  margin: 0 0 0.8em;
+  padding: 0.2em 0 0.2em 1em;
+  border-left: 3px solid var(--brand-blue);
+  color: var(--ink-700);
+}
+.editorProse pre {
+  font-family: var(--admin-mono);
+  font-size: 13px;
+  background: var(--ink-50);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0 0 0.8em;
+}
+.editorProse code { font-family: var(--admin-mono); font-size: 0.9em; background: var(--ink-50); padding: 1px 5px; border-radius: 5px; }
+.editorProse pre code { background: none; padding: 0; }
+.editorProse a { color: var(--blue-700); text-decoration: underline; }
+.editorProse img { max-width: 100%; border-radius: 12px; margin: 0.5em 0; }
+.editorProse hr { border: 0; border-top: 1px solid var(--hairline); margin: 1.2em 0; }
+.editorProse ul[data-type="taskList"] { list-style: none; padding-left: 0.2em; }
+.editorProse ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; }
+.editorProse ul[data-type="taskList"] li > label { flex: none; }
+.editorProse ul[data-type="taskList"] li > div { flex: 1; }
+/* The placeholder TipTap paints when the document is empty. */
+.editorProse p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: #98a2b3;
+  pointer-events: none;
+}
+
 /* ---------- modal ---------- */
 /* The native <dialog>. Sized and positioned by the browser, so there is no
    overlay element, no z-index and no scroll lock to get wrong — see
@@ -908,11 +1597,20 @@
   padding: 0;
   border: 0;
   background: transparent;
+  /* Centres the dialog, and has to be said explicitly. The browser's own
+     stylesheet centres a modal <dialog> with `margin: auto` against
+     `inset: 0`, but Tailwind v4's preflight — `@import "tailwindcss"` in
+     styles/globals.css — zeroes margin on `*, ::before, ::after, ::backdrop`,
+     which takes that with it and drops every modal into the top-left corner. */
+  margin: auto;
   max-width: min(44rem, calc(100vw - 32px));
   width: 100%;
   max-height: calc(100vh - 64px);
   color: var(--ink-900);
 }
+/* A question, not a form: narrower than the 44rem a modal form wants, so it
+   reads as one thing to answer. See ConfirmDialog.tsx. */
+.modalNarrow { max-width: min(30rem, calc(100vw - 32px)); }
 /* Only paints for a dialog opened with showModal(), which is the reason the
    component calls it rather than rendering `open`. */
 .modal::backdrop { background: rgba(0, 5, 67, 0.45); }
@@ -962,18 +1660,27 @@
    sections there are. */
 .sectionCell {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 10px;
   padding: 18px 22px;
   border-top: 1px solid var(--hairline);
 }
+/* flex-basis 0 rather than .grow's 18rem: two of those in a half-width cell
+   would overflow it before they ever shared the space. min-width lets them
+   shrink evenly instead of the second one being squeezed out. */
+.sectionField { flex: 1 1 0; min-width: 0; }
+/* And the input has to be told to follow. .control sets no width, so an input
+   falls back to its intrinsic ~20-character default (~202px) — which fits by
+   luck at a wide viewport and, once the field shrinks below that, paints
+   straight over the neighbouring field and the save button. Measured at a
+   1190px viewport: field 145px, input 202px. Scoped to .sectionField rather
+   than added to .control, because every other form in this admin gives its
+   fields a flex-basis wide enough that the intrinsic width never shows. */
+.sectionField .control { width: 100%; min-width: 0; }
 .sectionCell:nth-child(-n+2) { border-top: 0; }
 /* :not(:last-child) so an odd number of sections does not leave a divider
    pointing at empty space. */
 .sectionCell:nth-child(odd):not(:last-child) { border-right: 1px solid var(--hairline); }
-/* The anchor and its save button share a line under the title: the anchor is a
-   URL fragment, so it is always short. */
-.sectionRow { display: flex; align-items: flex-end; gap: 12px; }
 
 /* One column well before the page's own 1180px breakpoint — this grid lives
    inside a panel, so it runs out of room sooner than the page does. */
@@ -1085,6 +1792,7 @@
 @media (max-width: 960px) {
   .detailGrid { grid-template-columns: minmax(0, 1fr); }
   .reviewEditGrid { grid-template-columns: minmax(0, 1fr); }
+  .teamTopGrid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 720px) {
   .sidebar {
@@ -1369,6 +2077,43 @@
   border-bottom: 1px solid var(--hairline);
 }
 .faqRow:last-child { border-bottom: 0; }
+/* The confirm step stands in for the row it belongs to, tinted so it is
+   obviously not one of the rows around it. */
+.faqConfirmRow {
+  background: #fbfcfe;
+  border-bottom: 1px solid var(--hairline);
+}
+.faqConfirmRow:last-child { border-bottom: 0; }
+/* The question on the left, the buttons opposite it on the right — the end of
+   the row the menu button was just occupying. .faqConfirmText grows, which is
+   what pushes the actions to that edge; below roughly 22rem of question the two
+   wrap onto separate lines and both go flush left, which is the only shape that
+   works on a phone. */
+.faqConfirmForm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 16px 22px;
+}
+/* Question, then tickbox under it, down one left edge. */
+.faqConfirmText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+.faqConfirmLead {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+/* .confirmCheck is `flex: 1 1 100%` for the wrapping row it was written for;
+   in this column it just needs to stop stretching. */
+.faqConfirmForm .confirmCheck { flex: none; }
 .faqQ {
   font-size: 14px;
   font-weight: 600;
@@ -1393,10 +2138,17 @@ a.faqQ:hover { color: var(--blue-700); }
   white-space: nowrap;
 }
 .actions { display: flex; gap: 2px; justify-content: flex-end; }
-.actions form { display: contents; }
+/* Direct children only. The rule exists so an icon-button's own form does not
+   become a flex item of its own; a form inside a row menu's popup is nested
+   several levels down and must keep its box. */
+.actions > form { display: contents; }
 .pillLow { color: var(--low-700); background: var(--low-50); }
 .pillMed { color: var(--medium-700); background: var(--medium-50); }
 .pillNeutral { color: var(--ink-600); background: var(--ink-50); }
+/* The homepage pill. Brand blue rather than another status colour: it is not a
+   third state alongside Published and Draft, it is a second fact about a row
+   that already has one, and it sits next to that pill. */
+.pillHome { color: var(--blue-700); background: rgba(81, 141, 224, 0.12); }
 
 .rowActions {
   display: flex;
@@ -1412,6 +2164,12 @@ a.faqQ:hover { color: var(--blue-700); }
 @media (max-width: 720px) {
   .stackWide { padding: 14px 18px; }
   .rowActions { padding: 0 18px 14px; }
+  /* .faqConfirmText shrinks below its 22rem basis rather than wrapping, since
+     it is allowed to shrink to nothing — so on a narrow screen the question
+     would squeeze into a column beside the buttons instead of dropping them
+     underneath it. Taking the whole line is what makes it wrap. */
+  .faqConfirmForm { padding: 14px 18px; }
+  .faqConfirmText { flex-basis: 100%; }
 }
 
 /* ---------- ported from the Test Admin prototype ---------- */
@@ -1421,10 +2179,31 @@ a.faqQ:hover { color: var(--blue-700); }
    label sits ABOVE the value rather than under it, and the value is 800 weight
    with negative tracking. Reading order becomes "what is this / how many"
    instead of "how many / of what". */
+/* Greeting above dashboard */
+.greeting {
+  margin-bottom: 24px;
+}
+.greetingTitle {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+}
+.greetingSub {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  color: var(--ink-500);
+}
+.greetingDate {
+  color: var(--brand-blue);
+  font-weight: 600;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
+  gap: 18px;
   margin-bottom: 24px;
 }
 .statCard {
@@ -1432,25 +2211,42 @@ a.faqQ:hover { color: var(--blue-700); }
   border-radius: var(--r-md);
   padding: 20px 22px;
   box-shadow: var(--shadow-sm);
-  text-decoration: none;
+  border: 1px solid var(--hairline);
+  text-decoration: none !important;
   color: inherit;
-  display: block;
-  transition: box-shadow 150ms, transform 150ms;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 160px;
+  transition: box-shadow 150ms, transform 150ms, border-color 150ms;
 }
-/* Every card is a link into the screen that can act on the number, which the
-   static prototype had no need to express. */
-.statCard:hover { transform: translateY(-1px); box-shadow: 0 16px 40px rgba(0, 5, 67, 0.16); }
+.statCard:hover,
+.statCard:hover * {
+  text-decoration: none !important;
+}
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(0, 5, 67, 0.12);
+  border-color: #d5dced;
+}
 .statCard:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 2px; }
-.statTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+
+.statTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
 .statIco {
   width: 42px;
   height: 42px;
-  border-radius: 13px;
+  border-radius: 12px;
   background: rgba(81, 141, 224, 0.11);
   color: var(--brand-blue);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .statIco svg {
   width: 20px;
@@ -1464,16 +2260,43 @@ a.faqQ:hover { color: var(--blue-700); }
 .statDelta {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   font-size: 12px;
   font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 8px;
   white-space: nowrap;
+  text-decoration: none !important;
 }
-.deltaUp { color: var(--low-700); background: var(--low-50); }
-.deltaNeeds { color: var(--high-700); background: var(--high-50); }
-.statLabel { margin-top: 14px; font-size: 13px; color: var(--ink-500); font-weight: 500; }
+.statDelta svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.deltaUp {
+  color: var(--low-700);
+  background: var(--low-50);
+}
+.deltaNeeds {
+  color: var(--high-700);
+  background: var(--high-50);
+}
+.deltaNeutral {
+  color: var(--ink-600);
+  background: var(--ink-50);
+}
+
+.statLabel {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--ink-500);
+  font-weight: 500;
+  line-height: 1.3;
+}
 .statValue {
   margin-top: 2px;
   font-size: 30px;
@@ -1482,13 +2305,49 @@ a.faqQ:hover { color: var(--blue-700); }
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
-.statNote { margin-top: 6px; font-size: 12px; color: var(--ink-400); }
+
+.statFoot {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.statNote {
+  font-size: 12px;
+  color: var(--ink-400);
+  white-space: nowrap;
+}
+.statBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  background: #fff;
+  border: 1px solid #d5dced;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 150ms ease;
+  text-decoration: none !important;
+  margin-left: auto;
+}
+.statCard:hover .statBtn,
+.statBtn:hover {
+  background: var(--brand-blue);
+  color: #fff;
+  border-color: var(--brand-blue);
+  text-decoration: none !important;
+}
 
 /* Two-line table cells — the prototype's most-used pattern by a distance, and
    the reason its tables read as denser without being harder to scan: the
    identifying value is bold, the qualifier sits under it in small grey. */
 .cellPrimary { font-weight: 600; color: var(--ink-900); }
 .cellSecondary { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-500); }
+td.cellSecondary { display: table-cell; margin-top: 0; }
 
 /* Icon-only row actions. 72 uses in the prototype; the text buttons these
    replace made every row as wide as its longest verb. */
@@ -1556,6 +2415,12 @@ a.faqQ:hover { color: var(--blue-700); }
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
   margin-bottom: 24px;
+  align-items: stretch;
+}
+.grid2eq > .panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* The reviews Sources tab: one panel per source, side by side. Two sources
@@ -1569,8 +2434,373 @@ a.faqQ:hover { color: var(--blue-700); }
 }
 .sourcesGrid > .section { margin-bottom: 0; }
 
-/* "At a glance" — stacked sections divided by hairlines rather than separate
-   panels, so the rail reads as one object beside the table. */
+/* A source's own logo beside its name in a panel head — the Trustpilot star,
+   the Google G. Sized to the 16px heading it stands with, not to the public
+   page's logo, and given its own line-height-free block so the two sit on one
+   baseline. Brand colours come from the marks themselves, so nothing here sets
+   fill or stroke. */
+.sourceMark {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  display: block;
+}
+/* The heading that carries one. */
+.panelTitleMark {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+/* "At a glance" 2x2 site health grid */
+.glanceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding: 18px 22px;
+}
+.glanceTile {
+  background: #fff;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  padding: 16px 18px;
+  text-decoration: none !important;
+  color: inherit;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 10px;
+  transition: all 150ms ease;
+}
+.glanceTile:hover,
+.glanceTile:hover * {
+  text-decoration: none !important;
+}
+.glanceTile:hover {
+  border-color: #d5dced;
+  box-shadow: 0 4px 14px rgba(0, 5, 67, 0.06);
+  transform: translateY(-1px);
+}
+/* The right side of a tile: title on top, figure below, both on the left. */
+.glanceTileBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+.glanceTileTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-700);
+  line-height: 1.35;
+}
+.glanceTileVal {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink-900);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+/* The icon column in an At-a-glance tile — stretched so it runs the full
+   height of the tile's right side, with the glyph centred in it. Fixed to the
+   glyph's own size (28px) so there is no dead air between the icon and text. */
+.glanceTile > .healthIconGood,
+.glanceTile > .healthIconWarn {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+}
+.healthIconGood { color: #12b76a; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.healthIconWarn { color: #d97706; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* System alerts */
+.alertList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 22px;
+}
+.alertItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: var(--r-sm);
+  background: #fbfcfe;
+  border: 1px solid var(--hairline);
+  transition: border-color 150ms;
+}
+.alertItem:hover {
+  border-color: #d5dced;
+}
+.alertContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.alertIconWarn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fef6e7;
+  color: #d97706;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+/* The triangle is 28px by design for the inline icon; inside the badge it
+   fills the circle edge-to-edge, so scale it down to sit comfortably in the
+   32px disc. */
+.alertIconWarn svg {
+  width: 16px;
+  height: 16px;
+}
+.alertText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.alertTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.alertDesc {
+  font-size: 12px;
+  color: var(--ink-500);
+}
+.alertBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-700);
+  background: #fff;
+  border: 1px solid #d5dced;
+  border-radius: 8px;
+  text-decoration: none !important;
+  white-space: nowrap;
+  transition: all 130ms ease;
+  flex-shrink: 0;
+}
+.alertBtn:hover {
+  background: var(--ink-50);
+  color: var(--ink-900);
+  border-color: var(--ink-400);
+  text-decoration: none !important;
+}
+.alertEmpty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  color: var(--ink-700);
+}
+/* The check in the "All systems operational" row uses the same 28px inline
+   icon; inside the alert row it reads large next to the text, so scale it to
+   match the warning badge's glyph. */
+.alertEmpty svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Row 4: 3-column grid */
+.grid3Col {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Lead pipeline */
+.pipelineWrap {
+  padding: 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+.pipelineWrap .tableWrap {
+  flex: 1;
+}
+.pipelineStepper {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 18px 20px 22px;
+  background: #fbfcfe;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+}
+.pipelineLine,
+.pipelineSvg {
+  position: absolute;
+  /* Centered with the circle row:
+     padding-top: 18px
+     pipelineStepLabel height: 16px + margin-bottom: 8px = 24px
+     pipelineDotSlot height: 36px (center at 18px)
+     Exact vertical center = 18px + 24px + 18px = 60px.
+     Horizontally, with 4 steps of width 76px spaced edge-to-edge:
+     First circle center is at 20px (padding) + 38px (half width) = 58px.
+     Last circle center is at 100% - 58px. */
+  top: 60px;
+  transform: translateY(-50%);
+  left: 58px;
+  right: 58px;
+  width: calc(100% - 116px);
+  height: 24px;
+  z-index: 1;
+  pointer-events: none;
+}
+.pipelineStep {
+  position: relative;
+  z-index: 2;
+  width: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex-shrink: 0;
+}
+.pipelineStepLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  height: 16px;
+  line-height: 16px;
+  margin-bottom: 8px;
+  white-space: nowrap;
+}
+.pipelineDotSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  margin-bottom: 8px;
+}
+.pipelineDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #d0d5dd;
+  transition: all 180ms ease;
+}
+.pipelineDotActive {
+  border-width: 3px;
+}
+.pipelineStepCount {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink-900);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+/* The "{n} of {n}" summary in the Lead pipeline header — bold and in the brand's
+   light blue, but the same size as the "leads are in the pipeline" label it sits
+   inside, so the count reads as an emphasised part of one sentence. */
+.pipelineSubCount {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--blue-300);
+  font-variant-numeric: tabular-nums;
+}
+.pipelineRowStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+.statusBullet {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.barCell {
+  width: 50%;
+  min-width: 110px;
+  vertical-align: middle;
+}
+.bar {
+  display: inline-block;
+  width: 62%;
+  height: 6px;
+  background: var(--hairline);
+  border-radius: 999px;
+  overflow: hidden;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.barFill {
+  display: block;
+  height: 100%;
+  background: var(--brand-blue);
+  border-radius: 999px;
+}
+.barPct {
+  font-size: 12px;
+  color: var(--ink-500);
+  font-family: var(--admin-mono);
+  font-weight: 300;
+  vertical-align: middle;
+}
+.pipelineFoot {
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--ink-600);
+}
+.pipelineFoot b {
+  color: var(--ink-900);
+}
+
+.conversionStat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.conversionStatLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.conversionStatVal {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink-900);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Backward-compatible sections */
 .glanceSection { padding: 16px 22px; }
 .glanceSection + .glanceSection { border-top: 1px solid var(--hairline); }
 .glanceLabel {
@@ -1653,7 +2883,7 @@ a.glanceRow:hover { color: var(--blue-700); }
 
 /* Lead volume. One column per day, bars sized against the busiest day so the
    shape is readable even when the numbers are small. */
-.chart { display: flex; align-items: flex-end; gap: 8px; height: 200px; padding: 22px 24px 0; }
+.chart { display: flex; align-items: flex-end; gap: 8px; height: 180px; padding: 20px 22px 20px; }
 .chartCol {
   flex: 1;
   height: 100%;
@@ -1665,8 +2895,8 @@ a.glanceRow:hover { color: var(--blue-700); }
 }
 .chartBar {
   width: 100%;
-  max-width: 34px;
-  border-radius: 8px 8px 3px 3px;
+  max-width: 16px;
+  border-radius: 4px 4px 2px 2px;
   background: rgba(81, 141, 224, 0.28);
   transition: background 150ms;
 }
@@ -1674,6 +2904,30 @@ a.glanceRow:hover { color: var(--blue-700); }
 .chartToday .chartBar { background: var(--navy-900); }
 .cday { font-size: 10.5px; color: var(--ink-400); white-space: nowrap; }
 .chartToday .cday { color: var(--ink-900); font-weight: 700; }
+
+.colStack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100%;
+}
+.colStack > .panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.colStack > .panel > .chart {
+  flex: 1;
+}
+.colStack > .panel > .sources {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.colStack > .panel > .panelFoot {
+  margin-top: auto;
+}
 
 /* Top sources. */
 .sources { padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 16px; }
@@ -1688,7 +2942,14 @@ a.glanceRow:hover { color: var(--blue-700); }
 
 @media (max-width: 1180px) {
   .grid2, .grid2eq { grid-template-columns: 1fr; }
+  .grid2eq > .panel { height: auto; }
+  .colStack { height: auto; }
+  .colStack > .panel { flex: initial; height: auto; }
+  .grid3Col { grid-template-columns: 1fr; }
   .sourcesGrid { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .glanceGrid { grid-template-columns: 1fr; }
 }
 
 /* Settings folded behind a summary, shared by the FAQ's section titles and
@@ -1768,6 +3029,290 @@ a.glanceRow:hover { color: var(--blue-700); }
    a ten-line one should put their buttons in the same place. */
 .reviewActions { display: flex; gap: 2px; flex: none; }
 
+/* ---------- team CMS, ported from the prototype's card grid ---------- */
+
+/* One card per member, three abreast on a wide screen — the same shape as the
+   Test Admin prototype's team grid, but reading "Edit member" rather than a
+   fake online dot. */
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px 22px;
+}
+.memberCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.memberCard:hover { border-color: #d5dced; box-shadow: 0 4px 14px rgba(0, 5, 67, 0.06); }
+.memberPhoto {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  flex: none;
+  background: linear-gradient(135deg, var(--brand-blue), var(--blue-700));
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.memberPhoto img { width: 100%; height: 100%; object-fit: cover; }
+.memberMeta { flex: 1; min-width: 0; }
+.memberName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.memberRole {
+  font-size: 12.5px;
+  color: var(--ink-500);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.memberTags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.memberTags .tag { margin-left: 0; }
+
+/* The photo field on the new/edit form: a square preview that swaps to a live
+   local preview the moment a file is picked. */
+.photoField { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.photoPreview {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  flex: none;
+  background: linear-gradient(135deg, var(--brand-blue), var(--blue-700));
+  color: #fff;
+  font-weight: 700;
+  font-size: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.photoPreview img { width: 100%; height: 100%; object-fit: cover; }
+.photoControls { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.photoControls input[type='file'] { font-size: 13px; color: var(--ink-500); }
+.photoControls input[type='file']::file-selector-button {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-700);
+  background: #fff;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  margin-right: 10px;
+  cursor: pointer;
+  transition: background 150ms, color 150ms, border-color 150ms;
+}
+.photoControls input[type='file']::file-selector-button:hover {
+  background: var(--ink-50);
+  color: var(--ink-900);
+  border-color: #d5dced;
+}
+
+/* An image field on the post form: a preview beside the file picker and the
+   path box, so a cover can come off this computer or out of /public/images. */
+.imageField { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.imageField .photoControls { flex: 1 1 240px; }
+.imageCover,
+.imageAvatar {
+  flex: none;
+  overflow: hidden;
+  background: var(--ink-50);
+  border: 1px solid var(--hairline);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.imageCover { width: 160px; aspect-ratio: 16 / 9; border-radius: var(--r-sm); }
+.imageAvatar { width: 72px; height: 72px; border-radius: 50%; }
+.imageCover img,
+.imageAvatar img { width: 100%; height: 100%; object-fit: cover; }
+/* The upload note and the current path, side by side under the file button.
+   Both shrink; below the wrap point they stack, which is the layout they had
+   when the field was narrow enough to need it. */
+.imageMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.imageMetaRow .panelNote { flex: 0 1 auto; min-width: 0; }
+.imageMetaRow .control { flex: 1 1 260px; min-width: 0; }
+.imageEmpty {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-500);
+  text-align: center;
+  padding: 0 6px;
+}
+
+/* A button that reads as a link. "Cancel upload", inside a note. */
+.linkBtn {
+  font: inherit;
+  color: var(--blue-700);
+  font-weight: 600;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.linkBtn:disabled { color: var(--ink-400); cursor: default; text-decoration: none; }
+
+/* ==========================================================================
+   Post editor — counted labels, the slug row, the publish gate, Preview
+   ========================================================================== */
+
+/* A label with its character count pushed to the right. Its own class rather
+   than a change to .fieldLabel, which every other admin form shares. */
+.fieldLabelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.countHint {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-400);
+  /* Tabular figures: the count must not shuffle the label as it climbs. */
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+.countHintFull { color: var(--high-600); }
+
+/* The slug box with "From title" beside it. */
+.slugRow { display: flex; align-items: center; gap: 10px; }
+.slugRow .control { flex: 1; min-width: 0; }
+.slugRow .btn { flex: none; padding: 0 14px; font-size: 13px; }
+
+/* Category, Author, Date and Read time, one row: read together, with the
+   width following the information — category widest, author next, date
+   narrower, read time narrowest. Flex rather than percentage columns: every
+   field starts at the width of its own content and grows by the share it
+   asks for, so the row is responsive by construction — on a narrow panel the
+   fields give space back and the row wraps to two lines before anything is
+   crushed instead of holding fixed ratios at every size. */
+.blogFieldRow4 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Grow shares — category and author collect the same extra room (the
+   author's select sits beside its headshot), date and read time much less.
+   The basis is only where each field starts from, never a percentage. */
+.blogFieldRow4 > .field:nth-child(1) { flex: 2 1 14rem; } /* Category */
+.blogFieldRow4 > .field:nth-child(2) { flex: 2 1 13rem; } /* Author */
+.blogFieldRow4 > .field:nth-child(3) { flex: 1 1 10rem; } /* Date */
+.blogFieldRow4 > .field:nth-child(4) { flex: 1 1 8rem; }  /* Read time */
+
+/* Below this the four-in-hand gets too tight even across two lines, so the
+   fields stack to one full-width column. */
+@media (max-width: 720px) {
+  .blogFieldRow4 { flex-direction: column; flex-wrap: nowrap; }
+}
+
+/* A number field with its unit beside it — "7" then "min read". The stepper
+   arrows are the browser's own, so the arrow keys work with them. */
+.stepRow { display: flex; align-items: center; gap: 10px; }
+.stepRow .control { flex: 1; min-width: 0; }
+.stepUnit { font-size: 13px; color: var(--ink-500); font-weight: 600; white-space: nowrap; }
+
+/* The author's headshot beside the name it belongs to. */
+.authorRow { display: flex; align-items: center; gap: 14px; }
+.authorRow .imageAvatar { width: 44px; height: 44px; }
+.authorRow .imageEmpty { font-size: 9px; }
+.authorRow .selectField { flex: 1; min-width: 0; }
+
+/* The editor's dropdowns in .selectField dress.
+   Two things have to give here. The 8rem floor suits a filter pill standing on
+   its own, but these sit in a four-column row and a floor that wide pushes the
+   grid out; and 13.5px is the filter bar's size, where this is a form and the
+   fields either side of it are 14px. Both are lifted for this screen only, so
+   the bar keeps the sizing it was tuned for. */
+.blogEditLeftBody .selectField { display: flex; width: 100%; }
+.blogEditLeftBody .selectField select { min-width: 0; font-size: 14px; }
+.blogEditLeftBody .selectField select:disabled { color: var(--ink-400); cursor: default; }
+
+/* A disabled field is showing a value, not refusing one — it should read as
+   text rather than as a box somebody failed to click into. */
+.imageField .control:disabled { background: var(--ink-50); color: var(--ink-500); }
+
+/* Why Publish is disabled, said once above the form. */
+.publishGate {
+  /* Also used as a <span> under the author field, so it must be a block in
+     its own right rather than depending on its container's tag. */
+  display: block;
+  margin: 0 0 16px;
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+  background: var(--high-50);
+  border: 1px solid var(--high-100);
+  color: var(--high-700);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Preview: the article template, full screen, over the editor. The page behind
+   has its scroll locked by the modal, so this owns the scrolling. */
+.previewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-marketing-paper);
+}
+.previewBar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 18px;
+  background: #fff;
+  border-bottom: 1px solid var(--hairline);
+}
+.previewBarNote { font-size: 13px; color: var(--ink-600); }
+.previewScroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
+.previewProblem {
+  margin: 0;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--ink-500);
+  text-align: center;
+}
+
+@media (max-width: 1180px) {
+  .teamGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .teamGrid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 720px) {
   /* The avatar is the first thing to go: it identifies nothing the meta line
      below does not say in words. */
@@ -1779,20 +3324,20 @@ a.glanceRow:hover { color: var(--blue-700); }
 /* ---------- responsive shell, ported from the prototype ---------- */
 
 /* Tablet and smaller laptops: the sidebar becomes a 76px icon rail. Labels
-   hide; every nav link centres its glyph. The footer keeps the avatar and the
-   two icon-only links (sign-out must survive on every screen size, unlike the
-   prototype's static mock where dropping it was harmless). */
+   hide; every nav link centres its glyph. The footer keeps just the sign-out
+   (sign-out must survive on every screen size, unlike the prototype's static
+   mock where dropping it was harmless). */
 @media (max-width: 960px) {
   .sidebar { width: 76px; padding: 16px 10px; }
   .sidebarBrand { justify-content: center; padding: 2px 0 16px; }
   .sidebarBrand img { height: 26px; }
   .brandLabel, .navGroupTitle, .navLink span, .navBadge,
-  .adminCard > div, .sidebarLinks span { display: none; }
+  .viewSite span, .signoutRow span { display: none; }
   .navGroup { margin-top: 14px; }
   .navLink { justify-content: center; padding: 12px 0; border-left: 0; }
   .navLink.active { border-left: 0; border-radius: var(--r-sm); }
-  .adminCard { justify-content: center; padding: 6px 0 12px; }
-  .sidebarLinks { flex-direction: column; align-items: center; gap: 2px; padding: 0; }
+  .viewSite { justify-content: center; margin: 0; padding: 12px 0; border-left: 0; }
+  .signoutRow { justify-content: center; }
   .main { margin-left: 76px; }
 }
 
@@ -1822,5 +3367,1635 @@ a.glanceRow:hover { color: var(--blue-700); }
     justify-content: flex-end;
     padding-top: 8px;
   }
-  .adminCard { display: none; }
+  .viewSite, .signoutRow { width: auto; }
+}
+
+/* ==========================================================================
+   Team CMS Inspiration Redesign
+   ========================================================================== */
+
+.teamContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Toolbar: Segmented status tabs on left, Action tools on right */
+.teamToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.teamFilterPills {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  padding: 4px 6px;
+  border-radius: 12px;
+  border: 1px solid var(--hairline);
+  box-shadow: 0 1px 3px rgba(0, 5, 67, 0.02);
+}
+
+.teamFbtn {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 7px 14px;
+  border-radius: 9px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-500);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 150ms, color 150ms;
+  text-decoration: none;
+}
+
+.teamFbtn:hover {
+  color: var(--ink-900);
+  background: #f8fafc;
+}
+
+.teamFbtnActive {
+  background: var(--navy-900) !important;
+  color: #fff !important;
+}
+
+.teamFbtnCount {
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+  border-radius: 999px;
+  padding: 2px 7px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.teamFbtnActive .teamFbtnCount {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+/* Right tools */
+.teamToolsGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Inline Search Box in Tools Group */
+.teamInlineSearch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 210px;
+}
+
+.teamInlineSearch svg {
+  position: absolute;
+  left: 11px;
+  width: 15px;
+  height: 15px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.teamInlineSearchInput {
+  width: 100%;
+  height: 38px;
+  padding: 0 32px 0 34px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink-900);
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0, 5, 67, 0.02);
+  transition: all 150ms ease;
+}
+
+.teamInlineSearchInput:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.15);
+}
+
+.teamInlineSearchInput::placeholder {
+  color: #94a3b8;
+}
+
+.teamToolBtn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 150ms ease;
+  box-shadow: 0 1px 3px rgba(0, 5, 67, 0.02);
+}
+
+.teamToolBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: var(--ink-900);
+}
+
+.teamToolBtnActive {
+  background: #eff6ff !important;
+  border-color: var(--brand-blue) !important;
+  color: var(--brand-blue) !important;
+}
+
+.teamToolBtn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.2;
+}
+
+/* View switcher */
+.teamViewToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  background: #fff;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 5, 67, 0.02);
+}
+
+.teamViewBtn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.teamViewBtn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.teamViewBtnActive {
+  background: #4c84e8 !important;
+  color: #fff !important;
+}
+
+.teamViewBtn svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Expandable Filter / Search Panel */
+.teamFilterDrawer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 12px rgba(0, 5, 67, 0.04);
+  animation: teamFadeInDown 180ms ease;
+}
+
+@keyframes teamFadeInDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.teamSearchRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.teamSearchBox {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.teamSearchBox svg {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.teamSearchInput {
+  width: 100%;
+  height: 38px;
+  padding: 0 36px 0 36px;
+  font: inherit;
+  font-size: 13.5px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: var(--ink-900);
+  outline: none;
+  transition: all 150ms;
+}
+
+.teamSearchInput:focus {
+  border-color: var(--brand-blue);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.15);
+}
+
+.teamSearchClear {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.teamSearchClear:hover {
+  color: #334155;
+}
+
+.teamTagsFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.teamTagsLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-right: 4px;
+}
+
+.teamTagChip {
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.teamTagChip:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.teamTagChipActive {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+/* Card Grid */
+.teamCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 1120px) {
+  .teamCardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .teamCardsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Member Card */
+.memberCardInsp {
+  background: #ffffff;
+  border: 1px solid #e8ecf4;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  box-shadow: 0 2px 8px rgba(0, 5, 67, 0.03);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  position: relative;
+}
+
+.memberCardInsp:hover {
+  transform: translateY(-2px);
+  border-color: #d5dced;
+  box-shadow: 0 8px 24px rgba(0, 5, 67, 0.08);
+}
+
+/* Avatar Photo: 96x96px rounded square */
+.memberPhotoSquare {
+  width: 96px;
+  height: 96px;
+  min-width: 96px;
+  min-height: 96px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f1f5f9;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.memberPhotoSquare img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.memberPhotoMonogram {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--brand-blue), var(--blue-700));
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: 0.02em;
+}
+
+/* Member Content */
+.memberCardContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.memberCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.memberCardName {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: #000543;
+  line-height: 1.25;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberCardRole {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 3px 0 0;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Action Menu Button */
+.memberMoreWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.memberMoreBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 150ms ease;
+  padding: 0;
+}
+
+.memberMoreBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #000543;
+}
+
+.memberDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 5, 67, 0.12);
+  min-width: 170px;
+  z-index: 20;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.memberDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 150ms;
+}
+
+.memberDropdownItem:hover {
+  background: #f1f5f9;
+  color: #000543;
+}
+
+/* On the rate tables the menu is anchored to the viewport instead of its own
+   wrapper: .panel is overflow:hidden for its corners and .tableWrap is
+   overflow-x:auto for narrow screens, and either one clips an absolutely
+   positioned dropdown — the menu came out with its right half cut off. RowMenu
+   supplies top/left from the button's rect. */
+.memberDropdownFixed {
+  position: fixed;
+  top: auto;
+  right: auto;
+  margin-top: 0;
+  z-index: 210;
+}
+
+/* Deactivating is the one item in a rate row's menu that takes something out
+   of what the site quotes, so it does not read like the rest of the list. */
+.memberDropdownItemDanger { color: var(--critical-600); }
+.memberDropdownItemDanger:hover {
+  background: var(--critical-50);
+  color: var(--critical-600);
+}
+
+/* Publish on a post with no article body. Offered and refused rather than
+   omitted: a two-item menu where other rows have three looks like a bug, and
+   the title attribute says which post and why. */
+.memberDropdownItem:disabled {
+  color: var(--ink-400);
+  cursor: not-allowed;
+}
+.memberDropdownItem:disabled:hover { background: transparent; color: var(--ink-400); }
+
+/* Department Badges matching mockup */
+.deptPill {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 9px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+.deptExec {
+  background: #fef3e2;
+  color: #b45309;
+}
+
+.deptDesign {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.deptPeople {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.deptOps {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.deptTech {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.deptRevenue {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.deptDefault {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Status row: dot + text */
+.memberStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.memberStatusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.memberStatusDotPublished {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.memberStatusDotDraft {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+/* List view mode */
+.teamListCard {
+  background: #fff;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+.teamListTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.teamListTable th {
+  text-align: left;
+  padding: 12px 16px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.teamListTable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.teamListTable tr:last-child td {
+  border-bottom: 0;
+}
+
+.teamListTable tr:hover td {
+  background: #f8fafc;
+}
+
+/* Bottom info banner */
+.teamFootBanner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.teamFootBannerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #475569;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+.teamFootBannerLeft svg {
+  width: 20px;
+  height: 20px;
+  color: var(--brand-blue);
+  flex-shrink: 0;
+}
+
+.teamFootBannerLink {
+  color: var(--brand-blue);
+  font-weight: 600;
+  font-size: 13.5px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 150ms;
+}
+
+.teamFootBannerLink:hover {
+  color: var(--blue-700);
+  text-decoration: underline;
+}
+
+.teamFootBannerLink svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ==========================================================================
+   Member Form (Add / Edit) Inspiration Design
+   ========================================================================== */
+
+.memberBackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #ffffff;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(0, 5, 67, 0.02);
+  margin-bottom: 20px;
+  transition: all 150ms ease;
+}
+
+/* Back on the left, the member-level controls on the right. The back button
+   carries the row's bottom margin, so the row itself needs none. */
+.memberTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.memberTopActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.memberOrderForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.memberOrderLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+.memberOrderInput {
+  font: inherit;
+  font-size: 14px;
+  width: 5.5rem;
+  height: 40px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: #fff;
+  color: var(--ink-900);
+}
+.memberOrderInput:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 1px; }
+.memberOrderOf { font-size: 13px; color: var(--ink-500); }
+
+.memberBackBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: var(--navy-900);
+}
+
+.memberBackBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.memberFormCard {
+  background: #ffffff;
+  border: 1px solid #e8ecf4;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 5, 67, 0.03);
+}
+
+.memberFormHeader {
+  margin-bottom: 24px;
+}
+
+.memberFormTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000543;
+  margin: 0;
+}
+
+.memberFormSub {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+/* Headshot + Top Grid Layout */
+.memberFormTopGrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 28px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .memberFormTopGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.memberHeadshotBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.memberHeadshotLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.memberHeadshotRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.memberHeadshotPreviewBox {
+  width: 130px;
+  height: 130px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.memberHeadshotMonogram {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background: #60a5fa;
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+}
+
+.memberHeadshotImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.memberHeadshotCameraBadge {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 5px rgba(0, 5, 67, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+.memberHeadshotCameraBadge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.memberHeadshotActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.memberHeadshotBtn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  height: 42px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+  width: 140px;
+}
+
+.memberHeadshotBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #000543;
+}
+
+.memberHeadshotBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.memberHeadshotBtn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.memberHeadshotStatusText {
+  font-size: 12px;
+  font-weight: 600;
+  width: 140px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.memberHeadshotStatusSet {
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.memberHeadshotStatusNotSet {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+/* Fields Grid beside Headshot */
+.memberFieldsTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+@media (max-width: 640px) {
+  .memberFieldsTwoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+.memberFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.memberFieldLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.memberFieldInput {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13.5px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--ink-900);
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.memberFieldInput:focus {
+  border-color: #4c84e8;
+  box-shadow: 0 0 0 3px rgba(76, 132, 232, 0.15);
+}
+
+.memberFieldInput::placeholder {
+  color: #94a3b8;
+}
+
+.memberFieldHelper {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* A number field with its unit beside it, in the member form's dress —
+   used by the popup editor's delay and display-duration fields. */
+.memberStepWrap { display: flex; align-items: center; gap: 10px; }
+.memberStepWrap .memberFieldInput { flex: 1; min-width: 0; }
+.memberStepUnit {
+  font-size: 13px;
+  color: var(--ink-500);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Textarea with Character Counter */
+.memberTextareaWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.memberTextarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px 28px 14px;
+  font: inherit;
+  font-size: 13.5px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--ink-900);
+  outline: none;
+  resize: vertical;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.memberTextarea:focus {
+  border-color: #4c84e8;
+  box-shadow: 0 0 0 3px rgba(76, 132, 232, 0.15);
+}
+
+.memberTextarea::placeholder {
+  color: #94a3b8;
+}
+
+.memberCharCount {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* Submit Action Row */
+.memberSubmitRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 10px;
+  flex-wrap: wrap;
+}
+
+.memberSubmitBtn {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #4c84e8;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 22px;
+  cursor: pointer;
+  transition: background 150ms ease;
+  box-shadow: 0 1px 3px rgba(0, 5, 67, 0.05);
+}
+
+.memberSubmitBtn:hover {
+  background: #3b74d6;
+}
+
+.memberSubmitNote {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Additional-info section — Placement-panel inspired */
+.memberExtraSection {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-bottom: 6px;
+}
+
+.memberExtraSectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.memberExtraSectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #000543;
+}
+
+.memberExtraSectionSub {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.memberExtraTwoCol,
+.formGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+/* The placement buttons, as one wrapping row inside their field group so they
+   line up with the labelled fields in the column beside them. */
+.memberPlacementRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .memberExtraTwoCol,
+  .formGrid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Remove bottom margin on field groups inside the extra section so the
+   section's own padding handles spacing. */
+.memberExtraSection .memberFieldGroup {
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   Add Question (FAQ Multi-Add & 2-Col Layout)
+   ========================================================================== */
+
+.faqTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+@media (max-width: 640px) {
+  .faqTwoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+.faqTwoCol .control {
+  width: 100%;
+}
+
+.faqAddedCard {
+  background: #fff;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.faqAddedHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 22px;
+  background: #fbfcfe;
+  border-bottom: 1px solid var(--hairline);
+  flex-wrap: wrap;
+}
+
+.faqAddedTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-900);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.faqAddedCount {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue-700);
+  background: rgba(81, 141, 224, 0.14);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.faqAccordionAnswer {
+  padding: 16px 22px;
+  border-top: 1px solid var(--hairline);
+  background: #ffffff;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-700);
+  white-space: pre-wrap;
+}
+
+/* Edit and Remove together at the right of the added-question foot. */
+.faqAddedFootActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+/* .rowLink as a <button>: same type and colour, none of the button chrome. */
+.faqAddedFootActions button.rowLink {
+  font: inherit;
+  font-size: inherit;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.faqAddedFootActions button.rowLink:disabled { opacity: 0.5; cursor: default; }
+.rowLinkDanger { color: var(--critical-600); }
+
+.faqAccordionAnswerFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--hairline);
+  font-size: 12.5px;
+  color: var(--ink-500);
+}
+
+.faqLimitNotice {
+  background: #fef9e7;
+  border: 1px solid #f2dfa4;
+  border-radius: var(--r-sm);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #92670a;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Lead Detail Top Horizontal Context Bar
+   ========================================================================== */
+
+.leadTopContextBar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: #ffffff;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 5, 67, 0.03);
+  flex-wrap: wrap;
+}
+
+.leadContextItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.leadContextLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+}
+
+.leadContextValue {
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.leadContextDivider {
+  width: 1px;
+  height: 16px;
+  background: var(--line-strong);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Blog Post Edit (2-Column Layout: Left Metadata, Right Body Editor)
+   ========================================================================== */
+
+.blogEditGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .blogEditGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.blogEditLeft,
+.blogEditRight {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.blogEditLeft .panel,
+.blogEditRight .panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.blogEditLeftBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 26px;
+  flex: 1;
+}
+
+.blogEditLeftBody .control,
+.blogEditLeftBody .textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.blogFieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.blogFieldRow .control {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .blogFieldRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.slugRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slugRow .control {
+  flex: 1;
+  min-width: 0;
+}
+
+.slugRow .btn {
+  flex: none;
+}
+
+.blogEditRightBody {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 26px;
+  flex: 1;
+  height: 100%;
+}
+
+.blogEditRightBody .editorOuter {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 520px;
+}
+
+.blogEditRightBody .editorOuter > div:last-of-type {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.blogEditRightBody .editorProse {
+  flex: 1;
+  min-height: 440px;
+}
+
+
+/* A required field's label mark — the red asterisk (shared RequiredMark). */
+.reqMark {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--critical-600);
+  font-weight: 700;
+}
+
+/* The popup editor's tab body — inner spacing like the posts editor's
+   blogEditLeftBody, with the member-form field groups' default bottom margin
+   zeroed the way .memberExtraSection already does, so the two-column grid
+   rows stay aligned. */
+.popupTabBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 26px;
+}
+.popupTabBody .memberFieldGroup { margin-bottom: 0; }
+/* ---------- Article blocks (post editor's third tab) ----------
+   Two columns: a narrow sidebar listing every block kind with its icon and an
+   add/remove (+/−) toggle, and a form column that shows the added blocks as an
+   accordion. At most MAX_OPEN (3) panels are expanded; opening another closes
+   the one at the top. */
+.articleBlocksShell {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px 26px;
+}
+
+.articleBlocksSide {
+  flex: 0 0 232px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.articleTabRow {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.articleTabRow:hover { border-color: #b7c4dd; }
+.articleTabRowOn { border-color: #4c84e8; box-shadow: 0 0 0 1px #4c84e8 inset; }
+
+.articleTabMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 8px 13px 12px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: #000543;
+}
+.articleTabMain:disabled { cursor: default; opacity: 0.7; }
+.articleTabMain:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: -2px; }
+
+.articleTabIcon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: #4c84e8;
+}
+.articleTabIcon svg { width: 18px; height: 18px; display: block; }
+
+.articleTabLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.articleTabDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2ba15a;
+}
+
+.articleTabToggle {
+  flex: none;
+  width: 30px;
+  height: 34px;
+  align-self: center;
+  margin-right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #000543;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms, color 150ms;
+}
+.articleTabToggle:hover:not(:disabled) { border-color: #4c84e8; color: #4c84e8; background: #f5f9ff; }
+.articleTabToggle:disabled { cursor: default; opacity: 0.5; }
+.articleTabToggle:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 2px; }
+.articleTabToggle svg { width: 14px; height: 14px; display: block; }
+
+.articleBlocksMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.articleAccordion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.articlePanel {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fbfcfe;
+  overflow: hidden;
+}
+.articlePanelOpen { border-color: #b7c4dd; }
+
+.articlePanelHead {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: #000543;
+}
+.articlePanelHead:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: -2px; }
+
+.articlePanelIcon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: #4c84e8;
+}
+.articlePanelIcon svg { width: 16px; height: 16px; display: block; }
+
+.articlePanelTitle {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.articlePanelFilled {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin: 0 6px;
+  border-radius: 50%;
+  background: #2ba15a;
+}
+
+.articlePanelChevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: #667180;
+  transition: transform 150ms;
+}
+.articlePanelOpen .articlePanelChevron { transform: rotate(180deg); }
+
+.articlePanelBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px 18px;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+}
+.articlePanelBody .field { width: 100%; }
+.articlePanelBody .control,
+.articlePanelBody .textarea { width: 100%; box-sizing: border-box; }
+
+/* One repeatable entry: fields inside a bordered row, with the Remove control
+   beneath and the Add button for the list below it. */
+.articleRow {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fbfcfe;
+}
+.articleRow .blogFieldRow { flex: 1; }
+.articleRow > .btn { align-self: flex-end; }
+
+@media (max-width: 900px) {
+  .articleBlocksShell { flex-direction: column; }
+  .articleBlocksSide {
+    flex: none;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

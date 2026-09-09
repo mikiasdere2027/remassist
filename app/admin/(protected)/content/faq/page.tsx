@@ -3,11 +3,13 @@ import { asc } from 'drizzle-orm';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { faqGroups, faqItems } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
-import { canEditContent } from '@/lib/auth/roles';
-import ModalDialog from '../../ModalDialog';
+import { canDeleteFaqItem, canEditContent } from '@/lib/auth/roles';
+import { MAX_FEATURED } from '@/lib/faq/content';
 import CategoryFilter from './CategoryFilter';
-import { addFaqItem, saveFaqGroup, setFaqItemPublished } from './actions';
+import { saveFaqGroup } from './actions';
+import FaqAccordion, { type FaqAccordionSection } from './FaqAccordion';
 import { faqMessage } from './messages';
+import AdminTopbar from '../../AdminTopbar';
 import styles from '../../../admin.module.css';
 
 /**
@@ -49,7 +51,16 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-const STATUSES = ['all', 'published', 'draft'] as const;
+/**
+ * `homepage` is a filter, not a status.
+ *
+ * It rides in the same param and the same row of pills because it answers the
+ * same question the other three do — "which of these am I looking at" — and a
+ * separate control for one more subset of the same list would be a second thing
+ * to learn for no second idea. Being featured is orthogonal to being published,
+ * which is why the rows under it still carry their own Published/Draft pill.
+ */
+const STATUSES = ['all', 'published', 'draft', 'homepage'] as const;
 type Status = (typeof STATUSES)[number];
 
 /**
@@ -76,12 +87,15 @@ export default async function FaqListPage({
   searchParams,
 }: {
   searchParams: Promise<{
-    ok?: string; error?: string; status?: string; cat?: string; add?: string; view?: string;
+    ok?: string; error?: string; status?: string; cat?: string; view?: string;
+    /** The question whose "remove" confirm step is open, by id. */
+    del?: string;
   }>;
 }) {
   const [user, sp] = await Promise.all([requireUser(), searchParams]);
   const message = faqMessage(sp.ok, sp.error);
   const mayEdit = canEditContent(user.role);
+  const mayDelete = canDeleteFaqItem(user.role);
   const status = asStatus(sp.status);
   /* Only an editor has a sections view to switch to, so a manager arriving on
      ?view=sections gets the questions rather than a panel of controls every
@@ -128,6 +142,7 @@ export default async function FaqListPage({
   const total = ordered.length;
   const publishedCount = ordered.filter((i) => i.published).length;
   const draftCount = total - publishedCount;
+  const featuredCount = ordered.filter((i) => i.featured).length;
 
   /* A category from the query string is only honoured if it names a group that
      exists, so a hand-typed ?cat= falls back to showing everything rather than
@@ -137,22 +152,16 @@ export default async function FaqListPage({
   const rows = ordered.filter((i) => {
     if (status === 'published' && !i.published) return false;
     if (status === 'draft' && i.published) return false;
+    if (status === 'homepage' && !i.featured) return false;
     if (cat !== 'all' && i.groupId !== cat) return false;
     return true;
   });
-
-  /* Headings only when nothing is already narrowing the list to one section. */
-  const grouped = cat === 'all';
-  const shownPerGroup = new Map<string, number>();
-  for (const r of rows) shownPerGroup.set(r.groupId, (shownPerGroup.get(r.groupId) ?? 0) + 1);
-
-  const adding = mayEdit && sp.add === '1' && view === 'questions';
 
   /* Every link keeps the other filters. Losing the category you had selected
      because you clicked Draft is the sort of thing that makes a filter bar feel
      broken when each control works perfectly on its own. Params equal to their
      default are omitted, so the canonical URL of the default view is bare. */
-  const href = (next: { status?: Status; cat?: string; view?: View; add?: '1' }) => {
+  const href = (next: { status?: Status; cat?: string; view?: View; del?: string }) => {
     const s = next.status ?? status;
     const c = next.cat ?? cat;
     const v = next.view ?? view;
@@ -160,10 +169,43 @@ export default async function FaqListPage({
     if (s !== 'all') params.set('status', s);
     if (c !== 'all') params.set('cat', c);
     if (v !== 'questions') params.set('view', v);
-    if (next.add) params.set('add', next.add);
+    if (next.del) params.set('del', next.del);
     const qs = params.toString();
     return `/admin/content/faq${qs ? `?${qs}` : ''}`;
   };
+
+  /* Only honoured if it names a row still visible under the current filters,
+     so a stale ?del= left in the URL after a filter change cannot arm a confirm
+     step under a row you did not open it on. A published row never arms one:
+     deleteFaqItem refuses those, and a confirm step for an action that always
+     fails is worse than no control. */
+  const confirming =
+    mayDelete && sp.del && rows.some((r) => r.id === sp.del && !r.published) ? sp.del : null;
+
+  /* One accordion section per group, in the public page's order. Only groups
+     that still have rows after filtering appear; the accordion opens the first
+     one and closes it when another is opened. */
+  const sections: FaqAccordionSection[] = groups
+    .map((g) => {
+      const groupRows = rows.filter((r) => r.groupId === g.id);
+      return {
+        id: g.id,
+        title: g.title ?? 'No section',
+        count: groupRows.length,
+        rows: groupRows.map((r) => ({
+          id: r.id,
+          question: r.question,
+          published: r.published,
+          featured: r.featured,
+          /* Built here rather than in the accordion: href() closes over the
+             current filters, and a function is not a prop a client component
+             can receive. A published row gets none — deleteFaqItem refuses
+             those, so it has no confirm step to open. */
+          removeHref: mayDelete && !r.published ? href({ del: r.id }) : null,
+        })),
+      };
+    })
+    .filter((s) => s.rows.length > 0);
 
   return (
     <>
@@ -203,6 +245,12 @@ export default async function FaqListPage({
               label="Draft"
               count={draftCount}
             />
+            <Tab
+              href={href({ status: 'homepage', view: 'questions' })}
+              on={view === 'questions' && status === 'homepage'}
+              label="Homepage"
+              count={featuredCount}
+            />
           </div>
 
           {/* Selecting a category navigates without a view param, so it lands
@@ -226,18 +274,20 @@ export default async function FaqListPage({
               />
             </div>
           )}
-
-          {mayEdit && (
-            <Link
-              className={`${styles.btn} ${styles.btnGhost} ${styles.filterEnd}`}
-              /* Forced to the questions view: the modal renders there, so
-                 adding from the sections view has to leave it. */
-              href={href({ add: '1', view: 'questions' })}
-            >
-              + Add question
-            </Link>
-          )}
         </div>
+
+        {/* Shown on every tab, not just Homepage, because the thing it explains
+            is what a visitor sees right now and an editor who never opens that
+            tab is exactly the one who does not know. It disappears the moment
+            anything is starred. */}
+        {view === 'questions' && featuredCount === 0 && (
+          <div className={styles.notice}>
+            <strong>Nothing is chosen for the homepage</strong>
+            The homepage FAQ card is falling back to the first {MAX_FEATURED} published
+            questions in page order. Pick the ones that should sell the process with
+            &ldquo;Show on the homepage&rdquo; in a question&rsquo;s menu.
+          </div>
+        )}
 
         {view === 'sections' ? (
           <div className={styles.panel}>
@@ -256,7 +306,7 @@ export default async function FaqListPage({
               {groups.map((g) => (
                 <form className={styles.sectionCell} action={saveFaqGroup} key={g.id}>
                   <input type="hidden" name="id" value={g.id} />
-                  <div className={styles.field}>
+                  <div className={`${styles.field} ${styles.sectionField}`}>
                     <label className={styles.fieldLabel} htmlFor={`t-${g.id}`}>Title</label>
                     <input
                       className={styles.control}
@@ -266,29 +316,27 @@ export default async function FaqListPage({
                       required
                     />
                   </div>
-                  <div className={styles.sectionRow}>
-                    <div className={`${styles.field} ${styles.grow}`}>
-                      <label className={styles.fieldLabel} htmlFor={`s-${g.id}`}>Anchor</label>
-                      <input
-                        className={styles.control}
-                        id={`s-${g.id}`}
-                        name="slug"
-                        defaultValue={g.slug}
-                        pattern="[a-z][a-z\-]*[a-z]"
-                        title="Lowercase letters and hyphens only — it is part of a URL"
-                        required
-                      />
-                    </div>
-                    {/* Named for a screen reader: six buttons all reading
-                        "Save" is six identical announcements. */}
-                    <button
-                      className={`${styles.btn} ${styles.btnGhost}`}
-                      type="submit"
-                      aria-label={`Save section: ${g.title}`}
-                    >
-                      Save
-                    </button>
+                  <div className={`${styles.field} ${styles.sectionField}`}>
+                    <label className={styles.fieldLabel} htmlFor={`s-${g.id}`}>Anchor</label>
+                    <input
+                      className={styles.control}
+                      id={`s-${g.id}`}
+                      name="slug"
+                      defaultValue={g.slug}
+                      pattern="[a-z][a-z\-]*[a-z]"
+                      title="Lowercase letters and hyphens only — it is part of a URL"
+                      required
+                    />
                   </div>
+                  {/* Named for a screen reader: six buttons all reading "Save"
+                      is six identical announcements. */}
+                  <button
+                    className={`${styles.btn} ${styles.btnPrimary}`}
+                    type="submit"
+                    aria-label={`Save section: ${g.title}`}
+                  >
+                    Save
+                  </button>
                 </form>
               ))}
             </div>
@@ -300,8 +348,11 @@ export default async function FaqListPage({
             </div>
           </div>
         ) : (
-          <div className={styles.panel}>
-            {rows.length === 0 ? (
+          /* The empty state is still one panel — there is nothing to separate.
+             The list is not: each section is its own card on the page, so the
+             gaps between them fall on #f5f7fa and actually read as gaps. */
+          rows.length === 0 ? (
+            <div className={styles.panel}>
               <p className={styles.empty}>
                 <strong>
                   {total === 0 ? 'No questions yet' : 'Nothing matches those filters'}
@@ -310,163 +361,34 @@ export default async function FaqListPage({
                   ? 'Use “Add question” above to write the first one.'
                   : `There are ${total} questions in total — clear the filters to see them.`}
               </p>
-            ) : (
-              rows.map((it, n) => {
-                const group = groupById.get(it.groupId);
-                /* A heading before the first row of each run. The rows are
-                   sorted by section, so "the previous row was a different
-                   section" is the whole test. */
-                const opensGroup = grouped && rows[n - 1]?.groupId !== it.groupId;
-
-                return (
-                  <div key={it.id}>
-                    {opensGroup && (
-                      <div className={styles.faqGroupRow}>
-                        <span>{group?.title ?? 'No section'}</span>
-                        <span className={styles.faqGroupCount}>
-                          {shownPerGroup.get(it.groupId)}
-                          {status === 'all' ? '' : ' shown'}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className={styles.faqRow}>
-                      {/* Decorative: this admin has no client-side drag, and
-                          reordering is Move up / Move down on the edit page. */}
-                      <span className={styles.grip} aria-hidden="true" />
-
-                      <Link className={styles.faqQ} href={`/admin/content/faq/${it.id}`}>
-                        {it.question}
-                      </Link>
-
-                      {/* No category tag under a heading of the same name, and
-                          none when a category is selected either — every row
-                          would carry the word you just filtered on. */}
-                      <span
-                        className={`${styles.pill} ${it.published ? styles.pillLow : styles.pillMed}`}
-                      >
-                        {it.published ? 'Published' : 'Draft'}
-                      </span>
-
-                      {mayEdit && (
-                        <div className={styles.actions}>
-                          <Link
-                            className={styles.iconBtn}
-                            href={`/admin/content/faq/${it.id}`}
-                            aria-label={`Edit: ${it.question}`}
-                          >
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path d="M12 20h9" />
-                              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
-                            </svg>
-                          </Link>
-
-                          <form action={setFaqItemPublished}>
-                            <input type="hidden" name="id" value={it.id} />
-                            <input
-                              type="hidden"
-                              name="published"
-                              value={it.published ? '0' : '1'}
-                            />
-                            <button
-                              className={styles.iconBtn}
-                              type="submit"
-                              aria-label={
-                                it.published
-                                  ? `Take off the FAQ page: ${it.question}`
-                                  : `Put live on the FAQ page: ${it.question}`
-                              }
-                            >
-                              {it.published ? (
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                  <path d="M3 3l18 18" />
-                                  <path d="M10.6 5.1A9.9 9.9 0 0 1 12 5c5 0 9 4.5 9 7 0 .8-.5 1.9-1.4 3" />
-                                  <path d="M6.3 6.9C3.9 8.4 3 10.4 3 12c0 2.5 4 7 9 7 1.6 0 3-.4 4.2-1" />
-                                </svg>
-                              ) : (
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                                  <circle cx="12" cy="12" r="3" />
-                                </svg>
-                              )}
-                            </button>
-                          </form>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-
-            <div className={styles.panelFoot}>
-              <span>
-                Reorder from a question&rsquo;s edit page &mdash; the public FAQ follows
-                immediately after save.
-              </span>
-              <Link className={styles.rowLink} href="/faq">View the public page</Link>
             </div>
-          </div>
-        )}
-
-        {adding && (
-          <ModalDialog title="Add a question" cancelHref={href({})}>
-            <form className={styles.modalBody} action={addFaqItem}>
-              <div className={styles.fieldRow}>
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel} htmlFor="ng">Section</label>
-                  <select
-                    className={styles.control}
-                    id="ng"
-                    name="groupId"
-                    /* The section you are filtered to is the one you are
-                       looking at, so it is the one you are most likely adding
-                       to. Undefined falls back to the first option. */
-                    defaultValue={cat !== 'all' ? cat : undefined}
-                    required
-                  >
-                    {groups.map((g) => (
-                      <option key={g.id} value={g.id}>{g.title}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className={`${styles.field} ${styles.grow}`}>
-                  <label className={styles.fieldLabel} htmlFor="nq">Question</label>
-                  <input
-                    className={styles.control}
-                    id="nq"
-                    name="question"
-                    placeholder="What do people actually ask?"
-                    maxLength={300}
-                    required
-                    autoFocus
-                  />
-                </div>
-              </div>
-              <div className={styles.field}>
-                <label className={styles.fieldLabel} htmlFor="na">Answer</label>
-                <textarea
-                  className={styles.textarea}
-                  id="na"
-                  name="answer"
-                  rows={5}
-                  maxLength={4000}
-                  required
-                />
-              </div>
-              <div className={styles.modalFoot}>
-                <span className={styles.panelNote}>
-                  Added as a draft, so you can check it before it goes live
-                </span>
-                <Link className={`${styles.btn} ${styles.btnGhost}`} href={href({})}>
-                  Cancel
+          ) : (
+            <>
+              <FaqAccordion
+                sections={sections}
+                mayEdit={mayEdit}
+                confirming={confirming}
+                backHref={href({})}
+              />
+              <p className={styles.faqListFoot}>
+                {status === 'homepage' ? (
+                  <span>
+                    {featuredCount} of {MAX_FEATURED} places used. The order these appear in
+                    on the homepage is set on a question&rsquo;s edit page, and it is
+                    separate from the order on /faq.
+                  </span>
+                ) : (
+                  <span>
+                    Reorder from a question&rsquo;s edit page &mdash; the public FAQ follows
+                    immediately after save.
+                  </span>
+                )}
+                <Link className={styles.rowLink} href={status === 'homepage' ? '/' : '/faq'}>
+                  {status === 'homepage' ? 'View the homepage' : 'View the public page'}
                 </Link>
-                <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit">
-                  Add question
-                </button>
-              </div>
-            </form>
-          </ModalDialog>
+              </p>
+            </>
+          )
         )}
       </div>
     </>
@@ -499,13 +421,18 @@ function Tab({ href, on, label, count }: {
 
 function Topbar() {
   return (
-    <header className={styles.topbar}>
-      <div className={styles.tbInner}>
-        <div>
-          <h1 className={styles.tbTitle}>FAQ</h1>
-          <p className={styles.tbSub}>The questions that sell the process</p>
-        </div>
-      </div>
-    </header>
+    <AdminTopbar
+      title="FAQ"
+      subtitle="The questions that sell the process"
+      action={
+        <Link href="/admin/content/faq/new" className={styles.btnHeader}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add question
+        </Link>
+      }
+    />
   );
 }

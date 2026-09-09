@@ -93,11 +93,13 @@ fi
 # NEXT_PUBLIC_* are inlined into the client bundle at build time, so the build
 # must see them. Everything else in the file is harmless here.
 #
-# This ordering is load-bearing for analytics, and silently so. NEXT_PUBLIC_GTM_ID
-# and NEXT_PUBLIC_ANALYTICS_ENV are read by lib/analytics/events.ts, which is
-# client code: if they are absent from the environment *at build time* they are
-# compiled away to undefined, every event is dropped, and nothing logs an error
-# on the box or in the browser. Build somewhere other than here — CI, a laptop,
+# This ordering is load-bearing for analytics, and silently so. NEXT_PUBLIC_GTM_ID,
+# NEXT_PUBLIC_GA_ID and NEXT_PUBLIC_ANALYTICS_ENV are read by
+# lib/analytics/events.ts and by the two loaders in components/analytics/, all
+# of it client code: if they are absent from the environment *at build time*
+# they are compiled away to undefined, no tag is even emitted into the page,
+# every event is dropped, and nothing logs an error on the box or in the
+# browser. Build somewhere other than here — CI, a laptop,
 # a Docker layer that does not source shared/.env — and measurement goes dark
 # while the deploy reports success.
 set -a

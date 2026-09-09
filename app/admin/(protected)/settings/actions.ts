@@ -8,8 +8,11 @@ import { eq } from 'drizzle-orm';
 import { signIn } from '@/auth';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { users } from '@/db/schema/auth';
-import { assertUser } from '@/lib/auth/require';
+import { assertUnverifiedUser, assertUser } from '@/lib/auth/require';
 import { CODE_TTL_SEC } from '@/lib/auth/code';
+import {
+  PENDING_EMAIL_COOKIE, VERIFY_PENDING_COOKIE, verifyReturnPath,
+} from '@/lib/auth/verify';
 import { hashPassword, passwordProblem, verifyPassword } from '@/lib/auth/password';
 
 /**
@@ -20,10 +23,6 @@ import { hashPassword, passwordProblem, verifyPassword } from '@/lib/auth/passwo
  * gate never runs for it. Trusting the gate here would leave an unauthenticated
  * write against the users table.
  */
-
-/** Set alongside the verification email so the code screen knows to appear. */
-const VERIFY_PENDING_COOKIE = 'admin-verify-pending';
-const PENDING_EMAIL_COOKIE = 'admin-signin-email';
 
 function back(param: 'ok' | 'error', code: string): never {
   redirect(`/admin/settings?${param}=${code}`);
@@ -77,15 +76,29 @@ export async function changePassword(formData: FormData): Promise<void> {
 }
 
 /**
- * Send a verification email to the signed-in address.
+ * Send an activation code to the signed-in address.
  *
  * Reuses the ordinary emailed-code sign-in rather than inventing a second
  * token: when Auth.js redeems an email token for a user that already exists it
  * sets emailVerified on that row itself (handle-login.js), so the existing flow
  * already does the one thing this needs.
+ *
+ * assertUnverifiedUser rather than assertUser, and it has to be: an account
+ * past its activation deadline is refused by every other action in the admin,
+ * and this is the action that clears that. Behind the ordinary gate it would be
+ * a lock with no key. See lib/auth/verify.ts.
+ *
+ * Called from two screens — the banner inside the grace window and the
+ * activation screen after it — which differ only in where a failed send should
+ * land. That comes from a hidden field, resolved through an allowlist rather
+ * than used as given: this value reaches redirect(), and a posted path carried
+ * into one of those is an open redirector.
  */
-export async function sendVerificationEmail(): Promise<void> {
-  const user = await assertUser();
+export async function sendVerificationEmail(formData?: FormData): Promise<void> {
+  const user = await assertUnverifiedUser();
+  const returnTo = verifyReturnPath(
+    formData ? String(formData.get('returnTo') ?? '') : undefined,
+  );
 
   const jar = await cookies();
   const isProd = process.env.NODE_ENV === 'production';
@@ -107,11 +120,11 @@ export async function sendVerificationEmail(): Promise<void> {
   try {
     /* Throws a redirect to the verifyRequest page on success, which is how
        Auth.js signals it sent the mail. */
-    await signIn('resend', { email: user.email, redirectTo: '/admin/settings' });
+    await signIn('resend', { email: user.email, redirectTo: returnTo });
   } catch (err) {
     /* Only an AuthError is a real failure — the success path throws a redirect
        too, and swallowing that leaves the browser on a dead form post. */
-    if (err instanceof AuthError) back('error', 'verify-failed');
+    if (err instanceof AuthError) redirect(`${returnTo}?error=verify-failed`);
     throw err;
   }
 }

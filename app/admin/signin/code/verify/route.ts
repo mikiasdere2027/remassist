@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { isAllowedEmail } from '@/lib/auth/allowlist';
 import { isWellFormedCode, normaliseCode } from '@/lib/auth/code';
+import { PENDING_EMAIL_COOKIE, VERIFY_PENDING_COOKIE } from '@/lib/auth/verify';
 
 /**
  * Hand a typed code to the Auth.js callback — MIGRATION-PLAN §10.
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
   const jar = await cookies();
 
   const email = (
-    url.searchParams.get('email') ?? jar.get('admin-signin-email')?.value ?? ''
+    url.searchParams.get('email') ?? jar.get(PENDING_EMAIL_COOKIE)?.value ?? ''
   ).trim();
   const code = normaliseCode(url.searchParams.get('code') ?? '');
 
@@ -38,7 +39,7 @@ export async function GET(req: Request) {
   callback.searchParams.set('email', email);
   /* A verification started from the settings screen belongs back there; an
      ordinary sign-in belongs at the leads list. */
-  const verifying = jar.get('admin-verify-pending')?.value === '1';
+  const verifying = jar.get(VERIFY_PENDING_COOKIE)?.value === '1';
   callback.searchParams.set('callbackUrl', verifying ? '/admin/settings' : '/admin/leads');
 
   /* 303 so the browser follows with GET, which is what the callback expects. */

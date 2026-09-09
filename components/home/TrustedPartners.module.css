@@ -1,102 +1,233 @@
-/* TrustedPartners — the drifting logo belt, ported from index.html (Phase 02).
-   Each plate breathes on its own delay and carries a sheen sweep; the belt
-   itself drifts left and the section edges fade it out. */
+/* TrustedPartners — one card per logo, on a horizontal scroll track.
 
-.section { background: #fff; border-top: 1px solid var(--border-default); overflow: hidden; }
-.head { width: 100%; max-width: 1248px; box-sizing: border-box; margin: 0 auto; padding: 104px 24px 28px; }
-.belt { position: relative; padding: 44px 0 104px; }
+   This was a single white bar with hairline dividers between the logos. One
+   bar reads as one object, which is the wrong shape for what it holds: five
+   separate companies, each of which either is or is not a link. A card each
+   makes the units obvious, gives the linked ones something to lift on hover,
+   and lets the track scroll by whole cards instead of by an arbitrary gap.
 
-/* The artboard duplicated the plate list so the belt could loop. That only
-   reads correctly with enough distinct logos to fill the viewport — with two
-   partners the same mark would appear three times at once, which looks like a
-   bug rather than a marquee. `.row` centres them instead; `.rowDrift` is
-   applied only once PARTNERS is long enough (see TrustedPartners.tsx). */
-.row { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
-.rowDrift { width: max-content; justify-content: flex-start; flex-wrap: nowrap;
-  animation: beltDrift 44s linear infinite; }
-.rowDrift:hover { animation-play-state: paused; }
-@keyframes beltDrift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+   The scroller carries the shadows, so it has vertical padding to fit them:
+   overflow-x on a box forces overflow-y to scroll as well, and without that
+   padding each card's shadow would be clipped flat against the track's edge. */
 
-.plateWrap { flex: 0 0 auto; animation: plateBreathe 7s var(--ease-out) var(--plate-delay, 0s) infinite; }
-@keyframes plateBreathe {
-  0%, 100% { transform: translateY(0) rotate(-0.4deg); }
-  50% { transform: translateY(-9px) rotate(0.4deg); }
+.section {
+  background: #fff;
+  border-top: 1px solid var(--border-default);
+  overflow: hidden;
 }
 
-.plate { position: relative; width: 214px; height: 126px; border-radius: 10px; background: #fff;
-  border: 1px solid var(--border-default); box-shadow: var(--shadow-sm);
-  display: flex; align-items: center; justify-content: center; overflow: hidden; }
-/* A pane of glass travelling across the plate, not a painted streak: the
-   backdrop-filter is what actually reads as glass, blurring and lifting the
-   logo underneath, while the mask feathers both the blur and the highlight
-   so no hard edge ever shows. */
-.sheen { position: absolute; top: -25%; bottom: -25%; width: 44%; pointer-events: none;
-  background: linear-gradient(102deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.28) 34%,
-    rgba(255, 255, 255, 0.66) 50%,
-    rgba(255, 255, 255, 0.28) 66%,
-    rgba(255, 255, 255, 0) 100%);
-  backdrop-filter: blur(2.5px) brightness(1.1) saturate(1.25);
-  -webkit-backdrop-filter: blur(2.5px) brightness(1.1) saturate(1.25);
-  -webkit-mask-image: linear-gradient(102deg, transparent 0%, #000 34%, #000 66%, transparent 100%);
-  mask-image: linear-gradient(102deg, transparent 0%, #000 34%, #000 66%, transparent 100%);
-  animation: sheen 6s var(--ease-out) var(--sheen-delay, 0s) infinite; }
-@keyframes sheen {
-  0% { transform: translateX(-160%) skewX(-14deg); }
-  55%, 100% { transform: translateX(360%) skewX(-14deg); }
+.head {
+  width: 100%;
+  max-width: 1248px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 104px 24px 32px;
 }
 
-.link { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
-/* A definite box, not max-width + auto. next/image lazy-loads, and with auto
-   dimensions the element measures 0x0 until the file arrives — the plate was
-   empty and then jumped. `contain` letterboxes inside the box, so the logo
-   still renders at its own aspect ratio. */
-.logo { width: 150px; height: 78px; object-fit: contain; display: block; }
+/* ── Bar layout (chevron + card + chevron) ───────────────────────────────── */
 
-/* Edge fades, so the belt dissolves rather than being cut off. */
-.fadeL, .fadeR { position: absolute; top: 0; bottom: 0; width: 180px; pointer-events: none; }
-.fadeL { left: 0; background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0)); }
-.fadeR { right: 0; background: linear-gradient(270deg, #fff, rgba(255, 255, 255, 0)); }
-
-/* The duplicate half exists only to give a drifting belt a seam to loop on.
-   A centred static row would just show every logo twice. */
-@media (min-width: 768px) {
-  .row:not(.rowDrift) .dup { display: none; }
-  .belt:not(.beltDrift) .fadeL, .belt:not(.beltDrift) .fadeR { display: none; }
+.barOuter {
+  width: 100%;
+  max-width: 1248px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 0 24px 104px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 
-/* ── Mobile ─────────────────────────────────────────────────────────────
-   `.row` wraps, so at 375px the 214px plates fell into a single column and
-   five partners became five screens of scrolling. Below 768px the row always
-   drifts, whatever PARTNERS.length is: DRIFT_THRESHOLD guards against the
-   same logo appearing twice at once, and a phone viewport is narrower than a
-   single plate pair, so that cannot happen here.
+/* The viewport the cards scroll inside. No background or border of its own
+   any more — the cards are the objects now, and a frame around them would put
+   the old bar back with extra steps. */
+.bar {
+  flex: 1 1 0;
+  min-width: 0;
+  position: relative;
+}
 
-   The gap moves onto the plate as a margin. `translateX(-50%)` assumes the
-   two halves are exactly equal, and flex `gap` breaks that — the last plate
-   in each half carries no trailing gap, so the loop jumps by half a gap on
-   every cycle. A trailing margin on every plate makes the halves identical. */
+/* ── Scrollable logo track ───────────────────────────────────────────────── */
+
+.track {
+  display: flex;
+  align-items: center;
+  justify-content: safe center;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 14px;
+  /* 20px of vertical room for the card shadows, 2px of horizontal so the first
+     and last card are not shaved by the scroll box. */
+  padding: 20px 2px;
+  /* Snap each card to view */
+  scroll-snap-type: x proximity;
+}
+.track::-webkit-scrollbar { display: none; }
+
+.item {
+  flex: none;
+  scroll-snap-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 176px;
+  height: 108px;
+  padding: 0 18px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 5, 67, 0.09);
+  box-shadow:
+    0 14px 34px -16px rgba(0, 5, 67, 0.14),
+    0 2px 8px rgba(0, 5, 67, 0.05);
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out),
+    border-color 0.2s ease;
+}
+/* Only the cards that go somewhere lift: a hover state on a card that cannot
+   be clicked is an invitation to click it. */
+.item:has(a.logoWrap):hover {
+  transform: translateY(-3px);
+  border-color: rgba(81, 141, 224, 0.4);
+  box-shadow:
+    0 22px 44px -18px rgba(0, 5, 67, 0.2),
+    0 3px 10px rgba(0, 5, 67, 0.06);
+}
+
+.logoWrap {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+a.logoWrap:hover { opacity: 0.75; }
+a.logoWrap:focus-visible {
+  outline: 2px solid var(--brand-blue, #0052ff);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.logo {
+  height: 48px;
+  width: auto;
+  max-width: 130px;
+  object-fit: contain;
+  display: block;
+  filter: contrast(95%);
+  transition: filter 0.2s ease;
+}
+a.logoWrap:hover .logo { filter: contrast(105%) brightness(1.02); }
+
+/* ── Edge fade masks ─────────────────────────────────────────────────────── */
+
+.fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.fadeVisible {
+  opacity: 1;
+}
+.fadeLeft  { left:  0; background: linear-gradient(to right, rgba(255,255,255,0.95), transparent); }
+.fadeRight { right: 0; background: linear-gradient(to left,  rgba(255,255,255,0.95), transparent); }
+
+/* ── Navigation chevron buttons ─────────────────────────────────────────── */
+
+.navBtn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid rgba(0, 5, 67, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 5, 67, 0.08);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--brand-navy, #000543);
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+.navBtnLeft {
+  margin-left: -32px;
+}
+.navBtnRight {
+  margin-right: -32px;
+}
+.navBtn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.navBtn:hover:not(:disabled) {
+  background: var(--bg-marketing-paper, #f7faff);
+  border-color: rgba(0, 5, 67, 0.22);
+  box-shadow: 0 4px 14px rgba(0, 5, 67, 0.12);
+}
+.navBtn:focus-visible {
+  outline: 2px solid var(--brand-blue, #0052ff);
+  outline-offset: 2px;
+}
+.navBtn:disabled {
+  opacity: 0.28;
+  cursor: default;
+  box-shadow: none;
+}
+
+@media (max-width: 1280px) {
+  .navBtnLeft {
+    margin-left: -16px;
+  }
+  .navBtnRight {
+    margin-right: -16px;
+  }
+}
+
+/* ── Tablet ──────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .barOuter {
+    gap: 14px;
+  }
+  .navBtnLeft {
+    margin-left: 0;
+  }
+  .navBtnRight {
+    margin-right: 0;
+  }
+  .track {
+    justify-content: flex-start;
+  }
+  .item { width: 176px; height: 100px; padding: 0 16px; }
+  .logo  { height: 44px; max-width: 120px; }
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  .head { padding: 72px 20px 20px; }
-  .belt { padding: 26px 0 72px; }
-  .row { width: max-content; justify-content: flex-start; flex-wrap: nowrap;
-    gap: 0; animation: beltDrift 34s linear infinite; }
-  .plateWrap { margin-right: 16px; }
-  .plate { width: 168px; height: 100px; }
-  .logo { width: 118px; height: 62px; }
-  .fadeL, .fadeR { width: 48px; }
-}
-
-/* No animation to ride, so the belt becomes something to swipe instead of a
-   row of logos cut off at the viewport edge. */
-@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
-  .belt { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
-  .belt::-webkit-scrollbar { display: none; }
-  .dup { display: none; }
-  .fadeL, .fadeR { display: none; }
+  .head { padding: 72px 20px 24px; }
+  .barOuter { padding: 0 16px 72px; gap: 10px; }
+  .navBtn { width: 38px; height: 38px; }
+  .navBtn svg { width: 16px; height: 16px; }
+  .navBtnLeft { margin-left: 0; }
+  .navBtnRight { margin-right: 0; }
+  .track { padding: 16px 2px; gap: 12px; justify-content: flex-start; }
+  .item  { width: 152px; height: 88px; padding: 0 14px; border-radius: 14px; }
+  .logo  { height: 36px; max-width: 100px; }
+  .fade  { width: 32px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .row, .rowDrift, .plateWrap, .sheen { animation: none !important; }
+  .track { scroll-behavior: auto; }
+  .navBtn, .logoWrap, .logo, .item { transition: none !important; }
+  .item:has(a.logoWrap):hover { transform: none; }
 }

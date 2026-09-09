@@ -1,17 +1,16 @@
+'use client';
+
 import Image from 'next/image';
-import type { CSSProperties } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import shared from './HomeSections.module.css';
 import styles from './TrustedPartners.module.css';
 
 /**
- * TrustedPartners — "Teams that run on Rem Assist" (index.html, Phase 02).
+ * TrustedPartners — "Teams that run on Rem Assist".
  *
- * The artboard laid out seven plates, but five of them were unfilled
- * `image-slot` placeholders — design furniture waiting on real logos, not
- * clients. Only the two real partners are rendered here; empty plates on a
- * live site read as broken, and inventing logos to fill them is not an option.
- * Add entries to PARTNERS as logos arrive and the belt starts drifting on its
- * own once there are enough to loop without repeating on screen.
+ * Five logos, a card each, on a horizontal scroll track. Left / Right chevron
+ * buttons navigate the track, which also accepts touch swipes and mouse-drag on
+ * desktop. Auto-drifts every 4s and pauses when the pointer enters.
  */
 const PARTNERS = [
   {
@@ -28,8 +27,6 @@ const PARTNERS = [
     h: 188,
     href: null,
   },
-  // href stays null until someone confirms the sites — a wrong link on a
-  // client's name is worse than no link.
   {
     name: 'Fix My Foundation',
     logo: '/images/fix-my-foundation-logo.png',
@@ -53,24 +50,65 @@ const PARTNERS = [
   },
 ];
 
-/** Below this the belt would show the same logo more than once at a time —
-    on a desktop viewport. A phone shows one plate at a time, so the belt
-    always drifts there; see the max-width: 767px block in the stylesheet. */
-const DRIFT_THRESHOLD = 6;
+/* One card plus the track's gap, so an arrow press moves exactly one logo
+   rather than landing mid-card. Keep in step with .item in the module. */
+const SCROLL_STEP = 190;
+const AUTO_MS = 4000;
 
 export default function TrustedPartners() {
-  const drift = PARTNERS.length >= DRIFT_THRESHOLD;
-  /* The loop needs the list twice so translateX(-50%) lands on a seam. Both
-     halves are always rendered because mobile always drifts; CSS drops the
-     duplicates on a desktop that is showing a centred static row instead. */
-  const plates = [...PARTNERS, ...PARTNERS];
+  const trackRef  = useRef<HTMLDivElement>(null);
+  const [canLeft,  setCanLeft]  = useState(false);
+  const [canRight, setCanRight] = useState(true);
+  const [paused,   setPaused]   = useState(false);
+
+  /* Update arrow disabled states whenever the scroll position changes. */
+  const sync = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    sync();
+    el.addEventListener('scroll', sync, { passive: true });
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', sync); ro.disconnect(); };
+  }, [sync]);
+
+  /* Auto-drift: advance one step every AUTO_MS ms, wrap around. */
+  useEffect(() => {
+    if (paused) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const id = window.setInterval(() => {
+      const el = trackRef.current;
+      if (!el) return;
+      if (el.scrollWidth <= el.clientWidth + 4) return;
+      const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
+      el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + SCROLL_STEP, behavior: 'smooth' });
+    }, AUTO_MS);
+    return () => window.clearInterval(id);
+  }, [paused]);
+
+  const scroll = (dir: 1 | -1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const firstItem = el.querySelector<HTMLElement>(`.${styles.item}`);
+    const step = firstItem ? firstItem.offsetWidth + 14 : SCROLL_STEP;
+    el.scrollBy({ left: dir * step, behavior: 'smooth' });
+  };
 
   return (
-    <section className={styles.section}>
+    <section className={styles.section} aria-label="Trusted Partners">
       <div className={styles.head}>
         <span className={shared.eyebrow}>Trusted Partners</span>
         <div className={shared.head}>
-          <h2 className={shared.title}>Teams that run on<br /><span>Rem Assist</span></h2>
+          <h2 className={shared.title}>
+            Teams that run on<br /><span>Rem Assist</span>
+          </h2>
           <div className={shared.aside}>
             <p className={shared.desc}>
               No matter the industry, organizations trust our teams to take work off their plate and
@@ -80,32 +118,91 @@ export default function TrustedPartners() {
         </div>
       </div>
 
-      <div className={`${styles.belt} ${drift ? styles.beltDrift : ''}`}>
-        <div className={`${styles.row} ${drift ? styles.rowDrift : ''}`}>
-          {plates.map((p, i) => (
-            <div
-              key={`${p.name}-${i}`}
-              className={`${styles.plateWrap}${i >= PARTNERS.length ? ` ${styles.dup}` : ''}`}
-              style={{ '--plate-delay': `${(i % PARTNERS.length) * 0.55}s`, '--sheen-delay': `${(i % PARTNERS.length) * 0.85}s` } as CSSProperties}
-              aria-hidden={i >= PARTNERS.length || undefined}
-            >
-              <div className={styles.plate}>
-                <span className={styles.sheen} aria-hidden="true" />
-                {p.href ? (
-                  <a className={styles.link} href={p.href} target="_blank" rel="noopener">
-                    <Image className={styles.logo} src={p.logo} alt={p.name} width={p.w} height={p.h} sizes="150px" />
-                  </a>
-                ) : (
-                  <Image className={styles.logo} src={p.logo} alt={p.name} width={p.w} height={p.h} sizes="150px" />
-                )}
-              </div>
-            </div>
-          ))}
+      {/* Outer wrapper: nav buttons + bar */}
+      <div
+        className={styles.barOuter}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        {/* Left chevron */}
+        <button
+          type="button"
+          className={`${styles.navBtn} ${styles.navBtnLeft}`}
+          onClick={() => scroll(-1)}
+          disabled={!canLeft}
+          aria-label="Scroll logos left"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+
+        {/* The scroll viewport */}
+        <div className={styles.bar}>
+          {/* Fade masks on the edges to hint at overflow */}
+          <span
+            className={`${styles.fade} ${styles.fadeLeft}${canLeft ? ` ${styles.fadeVisible}` : ''}`}
+            aria-hidden="true"
+          />
+          <span
+            className={`${styles.fade} ${styles.fadeRight}${canRight ? ` ${styles.fadeVisible}` : ''}`}
+            aria-hidden="true"
+          />
+
+          {/* Scrollable logo track */}
+          <div
+            ref={trackRef}
+            className={styles.track}
+            role="list"
+            aria-label="Partner logos"
+          >
+            {PARTNERS.map((p) => {
+              const logoEl = (
+                <Image
+                  className={styles.logo}
+                  src={p.logo}
+                  alt={p.name}
+                  width={p.w}
+                  height={p.h}
+                  sizes="(max-width: 767px) 100px, 140px"
+                />
+              );
+
+              return (
+                <div key={p.name} className={styles.item} role="listitem">
+                  {p.href ? (
+                    <a
+                      className={styles.logoWrap}
+                      href={p.href}
+                      target="_blank"
+                      rel="noopener"
+                      title={p.name}
+                    >
+                      {logoEl}
+                    </a>
+                  ) : (
+                    <div className={styles.logoWrap} title={p.name}>
+                      {logoEl}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-        {/* Always rendered — the mobile belt drifts even when the desktop one
-            does not. CSS hides them on a static desktop row. */}
-        <span className={styles.fadeL} aria-hidden="true" />
-        <span className={styles.fadeR} aria-hidden="true" />
+
+        {/* Right chevron */}
+        <button
+          type="button"
+          className={`${styles.navBtn} ${styles.navBtnRight}`}
+          onClick={() => scroll(1)}
+          disabled={!canRight}
+          aria-label="Scroll logos right"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
       </div>
     </section>
   );

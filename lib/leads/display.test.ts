@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  answerFor, csvCell, csvRow, formatDate, orderedAnswers, questionFor, unknownRawKeys,
+  answerFor, csvCell, csvRow, formatDate, formatUtm, orderedAnswers, questionFor, unknownRawKeys,
 } from './display';
 
 describe('unknownRawKeys', () => {
@@ -104,5 +104,29 @@ describe('csv escaping', () => {
 
   it('round-trips a whole row', () => {
     expect(csvRow(['Ada', 'a, b', null, 'say "hi"'])).toBe('Ada,"a, b",,"say ""hi"""');
+  });
+});
+
+describe('formatUtm', () => {
+  it('reads as the query string somebody actually set up', () => {
+    expect(formatUtm({ utm_source: 'linkedin', utm_campaign: 'q3' }))
+      .toBe('utm_source=linkedin · utm_campaign=q3');
+  });
+
+  it('treats a lead with no campaign as absent, not blank', () => {
+    // null is the contract: the strip prints its own "None", and an empty
+    // string would render as a label with nothing beside it.
+    expect(formatUtm(null)).toBeNull();
+    expect(formatUtm(undefined)).toBeNull();
+    expect(formatUtm({})).toBeNull();
+  });
+
+  it('drops keys that arrived empty rather than printing utm_term=', () => {
+    expect(formatUtm({ utm_source: 'li', utm_term: '', utm_medium: '  ' }))
+      .toBe('utm_source=li');
+  });
+
+  it('is absent when every key arrived empty', () => {
+    expect(formatUtm({ utm_source: '', utm_term: '' })).toBeNull();
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ROLES, canDelete, canEditContent, canEditLeads, canEditRates, canInvite,
-  canManageUsers, canUnpublishContent, canViewLeads, isRole,
+  ROLES, canDelete, canDeleteFaqItem, canEditContent, canEditLeads, canEditRates,
+  canInvite, canManageUsers, canUnpublishContent, canViewLeads, isRole,
 } from './roles';
 
 describe('isRole', () => {
@@ -83,6 +83,18 @@ describe('content capabilities', () => {
     // record of what the site once claimed.
     for (const role of ROLES) {
       expect(canUnpublishContent(role), role).toBe(true);
+      expect(canDelete(role), role).toBe(false);
+    }
+  });
+
+  it('lets both roles remove a FAQ draft, without widening canDelete', () => {
+    // The narrow exception: an unpublished question is not a record of
+    // anything the site told anybody, and the Add question screen writes each
+    // one to the database as you go. The published check that keeps this
+    // narrow lives in deleteFaqItem, not here — this only says who may reach
+    // it, and it must not leak back into the account rule above.
+    for (const role of ROLES) {
+      expect(canDeleteFaqItem(role), role).toBe(true);
       expect(canDelete(role), role).toBe(false);
     }
   });

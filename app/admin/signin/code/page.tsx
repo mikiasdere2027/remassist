@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { isAllowedEmail } from '@/lib/auth/allowlist';
 import { CODE_LENGTH, CODE_TTL_SEC } from '@/lib/auth/code';
+import { PENDING_EMAIL_COOKIE, VERIFY_PENDING_COOKIE } from '@/lib/auth/verify';
 import styles from '../../admin.module.css';
 
 /**
@@ -38,9 +39,6 @@ export async function generateMetadata() {
 
 const MINUTES = Math.round(CODE_TTL_SEC / 60);
 
-/** Written by the settings screen alongside a verification email. */
-const VERIFY_PENDING_COOKIE = 'admin-verify-pending';
-
 export default async function SignInCodePage({
   searchParams,
 }: {
@@ -62,7 +60,7 @@ export default async function SignInCodePage({
   if (!verifying && isAllowedEmail(session?.user?.email)) redirect('/admin/leads');
 
   /* Set when the code was requested, so nobody types their address twice. */
-  const pending = jar.get('admin-signin-email')?.value ?? '';
+  const pending = jar.get(PENDING_EMAIL_COOKIE)?.value ?? '';
 
   return (
     <div className={styles.signinWrap}>
@@ -97,7 +95,7 @@ export default async function SignInCodePage({
                 id="code-email"
                 name="email"
                 type="email"
-                placeholder="you@remconnect.io"
+                placeholder="you@remassistance.com"
                 autoComplete="email"
                 required
               />

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { pageOg } from '@/lib/site';
 import { publishedPosts } from '@/lib/blog/content';
+import { formatPostDate } from '@/lib/blog/display';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
@@ -33,15 +34,6 @@ export const metadata: Metadata = {
  * the JSON-LD already use.
  */
 export const revalidate = 3600;
-
-/** "Aug 6, 2026", matching what the cards printed before. */
-function formatDate(iso: string): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
-  });
-}
 
 /* The grid's three thumbnail gradients, cycled so any number of posts renders. */
 const GRADIENTS = ['g1', 'g2', 'g3'] as const;
@@ -87,7 +79,7 @@ export default async function Page() {
                     <div>
                       <div className={styles['who']}>{featured.author.name}</div>
                       <div className={styles['when']}>
-                        {formatDate(featured.date)} · {featured.readTime}
+                        {formatPostDate(featured.date)} · {featured.readTime}
                       </div>
                     </div>
                     <span className={styles['read']}>
@@ -145,7 +137,7 @@ export default async function Page() {
                       <div>
                         <div className={styles['who']}>{p.author.name}</div>
                         <div className={styles['when']}>
-                          {formatDate(p.date)} · {p.readTime}
+                          {formatPostDate(p.date)} · {p.readTime}
                         </div>
                       </div>
                       <span className={styles['read']}>Read more</span>

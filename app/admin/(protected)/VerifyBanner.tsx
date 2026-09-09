@@ -1,39 +1,35 @@
 import { sendVerificationEmail } from './settings/actions';
 import type { AdminUser } from '@/lib/auth/require';
+import { hoursToVerify, verifyState } from '@/lib/auth/verify';
 import styles from '../admin.module.css';
 
 /**
- * "Your email is not verified yet" — MIGRATION-PLAN §10, phase 5.
+ * "Confirm your email address" — MIGRATION-PLAN §10, phase 5.
  *
- * Warn-only, and that is a decision rather than an omission. Verification
- * depends on email delivery, which is the very thing that was broken when this
- * work started — a hard block would brick the only admin account with no
- * recovery short of direct SQL. Making it a block later is one guard in
- * requireUser(), and it should only go in after a real sign-in email has been
- * seen to arrive in production.
+ * No longer warn-only. The deadline in lib/auth/verify.ts locks the account a
+ * day after the row is created, so this banner is the notice period rather than
+ * the whole control, and its job changed with it: it has to say what happens
+ * and when, not merely ask.
  *
- * It does grow more insistent after a week, so it cannot be ignored forever
- * without anyone noticing.
+ * A banner that asks is one people scroll past. A banner that says "16 hours
+ * left, then this account is locked" is one they act on — and the point of
+ * showing the number rather than the deadline is that nobody has to work out
+ * what a timestamp means relative to now.
+ *
+ * A locked account never sees this: requireUser has already sent it to
+ * /admin/verify, which is this banner's argument made in full.
  */
 
-/**
- * A week's grace before the banner turns insistent.
- *
- * It was a day, which was the wrong number for the situation it actually
- * describes: verification needs working email, and email is the thing that has
- * not worked in this deployment yet. A red banner on day two blames the person
- * for something they cannot fix, and a warning that appears when nothing can be
- * done about it is a warning people learn to scroll past — which then costs
- * nothing when it fires for a real reason.
- *
- * It still never blocks. Only the tone changes.
- */
-const LOUD_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
+/** The last stretch, where the tone changes from notice to warning. */
+const LOUD_UNDER_HOURS = 6;
 
 export default function VerifyBanner({ user }: { user: AdminUser }) {
-  if (user.emailVerified) return null;
+  /* Verified needs no banner, and locked never reaches this layout — the only
+     state this renders for is the grace window. */
+  if (verifyState(user) !== 'pending') return null;
 
-  const loud = Date.now() - user.createdAt.getTime() > LOUD_AFTER_MS;
+  const hours = hoursToVerify(user);
+  const loud = hours <= LOUD_UNDER_HOURS;
 
   return (
     <div
@@ -42,20 +38,25 @@ export default function VerifyBanner({ user }: { user: AdminUser }) {
     >
       <div>
         <strong>
-          {loud ? 'Your email address is still unverified' : 'Verify your email address'}
+          {loud
+            ? `${hours} ${hours === 1 ? 'hour' : 'hours'} left to confirm your email address`
+            : 'Confirm your email address'}
         </strong>
         <span>
           {loud
-            ? `This account has been unverified for more than a week. Nothing is blocked, but
-               an unverified address cannot receive a sign-in code — which is the only way
-               back in if the password is ever lost.`
-            : `We will email you a code. Entering it confirms the address can actually
-               receive mail, which is what makes password recovery possible.`}
+            ? `When the time runs out this account is locked out of the admin until the
+               address is confirmed. Nothing is lost — the code below unlocks it — but
+               anything you are part-way through will have to wait.`
+            : `We will email you a code. Entering it proves the address can receive mail,
+               which is what makes password recovery possible. ${hours} hours from now an
+               unconfirmed account is locked until it is done.`}
         </span>
       </div>
       <form action={sendVerificationEmail}>
+        {/* A failed send belongs back on the screen that asked for it. */}
+        <input type="hidden" name="returnTo" value="settings" />
         <button className={`${styles.btn} ${styles.btnGhost}`} type="submit">
-          Send verification email
+          Send activation code
         </button>
       </form>
     </div>

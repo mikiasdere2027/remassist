@@ -14,7 +14,7 @@ const CREATED = new Date('2026-08-01T09:00:00Z');
 function row(over: Partial<UserRow> = {}): UserRow {
   return {
     id: 'u1',
-    email: 'boss@remconnect.io',
+    email: 'boss@remassistance.com',
     name: 'Boss',
     role: 'admin',
     emailVerified: null,
@@ -27,10 +27,10 @@ function row(over: Partial<UserRow> = {}): UserRow {
 
 describe('authorise, when it allows', () => {
   it('returns the admin for a live row on a company domain', () => {
-    const user = authorise('boss@remconnect.io', row());
+    const user = authorise('boss@remassistance.com', row());
     expect(user).toEqual({
       id: 'u1',
-      email: 'boss@remconnect.io',
+      email: 'boss@remassistance.com',
       name: 'Boss',
       role: 'admin',
       emailVerified: null,
@@ -43,29 +43,34 @@ describe('authorise, when it allows', () => {
     // requireRole and assertRole enforce. This function only says who they are;
     // conflating the two is how a page ends up being the only thing standing
     // between a manager and an admin-only action.
-    expect(authorise('m@remconnect.io', row({ role: 'manager' }))?.role).toBe('manager');
+    expect(authorise('m@remassistance.com', row({ role: 'manager' }))?.role).toBe('manager');
   });
 
-  it('allows an unverified account', () => {
-    // Phase 5 is warn-only. Verification depends on email delivery, and a hard
-    // block would brick the only admin account with no recovery short of SQL.
-    expect(authorise('boss@remconnect.io', row({ emailVerified: null }))).not.toBeNull();
-  });
-
-  it('accepts the other company domain', () => {
-    const r = row({ email: 'boss@remassistance.com' });
-    expect(authorise('boss@remassistance.com', r)).not.toBeNull();
+  it('allows an unverified account — the activation deadline is not decided here', () => {
+    // Unverified is now enforced, but one layer up: authorise says who this
+    // request is, and requireUser/assertUser apply the deadline in
+    // lib/auth/verify.ts. Keeping them apart is what lets /admin/verify resolve
+    // the very account it exists to unlock, which a denial here would make
+    // impossible.
+    expect(authorise('boss@remassistance.com', row({ emailVerified: null }))).not.toBeNull();
   });
 });
 
 describe('authorise, when it denies', () => {
+  it('refuses an address off the company domain even with a live row', () => {
+    // The outer fence, and it earns its keep now that the allowlist is one
+    // domain: the @remconnect.io rows created before 2026-09-09 are still in
+    // the users table, live and undisabled, and this is what refuses them.
+    const r = row({ email: 'boss@remconnect.io' });
+    expect(authorise('boss@remconnect.io', r)).toBeNull();
+  });
   it('denies with no row at all — which is also the no-database case', () => {
     // currentUser passes undefined both when the query found nothing and when
     // there is no DATABASE_URL to query. Failing CLOSED is structural here
     // rather than a branch somebody has to remember, and it is the opposite of
     // lib/auth/attempts.ts on purpose: failing open there means "do not
     // throttle", failing open here would mean "everyone is an admin".
-    expect(authorise('boss@remconnect.io', undefined)).toBeNull();
+    expect(authorise('boss@remassistance.com', undefined)).toBeNull();
     expect(authorise(null, undefined)).toBeNull();
   });
 
@@ -74,12 +79,12 @@ describe('authorise, when it denies', () => {
     // setting disabledAt, and it is checked on every request, so a disabled
     // person loses access immediately rather than at their next sign-in.
     const disabled = row({ disabledAt: new Date('2026-08-20T00:00:00Z') });
-    expect(authorise('boss@remconnect.io', disabled)).toBeNull();
+    expect(authorise('boss@remassistance.com', disabled)).toBeNull();
   });
 
   it('denies a disabled admin too, not just a disabled manager', () => {
     const disabled = row({ role: 'admin', disabledAt: new Date() });
-    expect(authorise('boss@remconnect.io', disabled)).toBeNull();
+    expect(authorise('boss@remassistance.com', disabled)).toBeNull();
   });
 
   it('denies an address off a company domain even when a row exists', () => {
@@ -94,7 +99,7 @@ describe('authorise, when it denies', () => {
     // A role nobody wrote on purpose is a row nobody should be trusting. The
     // near-misses matter: 'administrator' and 'Admin' must not resolve.
     for (const role of ['', 'administrator', 'Admin', 'owner', 'superuser', 'root']) {
-      expect(authorise('boss@remconnect.io', row({ role })), role).toBeNull();
+      expect(authorise('boss@remassistance.com', row({ role })), role).toBeNull();
     }
   });
 
@@ -106,7 +111,7 @@ describe('authorise, when it denies', () => {
 
   it('checks disabled before role, so a disabled row with a bad role still denies', () => {
     const both = row({ role: 'nonsense', disabledAt: new Date() });
-    expect(authorise('boss@remconnect.io', both)).toBeNull();
+    expect(authorise('boss@remassistance.com', both)).toBeNull();
   });
 });
 
@@ -114,8 +119,8 @@ describe('authorise never leaks the password hash', () => {
   it('reports only whether one is set', () => {
     // The hash must not reach a server-component payload or a log. hasPassword
     // is what the settings screen needs to choose between "set" and "change".
-    const withPw = authorise('boss@remconnect.io', row({ passwordHash: 'scrypt$...' }));
-    const without = authorise('boss@remconnect.io', row({ passwordHash: null }));
+    const withPw = authorise('boss@remassistance.com', row({ passwordHash: 'scrypt$...' }));
+    const without = authorise('boss@remassistance.com', row({ passwordHash: null }));
 
     expect(withPw?.hasPassword).toBe(true);
     expect(without?.hasPassword).toBe(false);
@@ -124,7 +129,7 @@ describe('authorise never leaks the password hash', () => {
   });
 
   it('returns no disabledAt either — the caller has no use for it', () => {
-    expect(Object.keys(authorise('boss@remconnect.io', row())!)).toEqual([
+    expect(Object.keys(authorise('boss@remassistance.com', row())!)).toEqual([
       'id', 'email', 'name', 'role', 'emailVerified', 'createdAt', 'hasPassword',
     ]);
   });

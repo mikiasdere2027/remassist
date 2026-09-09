@@ -5,8 +5,11 @@ import { reviewSources, reviews } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canEditContent } from '@/lib/auth/roles';
 import { SOURCE_LABEL, Stars, initials } from './display';
-import { addReview, saveReviewSource, setReviewPublished } from './actions';
+import { saveReviewSource, setReviewPublished } from './actions';
 import { reviewMessage } from './messages';
+import ReviewRowMenu from './RowMenu';
+import InfoTooltip from '../../InfoTooltip';
+import AdminTopbar from '../../AdminTopbar';
 import styles from '../../../admin.module.css';
 
 /**
@@ -45,10 +48,11 @@ import styles from '../../../admin.module.css';
  *  - The mockup called the screen read-only. It is not, and that is a decision
  *    taken against MIGRATION-PLAN §6.5, which specified no create or edit path
  *    at all. What §6.5 was protecting against — a general-purpose CMS box that
- *    makes fabricating a testimonial easy — is answered instead by saying on
- *    the page what these fields are for, by keeping every source link required
- *    and resolvable, and by never deleting. Somebody has to be able to fix a
- *    transcription error, and doing it by hand in SQL is not safer.
+ *    makes fabricating a testimonial easy — is answered instead by saying, in
+ *    the list head’s ⓘ, what these fields are for, by keeping every source
+ *    link required and resolvable, and by never deleting. Somebody has to be
+ *    able to fix a transcription error, and doing it by hand in SQL is not
+ *    safer.
  *  - The second row action hides rather than deletes. Content on this site is
  *    taken off the page and kept — see canUnpublishContent in
  *    lib/auth/roles.ts. It matters more here than anywhere else: a review that
@@ -71,7 +75,7 @@ const SOURCES_TAB = 'sources';
 export default async function ReviewsListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string; tab?: string; add?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; tab?: string }>;
 }) {
   const [user, sp] = await Promise.all([requireUser(), searchParams]);
   const message = reviewMessage(sp.ok, sp.error);
@@ -80,7 +84,7 @@ export default async function ReviewsListPage({
   if (!isDatabaseConfigured()) {
     return (
       <>
-        <Topbar sub="Database not configured" />
+        <Topbar sub="Database not configured" mayEdit={mayEdit} />
         <div className={styles.view}>
           <div className={styles.notice}>
             <strong>No database configured</strong>
@@ -112,15 +116,14 @@ export default async function ReviewsListPage({
   const source = sources.find((s) => s.source === tab);
   const items = rows.filter((r) => r.source === tab);
   const live = items.filter((r) => r.published).length;
-  const adding = mayEdit && !onSources && sp.add === '1';
 
-  const href = (next: string, add?: '1') =>
-    `/admin/content/reviews?tab=${next}${add ? '&add=1' : ''}`;
+  const href = (next: string) => `/admin/content/reviews?tab=${next}`;
 
   return (
     <>
       <Topbar
         sub={`${rows.length} reviews, ${rows.filter((r) => r.published).length} live`}
+        mayEdit={mayEdit}
       />
 
       <div className={styles.view}>
@@ -132,17 +135,6 @@ export default async function ReviewsListPage({
             {message.text}
           </p>
         )}
-
-        <div className={`${styles.notice} ${styles.section}`}>
-          <strong>These are other people&rsquo;s words</strong>
-          Every review here was written by a named person on Trustpilot or Google. The fields
-          behind Edit are for correcting a transcription error, not for improving the wording — a
-          review that does not match its source is a fabricated testimonial. Hide one to take it
-          off the page; nothing here deletes.
-          <br />
-          <code>/reviews</code> reads from the database, and saving revalidates it, so a
-          correction is visible to visitors straight away.
-        </div>
 
         <div className={styles.filterbar}>
           <div className={styles.filterPills} role="group" aria-label="Choose a review source">
@@ -159,15 +151,6 @@ export default async function ReviewsListPage({
                 of tabs to its left. */}
             <Tab href={href(SOURCES_TAB)} on={onSources} label="Sources" />
           </div>
-
-          {mayEdit && !onSources && (
-            <Link
-              className={`${styles.btn} ${styles.btnGhost} ${styles.filterEnd}`}
-              href={adding ? href(tab) : href(tab, '1')}
-            >
-              {adding ? 'Cancel' : '+ Add review'}
-            </Link>
-          )}
         </div>
 
         {onSources ? (
@@ -183,6 +166,16 @@ export default async function ReviewsListPage({
                   Rated {source?.ratingLabel} · {items.length} transcribed, {live} live
                 </p>
               </div>
+              {/* What used to be a standing notice above the filter bar. What it
+                  warns about is the fields behind Edit, and as a block on the
+                  page it was read once and then scrolled past on every visit
+                  after that, while pushing the list it applies to off the first
+                  screen. Behind the head’s ⓘ it is one click from that list. */}
+              <InfoTooltip
+                text="These are other people’s words, transcribed by hand from Trustpilot or Google. The fields behind Edit are for correcting a transcription error, not for improving the wording — a review that does not match its source is a fabricated testimonial. Hide one to take it off the page; nothing here deletes."
+                position="bottom-left"
+                maxWidth={300}
+              />
             </div>
 
             {/* The footnote is the caveat the public cards are read against —
@@ -192,82 +185,10 @@ export default async function ReviewsListPage({
                 Sources tab where it is edited. */}
             {source?.footnote && <p className={styles.panelIntro}>{source.footnote}</p>}
 
-            {/* Revealed by the filter bar's own button rather than always
-                present: an add-form per source is part of what made the old
-                page long, and the source is the tab you are standing on. */}
-            {adding && (
-              <form className={styles.stackWide} action={addReview}>
-                <input type="hidden" name="source" value={tab} />
-                <div className={styles.inviteRow} style={{ padding: 0 }}>
-                  <div className={`${styles.field} ${styles.grow}`}>
-                    <label className={styles.fieldLabel} htmlFor="nau">
-                      Author, as {SOURCE_LABEL[tab] ?? tab} prints it
-                    </label>
-                    <input
-                      className={styles.control}
-                      id="nau"
-                      name="author"
-                      maxLength={200}
-                      required
-                      autoFocus
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.fieldLabel} htmlFor="ndt">Date</label>
-                    <input
-                      className={styles.control}
-                      id="ndt"
-                      name="dateText"
-                      maxLength={200}
-                      required
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.fieldLabel} htmlFor="nra">Rating</label>
-                    <input
-                      className={styles.control}
-                      id="nra"
-                      name="rating"
-                      type="number"
-                      min={1}
-                      max={5}
-                      defaultValue={5}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel} htmlFor="nbd">
-                    Review text, copied verbatim from {SOURCE_LABEL[tab] ?? tab}
-                  </label>
-                  <textarea
-                    className={styles.textarea}
-                    id="nbd"
-                    name="body"
-                    rows={4}
-                    maxLength={4000}
-                    required
-                  />
-                </div>
-                <div className={styles.rowActions} style={{ padding: 0 }}>
-                  <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit">
-                    Add review
-                  </button>
-                  <span className={styles.panelNote}>
-                    {/* The meta line and the Trustpilot headline are on the
-                        edit page. Three fields and the quote is what it takes
-                        to have a row at all; the rest is easier to fill in
-                        beside the original once the row exists. */}
-                    Added hidden, so you can check it against the original first
-                  </span>
-                </div>
-              </form>
-            )}
-
             {items.length === 0 ? (
               <p className={styles.empty}>
                 <strong>No {SOURCE_LABEL[tab] ?? tab} reviews yet</strong>
-                Use &ldquo;Add review&rdquo; above to transcribe the first one.
+                Use the &ldquo;Add review&rdquo; button above to transcribe the first one.
               </p>
             ) : (
               items.map((r) => (
@@ -297,45 +218,13 @@ export default async function ReviewsListPage({
                   </div>
 
                   {mayEdit && (
-                    <div className={styles.reviewActions}>
-                      <Link
-                        className={styles.iconBtn}
-                        href={`/admin/content/reviews/${r.id}`}
-                        aria-label={`Edit the review by ${r.author}`}
-                      >
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
-                        </svg>
-                      </Link>
-
-                      <form action={setReviewPublished}>
-                        <input type="hidden" name="id" value={r.id} />
-                        <input type="hidden" name="published" value={r.published ? '0' : '1'} />
-                        <button
-                          className={styles.iconBtn}
-                          type="submit"
-                          aria-label={
-                            r.published
-                              ? `Hide the review by ${r.author} from the reviews page`
-                              : `Show the review by ${r.author} on the reviews page`
-                          }
-                        >
-                          {r.published ? (
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path d="M3 3l18 18" />
-                              <path d="M10.6 5.1A9.9 9.9 0 0 1 12 5c5 0 9 4.5 9 7 0 .8-.5 1.9-1.4 3" />
-                              <path d="M6.3 6.9C3.9 8.4 3 10.4 3 12c0 2.5 4 7 9 7 1.6 0 3-.4 4.2-1" />
-                            </svg>
-                          ) : (
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          )}
-                        </button>
-                      </form>
-                    </div>
+                    <ReviewRowMenu
+                      id={r.id}
+                      author={r.author}
+                      published={r.published}
+                      show={setReviewPublished}
+                      hide={setReviewPublished}
+                    />
                   )}
                 </div>
               ))
@@ -388,14 +277,23 @@ function SourcesTab({
                   What the reviews page prints above the {label} cards
                 </p>
               </div>
-              <a
-                className={styles.rowLink}
-                href={s.url}
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                Open the profile ↗
-              </a>
+              {/* Grouped with the link so the head keeps two items: title on
+                  the left, what-and-where on the right. */}
+              <span className={styles.panelHeadNote}>
+                <a
+                  className={styles.rowLink}
+                  href={s.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  Open the profile ↗
+                </a>
+                <InfoTooltip
+                  text="These are the figures the source publishes, not our summary of the cards — the score worded as it words it, and the footnote every card is read against. The profile link has to resolve: a testimonial citing a source nobody can follow is just a claim."
+                  position="bottom-left"
+                  maxWidth={300}
+                />
+              </span>
             </div>
 
             <form className={styles.stackWide} action={saveReviewSource}>
@@ -461,7 +359,7 @@ function SourcesTab({
               </div>
               {mayEdit && (
                 <div className={styles.rowActions} style={{ padding: 0 }}>
-                  <button className={`${styles.btn} ${styles.btnGhost}`} type="submit">
+                  <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit">
                     Save {label} details
                   </button>
                 </div>
@@ -493,15 +391,22 @@ function Tab({ href, on, label, count }: {
   );
 }
 
-function Topbar({ sub }: { sub: string }) {
+function Topbar({ sub, mayEdit }: { sub: string; mayEdit: boolean }) {
   return (
-    <header className={styles.topbar}>
-      <div className={styles.tbInner}>
-        <div>
-          <h1 className={styles.tbTitle}>Reviews</h1>
-          <p className={styles.tbSub}>{sub}</p>
-        </div>
-      </div>
-    </header>
+    <AdminTopbar
+      title="Reviews"
+      subtitle={sub}
+      action={
+        mayEdit ? (
+          <Link href="/admin/content/reviews/new" className={styles.btnHeader}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add review
+          </Link>
+        ) : undefined
+      }
+    />
   );
 }

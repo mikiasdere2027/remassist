@@ -44,7 +44,10 @@ const KEYLEN = 64;
 const MAXMEM = 64 * 1024 * 1024;
 const MIN_LENGTH = 12;
 
-const ALLOWED = ['@remconnect.io', '@remassistance.com'];
+/* Mirrors lib/auth/allowlist.ts. Narrowed to one domain on 2026-09-09; keep
+   the two in step or this script will set a password on a row the running app
+   refuses to authorise. */
+const ALLOWED = ['@remassistance.com'];
 
 function fail(msg) {
   console.error(`\n  ${msg}\n`);

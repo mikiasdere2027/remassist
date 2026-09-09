@@ -59,10 +59,10 @@ export async function publishedPosts(): Promise<Post[]> {
  */
 export async function postBySlug(
   slug: string,
-): Promise<{ post: Post; body: string | null } | null> {
+): Promise<{ post: Post; body: string | null; articleLayout: string | null } | null> {
   if (!isDatabaseConfigured()) {
     const p = seed.posts.find((x) => x.slug === slug && x.published);
-    return p ? { post: toPost(p), body: null } : null;
+    return p ? { post: toPost(p), body: p.body ?? null, articleLayout: (p as { articleLayout?: string }).articleLayout ?? null } : null;
   }
   const [row] = await getDb()
     .select()
@@ -71,7 +71,7 @@ export async function postBySlug(
        by anyone who guesses the slug — a draft is not a soft-launch. */
     .where(and(eq(posts.slug, slug), eq(posts.published, true)))
     .limit(1);
-  return row ? { post: toPost(row), body: row.body } : null;
+  return row ? { post: toPost(row), body: row.body, articleLayout: row.articleLayout } : null;
 }
 
 /**

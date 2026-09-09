@@ -1,6 +1,5 @@
-'use client';
-
-import { useState, type ReactNode } from 'react';
+import { getFeaturedFaq } from '@/lib/faq/content';
+import FaqAccordion from './FaqAccordion';
 import shared from './HomeSections.module.css';
 import styles from './FaqSection.module.css';
 
@@ -15,58 +14,12 @@ import styles from './FaqSection.module.css';
  * The artboard's "Verify Here" pill is deliberately not reproduced: its href
  * in index.html is "#", so it links nowhere. It goes back in as soon as there
  * is a real certificate-registry URL to point it at.
+ *
+ * The four questions used to be a constant in this file, which made the one FAQ
+ * most visitors read the one nobody could edit. They are faq_items now, starred
+ * for the homepage in the admin — see getFeaturedFaq and the `featured` column.
+ * A question therefore exists once: correcting it here corrects /faq too.
  */
-const ROLES = [
-  'Executive Assistants',
-  'Bookkeepers / AP–AR',
-  'Operations Associates',
-  'Customer Support',
-  'Sales (SDRs)',
-  'Data Entry / Reporting',
-  'Marketing Assistants',
-];
-
-const FAQS: { q: string; a: ReactNode }[] = [
-  {
-    q: 'What types of roles can I fill offshore?',
-    a: (
-      <>
-        <p className={styles.a} style={{ paddingBottom: 14 }}>We specialize in remote hires for:</p>
-        <span className={styles.chips}>
-          {ROLES.map((c) => <span key={c} className={styles.chip}>{c}</span>)}
-        </span>
-      </>
-    ),
-  },
-  {
-    q: 'What if I don’t like any of the candidates?',
-    a: (
-      <p className={styles.a}>
-        No problem. If none of the vetted candidates feel like a fit, <b>you don’t pay anything</b>.
-        We’ll keep looking or part ways — no strings attached.
-      </p>
-    ),
-  },
-  {
-    q: 'How quickly can they start?',
-    a: (
-      <p className={styles.a}>
-        Most roles are filled within <b>7 to 21 days</b>. Once you choose a candidate, they can
-        typically start within a few business days.
-      </p>
-    ),
-  },
-  {
-    q: 'Do I have to pay upfront?',
-    a: (
-      <p className={styles.a}>
-        No. <b>You only pay if you hire.</b> There are no upfront fees or hidden costs — zero risk
-        until you find the right match.
-      </p>
-    ),
-  },
-];
-
 const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
 
 /** One ISO seal. `id` namespaces the gradients and text paths so the two
@@ -110,9 +63,8 @@ function Seal({ id, standard }: { id: string; standard: string }) {
   );
 }
 
-export default function FaqSection() {
-  // index.html starts at faqOpen: -1 — every row closed.
-  const [open, setOpen] = useState<number | null>(null);
+export default async function FaqSection() {
+  const faqs = await getFeaturedFaq();
 
   return (
     // id is a link target: /case-studies links to /#faq, as index.html did.
@@ -158,30 +110,7 @@ export default function FaqSection() {
               <a href={BOOK} target="_blank" rel="noopener">Chat with us.</a>
             </p>
 
-            <div className={styles.list}>
-              {FAQS.map((f, i) => {
-                const isOpen = open === i;
-                return (
-                  <div key={f.q} className={styles.item}>
-                    <button
-                      type="button"
-                      aria-expanded={isOpen}
-                      aria-controls={`faq-panel-${i}`}
-                      onClick={() => setOpen(isOpen ? null : i)}
-                      className={styles.q}
-                    >
-                      <span>{f.q}</span>
-                      <span className={styles.plus} aria-hidden="true" />
-                    </button>
-                    <div id={`faq-panel-${i}`} className={`${styles.panel} ${isOpen ? styles.panelOpen : ''}`}>
-                      <div className={styles.panelInner}>
-                        {f.a}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <FaqAccordion items={faqs} />
           </div>
         </div>
       </div>

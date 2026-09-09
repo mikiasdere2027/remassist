@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { desc, eq, isNull } from 'drizzle-orm';
+import { desc, eq, isNull, sql } from 'drizzle-orm';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { leads, quizSubmissions } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { answerFor, formatDate, orderedAnswers, questionFor } from '@/lib/leads/display';
 import styles from '../../admin.module.css';
+import AdminTopbar from '../AdminTopbar';
 import AnswerAccordion from './AnswerAccordion';
 
 /**
@@ -52,41 +53,50 @@ export default async function QuizzesPage({
   }
 
   const db = getDb();
-  const rows = await db
-    .select({
-      id: quizSubmissions.id,
-      createdAt: quizSubmissions.createdAt,
-      answers: quizSubmissions.answers,
-      result: quizSubmissions.result,
-      completed: quizSubmissions.completed,
-      leadId: quizSubmissions.leadId,
-      leadEmail: leads.email,
-      leadName: leads.name,
-    })
-    .from(quizSubmissions)
-    .leftJoin(leads, eq(quizSubmissions.leadId, leads.id))
-    .where(anonymousOnly ? isNull(quizSubmissions.leadId) : undefined)
-    .orderBy(desc(quizSubmissions.createdAt))
-    .limit(PAGE_SIZE);
+  const [rows, allCountRes, anonCountRes] = await Promise.all([
+    db
+      .select({
+        id: quizSubmissions.id,
+        createdAt: quizSubmissions.createdAt,
+        answers: quizSubmissions.answers,
+        result: quizSubmissions.result,
+        completed: quizSubmissions.completed,
+        leadId: quizSubmissions.leadId,
+        leadEmail: leads.email,
+        leadName: leads.name,
+      })
+      .from(quizSubmissions)
+      .leftJoin(leads, eq(quizSubmissions.leadId, leads.id))
+      .where(anonymousOnly ? isNull(quizSubmissions.leadId) : undefined)
+      .orderBy(desc(quizSubmissions.createdAt))
+      .limit(PAGE_SIZE),
+    db.select({ count: sql<number>`count(*)::int` }).from(quizSubmissions),
+    db.select({ count: sql<number>`count(*)::int` }).from(quizSubmissions).where(isNull(quizSubmissions.leadId)),
+  ]);
+
+  const totalCount = Number(allCountRes[0]?.count ?? 0);
+  const anonCount = Number(anonCountRes[0]?.count ?? 0);
 
   return (
     <>
-      <Topbar total={rows.length} anonymousOnly={anonymousOnly} />
+      <Topbar total={totalCount} anonymousOnly={anonymousOnly} />
 
       <div className={styles.view}>
-        <div className={styles.filters}>
-          <Link
-            className={`${styles.pagerLink} ${!anonymousOnly ? styles.pagerLinkOn : ''}`}
-            href="/admin/quizzes"
-          >
-            All submissions
-          </Link>
-          <Link
-            className={`${styles.pagerLink} ${anonymousOnly ? styles.pagerLinkOn : ''}`}
-            href="/admin/quizzes?only=anonymous"
-          >
-            No contact details
-          </Link>
+        <div className={styles.filterbar}>
+          <div className={styles.filterPills} role="group" aria-label="Filter fit finder submissions">
+            <Tab
+              href="/admin/quizzes"
+              on={!anonymousOnly}
+              label="All submissions"
+              count={totalCount}
+            />
+            <Tab
+              href="/admin/quizzes?only=anonymous"
+              on={anonymousOnly}
+              label="No contact details"
+              count={anonCount}
+            />
+          </div>
         </div>
 
         {rows.length === 0 ? (
@@ -125,13 +135,17 @@ export default async function QuizzesPage({
                   <span className={`${styles.panelNote} ${styles.panelHeadNote}`}>
                     <span className={styles.mono}>{formatDate(q.createdAt)}</span>
                     {!q.completed && <span className={styles.tag}>Partial</span>}
+                    {/* No · before it any more: the separator belongs between
+                        runs of text, and this is a button sitting beside one. */}
                     {q.leadId && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <Link className={styles.panelHeadLink} href={`/admin/leads/${q.leadId}`}>
-                          Open the lead
-                        </Link>
-                      </>
+                      <Link className={styles.panelHeadLink} href={`/admin/leads/${q.leadId}`}>
+                        <span>Open the lead</span>
+                        {/* Points at where the link goes — the lead record on
+                            its own page, not a panel that opens in place. */}
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M5 12h13M13 6l6 6-6 6" />
+                        </svg>
+                      </Link>
                     )}
                   </span>
                 </div>
@@ -206,19 +220,39 @@ function Quote({ label, value }: { label: string; value?: string | number }) {
 
 function Topbar({ total, anonymousOnly }: { total: number | null; anonymousOnly: boolean }) {
   return (
-    <header className={styles.topbar}>
-      <div className={styles.tbInner}>
-        <div>
-          <h1 className={styles.tbTitle}>Fit finder</h1>
-          <p className={styles.tbSub}>
-            {total === null
-              ? 'Database not configured'
-              : anonymousOnly
-                ? `${total} with no contact details`
-                : `${total} submissions`}
-          </p>
-        </div>
-      </div>
-    </header>
+    <AdminTopbar
+      title="Fit finder"
+      subtitle={
+        total === null
+          ? 'Database not configured'
+          : anonymousOnly
+            ? `${total} with no contact details`
+            : `${total} submissions`
+      }
+    />
   );
 }
+
+function Tab({
+  href,
+  on,
+  label,
+  count,
+}: {
+  href: string;
+  on: boolean;
+  label: string;
+  count?: number;
+}) {
+  return (
+    <Link
+      className={`${styles.fbtn} ${on ? styles.fbtnOn : ''}`}
+      href={href}
+      aria-current={on ? 'true' : undefined}
+    >
+      {label}
+      {count !== undefined && <span className={styles.fbtnCount}>{count}</span>}
+    </Link>
+  );
+}
+

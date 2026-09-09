@@ -11,6 +11,10 @@ export const FAQ_OK = {
   published: 'That question is live on the FAQ page.',
   unpublished: 'That question is off the FAQ page. Nothing was deleted — its wording is kept.',
   moved: 'Order updated.',
+  featured: 'That question is on the homepage.',
+  unfeatured: 'That question is off the homepage. It is still on the FAQ page.',
+  'featured-moved': 'Homepage order updated.',
+  removed: 'That draft question was removed.',
   'group-saved': 'Section saved.',
 } as const;
 
@@ -23,6 +27,10 @@ export const FAQ_ERR = {
   'bad-slug': 'A section anchor may only contain lowercase letters and hyphens — it is part of a URL.',
   'slug-taken': 'Another section already uses that anchor.',
   'group-not-empty': 'That section still holds questions. Move or unpublish them first.',
+  'not-confirmed': 'Nothing was removed — the confirmation was not ticked.',
+  'delete-published': 'A published question cannot be removed. Take it off the FAQ page first, then remove the draft.',
+  'featured-full': 'The homepage card holds six questions. Take one off before adding another.',
+  'not-featured': 'That question is not on the homepage, so there is nothing to reorder.',
 } as const;
 
 export function faqMessage(

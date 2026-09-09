@@ -15,102 +15,311 @@
   padding: 0 20px;
 }
 
-.head {
-  text-align: center;
-  margin-bottom: 28px;
+/* ---------- the banner card ---------- */
+/* --photoCol is declared once here and read by both rows below, so the trust
+   badge under the portrait stays in the same column as the portrait itself.
+   Two hard-coded widths would drift the first time either row is touched. */
+.banner {
+  --photoCol: 260px;
+  position: relative;
+  background:
+    radial-gradient(ellipse 460px 340px at 12% 40%, rgba(81, 141, 224, 0.2), transparent 72%),
+    linear-gradient(160deg, #02163e 0%, #010c22 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  padding: 0 34px 26px;
+  overflow: hidden;
+  box-shadow: 0 32px 70px -20px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-.title {
+.bannerMain {
+  display: grid;
+  grid-template-columns: var(--photoCol) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 36px;
+  min-height: 300px;
+}
+
+/* The portrait sits in its own column and is bottom-anchored, so she stands on
+   the divider rather than floating in the middle of the row. */
+.bannerPhoto {
+  position: relative;
+  align-self: stretch;
+  min-height: 300px;
+}
+
+/* object-fit: contain, never cover. Virtual-assitant.png is a real cutout —
+   578x922, four transparent corners — and `cover` would mask it into a
+   rectangle and draw a hard edge where the file has none. */
+.bannerImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(6px 4px 18px rgba(0, 5, 67, 0.6));
+}
+
+.bannerCopy {
+  padding: 30px 0;
+}
+
+.bannerTitle {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.15;
-  font-size: clamp(30px, 3.2vw, 42px);
+  line-height: 1.16;
+  font-size: clamp(28px, 3vw, 40px);
   color: #ffffff;
 }
 
-.title span {
+.bannerTitle span {
   color: var(--brand-blue);
 }
 
-.lede {
-  margin: 10px auto 0;
+.bannerLede {
+  margin: 14px 0 0;
   font-size: 15.5px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.78);
-  max-width: 68ch;
+  line-height: 1.62;
+  color: rgba(255, 255, 255, 0.74);
+  max-width: 46ch;
 }
 
-/* ---------- split container card ---------- */
-.card {
+/* The one call to action in the band. Sized like the reference's pill: wide
+   enough to read as the destination of the whole card, with the ring that
+   separates it from the panel gradient behind it. */
+.bannerBtn {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 250px;
+  padding: 20px 34px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: var(--brand-blue);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px -8px rgba(81, 141, 224, 0.7);
+  transition: background 160ms, transform 160ms, box-shadow 160ms;
+}
+
+.bannerBtn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px -8px rgba(81, 141, 224, 0.85);
+}
+
+.bannerBtn:active {
+  transform: scale(0.985);
+}
+
+.bannerBtn:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+.bannerRule {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.16) 22%, rgba(255, 255, 255, 0.16) 88%, rgba(255, 255, 255, 0.04));
+  margin-bottom: 22px;
+}
+
+.bannerFoot {
+  display: grid;
+  grid-template-columns: var(--photoCol) minmax(0, 1fr);
+  align-items: center;
+  gap: 18px 36px;
+}
+
+/* ---------- the three promises ---------- */
+.promises {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+
+.promise {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.promiseTick {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--brand-blue);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.promiseTick svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- trust block, under the portrait ---------- */
+/* Stacked, and deliberately without the pill chrome it used to carry. In the
+   old split card this sat across the full width of a 570px panel; here its
+   column is the portrait's 260px, and boxed-and-inline it wrapped to five
+   lines inside a border — a 107px-tall lump where the reference has a quiet
+   two-line caption. Avatars over text fits the same column in 70px. */
+.trustBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* flex: none — without it the avatars are the first thing squeezed when the
+   caption is long, and their -7px overlaps collapse them into one another. */
+.avatarStack {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.avatarImg {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid #000c26;
+  margin-left: -7px;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarImg:first-child {
+  margin-left: 0;
+}
+
+.trustText {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.trustText strong {
+  display: block;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+/* ---------- the dialog ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Declare `backdrop-filter` ALONE — with `-webkit-backdrop-filter` listed
+   after it, lightningcss collapses the pair and emits neither, which is how
+   BookingModal once shipped with no blur at all. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 5, 67, 0.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.visible .backdrop {
+  opacity: 1;
+}
+
+.dialog {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  width: min(1060px, 100%);
+  max-height: calc(100vh - 40px);
   background: #021235;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 22px;
   overflow: hidden;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 32px 70px -20px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 40px 90px -24px rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  transform: translateY(12px) scale(0.985);
+  transition: opacity 0.28s ease, transform 0.28s ease;
 }
 
-/* ---------- left dark column ---------- */
+.dialog:focus {
+  outline: none;
+}
+
+.visible .dialog {
+  opacity: 1;
+  transform: none;
+}
+
+.close {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  line-height: 1;
+  font-family: inherit;
+  color: var(--brand-navy);
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 5, 67, 0.18);
+  transition: background 150ms, color 150ms, border-color 150ms;
+}
+
+.close:hover {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+  color: #ffffff;
+}
+
+/* ---------- left dark column of the dialog ---------- */
 .leftCol {
   position: relative;
   background:
-    radial-gradient(ellipse 400px 300px at 15% 45%, rgba(81, 141, 224, 0.22), transparent 70%),
+    radial-gradient(ellipse 380px 300px at 20% 30%, rgba(81, 141, 224, 0.24), transparent 72%),
     linear-gradient(165deg, #02163e 0%, #010c22 100%);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.agentPhotoWrap {
-  position: absolute;
-  /* Pulled well left: at -8px her right shoulder and arm sat across the
-     three points, hiding 'Expert guidance' and 'Quick response' behind her.
-     -110px clears the copy entirely and leaves her reading as a figure at the
-     edge of the panel rather than one standing in the middle of the text. */
-  left: -110px;
-  bottom: 0;
-  top: 0;
-  /* Virtual-assitant.png is a real cutout — 578x922, 4 channels, all four
-     corners at alpha 0, 40% of it transparent. It must never be cropped: it is
-     already the shape it wants to be, and `cover` was masking a transparent
-     PNG into a rectangle and drawing a hard edge where the file has none.
-
-     76% of the column: at a 578/922 aspect that is the width she needs to reach
-     the full 663px height under `contain`. She overlaps the copy, which is the
-     point — z-index puts her in front and her own transparency lets the text
-     read through everywhere she is not. */
-  width: 76%;
-  display: block;
-  z-index: 3;
-  /* pointer-events: none is load-bearing now she is in front of the copy — a
-     transparent PNG still has a full-size box, and without this her empty half
-     would swallow every click and text selection in the column beneath. */
-  pointer-events: none;
-}
-
-
-.agentImg {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: bottom left;
-  filter: drop-shadow(8px 4px 18px rgba(0, 5, 67, 0.6));
+  overflow-y: auto;
 }
 
 .leftContent {
-  position: relative;
-  z-index: 2;
-  margin-left: 46%;
-  padding: 30px 30px 24px 14px;
+  padding: 34px 30px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
+  justify-content: center;
+  min-height: 100%;
   box-sizing: border-box;
 }
 
@@ -139,14 +348,13 @@
   height: 3px;
   background: var(--brand-blue);
   border-radius: 2px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .pointsList {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  margin-bottom: 20px;
 }
 
 .pointItem {
@@ -183,8 +391,6 @@
   margin-bottom: 5px;
 }
 
-/* Looser than the 1.5 it had: at 13.5px over a photograph, tight leading made
-   the two-line captions read as a block rather than as sentences. */
 .pointText p {
   margin: 0;
   font-size: 13.5px;
@@ -192,73 +398,7 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
-/* Bottom trust pill */
-/* Pulled left out of the text column. Inside it the badge was 240px wide and
-   the caption wrapped to four lines, interleaving with the avatars — the
-   reference runs it wide across the foot of the panel. The negative margin is
-   the offset .leftContent applies, so the badge starts where the photo's
-   lower body is rather than where the copy does. */
-.trustBadge {
-  /* Positioned against .leftCol, not .leftContent. z-index 4 only beats the
-     cutout's 3 because this element now lives outside the stacking context
-     .leftContent opens — inside it, 4 was resolved against its siblings and
-     the whole group still painted at the parent's 2, under her. */
-  position: absolute;
-  left: auto;
-  right: 22px;
-  bottom: 22px;
-  /* No `right`, so it sizes to its content — stretched edge to edge it read as
-     a bar across the panel rather than a chip sitting at her feet. */
-  max-width: calc(100% - 44px);
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 14px;
-  border-radius: 12px;
-  background: rgba(0, 5, 67, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
-
-/* flex: none — without it the avatars are the first thing squeezed when the
-   caption is long, and their -7px overlaps collapse them into one another. */
-.avatarStack {
-  display: flex;
-  align-items: center;
-  flex: none;
-}
-
-.avatarImg {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 1.5px solid #000c26;
-  margin-left: -7px;
-  object-fit: cover;
-  display: block;
-}
-
-.avatarImg:first-child {
-  margin-left: 0;
-}
-
-.trustText {
-  font-size: 12px;
-  line-height: 1.35;
-  color: rgba(255, 255, 255, 0.76);
-}
-
-.trustText strong {
-  display: block;
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 12.5px;
-  margin-bottom: 1px;
-}
-
-/* ---------- right white column ---------- */
+/* ---------- right form column of the dialog ---------- */
 .rightCol {
   /* A blue-tinted ground, not white. The fields are white; with a white panel
      behind them the whole side read as one flat sheet and the inputs vanished
@@ -268,6 +408,9 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  /* The scroller. The dialog is capped at the viewport, the left panel is
+     short, and this is the side that outgrows it. */
+  overflow-y: auto;
 }
 
 .rightEyebrow {
@@ -299,6 +442,15 @@
   color: var(--brand-navy);
   margin-bottom: 6px;
   letter-spacing: 0.01em;
+}
+
+/* The required marker. aria-hidden in the markup: `required` on the input is
+   what a screen reader announces, and a second "star" read out after every
+   label is noise, not information. */
+.req {
+  color: #dc2626;
+  font-weight: 700;
+  margin-left: 3px;
 }
 
 .input {
@@ -485,28 +637,64 @@ textarea.input {
   text-decoration: underline;
 }
 
-/* ---------- responsive ---------- */
-@media (max-width: 1024px) {
-  .card {
-    grid-template-columns: 1fr;
+/* ---------- responsive: banner ---------- */
+@media (max-width: 980px) {
+  /* The button drops under the copy rather than shrinking the copy to keep it
+     on the same row — below this width the three-column main leaves the lede
+     about twenty characters to wrap in. */
+  .bannerMain {
+    grid-template-columns: var(--photoCol) minmax(0, 1fr);
+    gap: 0 28px;
   }
-  .agentPhotoWrap {
+  /* The button now takes a second row, so the portrait has to span both or she
+     stops 68px short of the rule and floats with a gap under her feet.
+     `span 2`, not `1 / -1`: .bannerMain declares no grid-template-rows, so
+     every row here is implicit and -1 resolves back to the only explicit line
+     there is — line 1 — which silently collapses the span to nothing. */
+  .bannerPhoto {
+    grid-row: 1 / span 2;
+  }
+  .bannerBtn {
+    justify-self: start;
+    grid-column: 2;
+    min-width: 0;
+    margin-bottom: 30px;
+  }
+  .bannerCopy {
+    padding: 30px 0 18px;
+  }
+  .promises {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 720px) {
+  .banner {
+    --photoCol: 0px;
+    padding: 26px 22px;
+  }
+  /* The portrait is the first thing to go: at this width she is about 120px
+     wide and reads as an artefact rather than as a person. */
+  .bannerPhoto {
     display: none;
   }
-  .leftContent {
-    margin-left: 0;
-    padding: 28px 24px;
+  .bannerMain {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    gap: 0;
   }
-  /* Back into the flow: the photo is hidden below this breakpoint, so there is
-     nothing to paint over and an absolutely-placed badge would just sit on the
-     copy. */
-  .trustBadge {
-    position: static;
-    margin-top: 20px;
+  .bannerBtn {
+    grid-column: 1;
+    width: 100%;
+    padding: 17px 24px;
+    margin-bottom: 22px;
   }
-  .rightCol {
-    border-radius: 0 0 22px 22px;
-    padding: 28px 24px;
+  .bannerCopy {
+    padding: 0 0 20px;
+  }
+  .bannerFoot {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -514,6 +702,41 @@ textarea.input {
   .rail {
     padding: 48px 0 56px;
   }
+}
+
+/* ---------- responsive: dialog ---------- */
+@media (max-width: 900px) {
+  .overlay {
+    padding: 12px;
+  }
+  /* One column, and the DIALOG becomes the scroller. The two panels each
+     scrolling themselves is right side by side and wrong stacked — it gives
+     the visitor two scrollbars for one document. */
+  .dialog {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+  .leftCol {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-y: visible;
+  }
+  .leftContent {
+    padding: 28px 24px;
+    min-height: 0;
+  }
+  .rightCol {
+    overflow-y: visible;
+  }
+  .close {
+    top: 14px;
+    right: 14px;
+  }
+}
+
+@media (max-width: 600px) {
   .formGrid {
     grid-template-columns: 1fr;
   }
@@ -522,5 +745,8 @@ textarea.input {
   }
   .rightCol {
     padding: 22px 18px;
+  }
+  .pointsList {
+    gap: 16px;
   }
 }

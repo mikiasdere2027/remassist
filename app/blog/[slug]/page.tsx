@@ -1,20 +1,21 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { bodyBlocks, postBySlug, publishedPosts } from '@/lib/blog/content';
-import { hasLegacyBody } from '@/lib/blog/legacy-bodies';
+import { postBySlug, publishedPosts } from '@/lib/blog/content';
+import { cleanHtml } from '@/lib/content/sanitize';
+import { parseArticleLayout } from '@/lib/blog/article-layout';
+import { getFaqByIds } from '@/lib/faq/content';
 import { pageOg } from '@/lib/site';
 import { BlogPostingJsonLd } from '@/components/layout/JsonLd';
-import ArticleBody from './ArticleBody';
 import ArticleChrome from './ArticleChrome';
+import ArticleView from './ArticleView';
 
 /**
  * Blog post route. Statically generated from the published set, so an unwritten
  * or mistyped slug 404s rather than rendering the wrong article — the artboard
  * pointed all four index cards at the same body, which this replaces.
  *
- * Only one article has a body today (see ArticleBody). When Phase 03 moves
- * posts into Postgres, this route keeps its shape: swap postBySlug/publishedPosts
- * for queries and render the stored body.
+ * Posts are rendered from their stored rich-text body and optional structured
+ * article layout, so every public article uses the same CMS-backed template.
  */
 export async function generateStaticParams() {
   return (await publishedPosts()).map((p) => ({ slug: p.slug }));
@@ -69,25 +70,37 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { slug } = await params;
   const found = await postBySlug(slug);
   if (!found) notFound();
-  const { post, body } = found;
+  const { post, body, articleLayout } = found;
+  const layout = parseArticleLayout(articleLayout);
+  const existingFaq = await getFaqByIds(layout.existingFaqIds ?? []);
 
   return (
     <>
       <BlogPostingJsonLd post={post} />
-      {/* One article's body is still a component; everything else renders the
-          stored text. See lib/blog/legacy-bodies.ts for why that split exists
-          and why the set should shrink to nothing. */}
-      {hasLegacyBody(slug) ? (
-        <ArticleBody />
-      ) : (
-        <article className="bk-body">
-          {bodyBlocks(body ?? '').map((b, i) => (
-            b.type === 'h2'
-              ? <h2 key={i}>{b.text}</h2>
-              : <p key={i}>{b.text}</p>
-          ))}
-        </article>
-      )}
+      {/* What was here before was `<article className="bk-body">` holding just
+          the body HTML — no title, no cover, no byline, and a class with no CSS
+          behind it, so every post written in the admin published as unstyled
+          text under no headline. ArticleView is that page built from the row.
+
+          The stored markup was sanitized when it was saved; cleanHtml here is a
+          second pass, so a row that predates the editor still cannot inject
+          anything. It stays on this side of the component because ArticleView
+          also renders inside the admin, and sanitize-html is server-only. */}
+      <ArticleView
+          post={{
+            title: post.title,
+            excerpt: post.excerpt,
+            category: post.category,
+            date: post.date,
+            readTime: post.readTime,
+            image: post.image,
+            authorName: post.author.name,
+            authorAvatar: post.author.avatar,
+          }}
+          bodyHtml={cleanHtml(body ?? '')}
+          layout={layout}
+          existingFaq={existingFaq}
+        />
       {/* progress bar, mobile contents drawer, share buttons */}
       <ArticleChrome />
     </>

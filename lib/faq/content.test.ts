@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import seed from '@/db/content-seed.json';
+import { MAX_FEATURED, selectFeatured } from './content';
 
 /**
  * The build-time fallback's data.
@@ -26,7 +27,9 @@ import seed from '@/db/content-seed.json';
 describe('the FAQ seed that CI builds from', () => {
   it('has every group and question', () => {
     expect(seed.faqGroups).toHaveLength(6);
-    expect(seed.faqItems).toHaveLength(29);
+    // 29 imported from the old /faq page, plus the four the homepage used to
+    // hard-code in components/home/FaqSection.tsx.
+    expect(seed.faqItems).toHaveLength(33);
   });
 
   it('keeps the group blurbs and source links', () => {
@@ -53,8 +56,72 @@ describe('the FAQ seed that CI builds from', () => {
     }
   });
 
+  it('stocks the homepage card', () => {
+    // The homepage is prerendered by the same CI build. Without featured rows
+    // here it would fall back to the top of the FAQ — not broken, but not the
+    // four questions that were chosen for it either, and nobody would notice.
+    const featured = seed.faqItems.filter((i) => i.featured);
+    expect(featured).toHaveLength(4);
+    expect(featured.every((i) => i.published)).toBe(true);
+    expect(featured.length).toBeLessThanOrEqual(MAX_FEATURED);
+  });
+
+  it('gives the featured questions a position each', () => {
+    // Duplicates would leave the homepage order down to the page-order
+    // tiebreak, which is not what somebody arranging four questions meant.
+    const orders = seed.faqItems.filter((i) => i.featured).map((i) => i.featuredOrder);
+    expect(new Set(orders).size).toBe(orders.length);
+  });
+
   it('assigns every question to a group that exists', () => {
     const slugs = new Set(seed.faqGroups.map((g) => g.slug));
     for (const i of seed.faqItems) expect(slugs.has(i.groupSlug), i.groupSlug).toBe(true);
+  });
+});
+
+/**
+ * The homepage's selection rule.
+ *
+ * Pure, so this is the whole of it — no database, no fixtures beyond the four
+ * fields it reads. The fallback is the case worth the test: an editor
+ * unstarring the last question is an ordinary action, and it must not empty the
+ * homepage's FAQ card.
+ */
+describe('selectFeatured', () => {
+  const q = (id: string, featured: boolean, featuredOrder = 0) => ({ id, featured, featuredOrder });
+
+  it('takes the starred questions, in their own order', () => {
+    const picked = selectFeatured([
+      q('a', false),
+      q('b', true, 1),
+      q('c', false),
+      q('d', true, 0),
+    ]);
+    expect(picked.map((i) => i.id)).toEqual(['d', 'b']);
+  });
+
+  it('falls back to page order when nothing is starred', () => {
+    const picked = selectFeatured([q('a', false), q('b', false), q('c', false)], 2);
+    expect(picked.map((i) => i.id)).toEqual(['a', 'b']);
+  });
+
+  it('breaks a tie on page order rather than arbitrarily', () => {
+    // Two questions share a position until one of them is moved — the column
+    // default is 0 — so this is the state right after starring a second one.
+    const picked = selectFeatured([q('a', true), q('b', true), q('c', true)]);
+    expect(picked.map((i) => i.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('never returns more than the card holds', () => {
+    const many = Array.from({ length: 20 }, (_, i) => q(String(i), true, i));
+    expect(selectFeatured(many)).toHaveLength(MAX_FEATURED);
+    // Including down the fallback path, where the whole FAQ is the candidate list.
+    expect(selectFeatured(many.map((i) => ({ ...i, featured: false })))).toHaveLength(MAX_FEATURED);
+  });
+
+  it('does not reorder the list it was given', () => {
+    const rows = [q('a', true, 2), q('b', true, 1)];
+    selectFeatured(rows);
+    expect(rows.map((i) => i.id)).toEqual(['a', 'b']);
   });
 });

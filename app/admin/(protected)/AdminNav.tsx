@@ -21,8 +21,8 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
   const pathname = usePathname() ?? '';
 
   /**
-   * Prefix matching, so /admin/leads/<id> keeps Leads lit. Settings is matched
-   * exactly, otherwise it would also light up on its own /team child.
+   * Prefix matching, so /admin/leads/<id> keeps Leads lit (and
+   * /admin/settings/team keeps Account lit).
    *
    * Returns aria-current alongside the class because the active state is
    * carried visually by a colour and a left border, and neither reaches a
@@ -103,18 +103,28 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
           </svg>
           <span>Posts</span>
         </Link>
+        <Link {...link('/admin/content/team')} href="/admin/content/team">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="9" cy="8" r="3.4" />
+            <path d="M3 20v-1.4A4.6 4.6 0 0 1 7.6 14h2.8a4.6 4.6 0 0 1 4.6 4.6V20" />
+            <path d="M16.5 4.6a3.4 3.4 0 0 1 0 6.6M21 20v-1.4a4.6 4.6 0 0 0-3.2-4.4" />
+          </svg>
+          <span>Team</span>
+        </Link>
+        <Link {...link('/admin/content/popups')} href="/admin/content/popups">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 4h16M4 9h16M4 14h16" />
+            <rect x="17" y="4" width="4" height="4" rx="1" />
+            <rect x="17" y="10" width="4" height="4" rx="1" />
+          </svg>
+          <span>Popups</span>
+        </Link>
       </div>
 
       <div className={styles.navGroup}>
         <div className={styles.navGroupTitle}>Account</div>
-        <Link {...link('/admin/settings', true)} href="/admin/settings">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-          <span>Settings</span>
-        </Link>
-
+        {/* Settings lives behind the identity chip in the topbar, so the only
+            account item here is the one thing the chip cannot reach. */}
         {showTeam && (
           <Link {...link('/admin/settings/team')} href="/admin/settings/team">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -122,7 +132,7 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
               <path d="M3 20v-1.4A4.6 4.6 0 0 1 7.6 14h2.8a4.6 4.6 0 0 1 4.6 4.6V20" />
               <path d="M16.5 4.6a3.4 3.4 0 0 1 0 6.6M21 20v-1.4a4.6 4.6 0 0 0-3.2-4.4" />
             </svg>
-            <span>Team</span>
+            <span>Manage team</span>
           </Link>
         )}
       </div>

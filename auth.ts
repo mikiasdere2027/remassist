@@ -9,15 +9,18 @@ import type { Adapter } from '@auth/core/adapters';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { users, accounts, sessions, verificationTokens } from '@/db/schema/auth';
 import { isAllowedEmail } from '@/lib/auth/allowlist';
+import { findUserByEmail } from '@/lib/auth/lookup';
+import { authorise } from '@/lib/auth/session';
 import { verifyPassword } from '@/lib/auth/password';
 import { isRole } from '@/lib/auth/roles';
 import { clearFailures, isLockedOut, recordFailure } from '@/lib/auth/attempts';
 import { CODE_TTL_SEC, generateSigninCode } from '@/lib/auth/code';
-import { renderSigninEmail } from '@/lib/auth/email';
+import { renderActivationEmail, renderSigninEmail } from '@/lib/auth/email';
 import { mailFrom, sendAuthEmail } from '@/lib/auth/mailer';
 import {
   REMEMBER_COOKIE, SESSION_UPDATE_AGE_SEC, sessionMaxAge,
 } from '@/lib/auth/remember';
+import { VERIFY_PENDING_COOKIE } from '@/lib/auth/verify';
 
 /**
  * Admin authentication — MIGRATION-PLAN §10.
@@ -135,6 +138,23 @@ const DUMMY_HASH =
   'scrypt$16384$8$1$AAAAAAAAAAAAAAAAAAAAAA==$' +
   'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
 
+/**
+ * Whether this send is somebody proving their own address rather than signing
+ * in. Set by sendVerificationEmail immediately before it calls signIn, so it is
+ * readable here in the same request.
+ *
+ * Swallows the failure: outside a request context there is no cookie jar, and
+ * the sign-in wording is the right default for a send nobody asked for from a
+ * screen.
+ */
+async function activationPending(): Promise<boolean> {
+  try {
+    return (await cookies()).get(VERIFY_PENDING_COOKIE)?.value === '1';
+  } catch {
+    return false;
+  }
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
   const adapter = isDatabaseConfigured() ? buildAdapter() : undefined;
   /* Resolved once per request from the remember cookie, and used both for the
@@ -213,7 +233,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
         maxAge: CODE_TTL_SEC,
         generateVerificationToken: generateSigninCode,
         async sendVerificationRequest({ identifier, url, token }) {
-          const { subject, html, text } = renderSigninEmail({ code: token, url });
+          /**
+           * One token, two errands. The settings banner and the activation
+           * screen both start an ordinary emailed-code sign-in to prove an
+           * address the person is already signed in with, and they set this
+           * cookie in the same request. Without the branch they get "finish
+           * signing in", which is the wrong instruction for somebody who
+           * already is — see renderActivationEmail.
+           */
+          const { subject, html, text } = (await activationPending())
+            ? renderActivationEmail({ code: token })
+            : renderSigninEmail({ code: token, url });
           await sendAuthEmail({
             to: identifier,
             subject,
@@ -271,14 +301,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     },
     callbacks: {
       /**
-       * Enforced here rather than only in the admin layout, and this matters:
-       * the callback runs *before* the mail is sent, so a stranger's address is
-       * refused instead of being emailed. Gating only at the page would leave a
-       * public endpoint that makes our server send mail to any address on
-       * request — an open relay wearing a sign-in form.
+       * Two rules, and both are enforced here rather than only in the admin
+       * layout, because of *when* this runs: the callback fires before the mail
+       * is sent and before handleLoginOrRegister, on every branch. Gating only
+       * at the page would leave a public endpoint that makes our server send
+       * mail to any address on request, and it would leave the account
+       * creation below untouched.
+       *
+       * 1. The address is on the company domain. A stranger's address is
+       *    refused instead of being emailed.
+       *
+       * 2. An account for it already exists, is not disabled, and carries a
+       *    role we recognise. THIS IS THE REGISTRATION RULE, and without it
+       *    there is effectively none: when an emailed code is redeemed for an
+       *    address it does not know, Auth.js creates the user itself
+       *    (handle-login.js: `createUser({ ...profile, emailVerified: new
+       *    Date() })`). So anybody with a mailbox on an allowed domain could
+       *    mint themselves a manager account — with access to every lead — by
+       *    asking for a code. An invitation being "the only way a second
+       *    account comes into existence" (lib/auth/invite.ts) was true of the
+       *    invitation flow and not true of the system.
+       *
+       * Reuses `authorise`, the same decision require.ts makes on every
+       * request, rather than asking a narrower question here. A second, looser
+       * copy of "who may be in this admin" is exactly the drift this codebase
+       * keeps one function to avoid — and it means a disabled account cannot
+       * even be sent a code, let alone spend one.
+       *
+       * Both refusals are the same `false`, which Auth.js turns into its
+       * generic AccessDenied. Nothing distinguishes "wrong domain" from "no
+       * account here", so the sign-in form does not answer the question of who
+       * works here.
        */
-      signIn({ user }) {
-        return isAllowedEmail(user?.email);
+      async signIn({ user }) {
+        const email = user?.email;
+        if (!isAllowedEmail(email)) return false;
+        /* Non-null: isAllowedEmail has already refused null and undefined. */
+        return authorise(email, await findUserByEmail(email!)) !== null;
       },
       session({ session, user }) {
         if (session.user) {

@@ -8,6 +8,7 @@ import { canEditContent } from '@/lib/auth/roles';
 import { SOURCE_LABEL } from '../display';
 import { moveReview, saveReview, setReviewPublished } from '../actions';
 import { reviewMessage } from '../messages';
+import AdminTopbar from '../../../AdminTopbar';
 import styles from '../../../../admin.module.css';
 
 /**
@@ -84,24 +85,22 @@ export default async function EditReviewPage({
 
   return (
     <>
-      <header className={styles.topbar}>
-        <div className={styles.tbInner}>
-          <div>
-            <h1 className={styles.tbTitle}>Edit review</h1>
-            <p className={styles.tbSub}>
-              By <strong>{row.author}</strong> on {label}
-            </p>
-          </div>
-          {/* Back to the tab this review lives on, not to whichever tab the
-              list opens on by default. */}
+      <AdminTopbar
+        title="Edit review"
+        subtitle={
+          <>
+            By <strong>{row.author}</strong> on {label}
+          </>
+        }
+        action={
           <Link
             className={`${styles.btn} ${styles.btnGhost}`}
             href={`/admin/content/reviews?tab=${row.source}`}
           >
             ← All {label} reviews
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <div className={styles.view}>
         {message && (

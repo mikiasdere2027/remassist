@@ -102,8 +102,15 @@ DATABASE_URL=postgres://$APP_USER:$DB_PASS@localhost:5432/$APP_USER
 NEXT_PUBLIC_SITE_URL=$SITE_URL
 NEXT_PUBLIC_CONSENT_MODE=opt-in
 
-# Unset = no tag loads at all (components/analytics/GoogleTagManager.tsx).
+# Measurement. Set EITHER a GTM container (GTM-XXXXXXX) OR a GA4 measurement
+# id (G-XXXXXXXXXX) — never both: GTM wins when both are set, and a GA4 tag in
+# a container plus one on the page doubles every count. Both unset = no tag
+# loads at all (components/analytics/GoogleTagManager.tsx, GoogleAnalytics.tsx).
 NEXT_PUBLIC_GTM_ID=
+NEXT_PUBLIC_GA_ID=
+# The tag and the events both stay off unless this says exactly 'production',
+# and it is read at BUILD time — see the ordering note in remote-deploy.sh.
+NEXT_PUBLIC_ANALYTICS_ENV=production
 # Unset = lead notifications are skipped silently (lib/notify.ts).
 LEAD_WEBHOOK_URL=
 

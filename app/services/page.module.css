@@ -60,6 +60,9 @@
   .xs-choose h3 { margin: 0 0 8px; font-size: 17.5px; font-weight: 700; color: var(--brand-navy); line-height: 1.3; }
   .xs-choose p { margin: 0; font-size: 14.5px; line-height: 1.68; color: var(--ink-600); }
 
+  /* ---------- managed talent pool ----------
+     Moved out to components/services/TalentPool.tsx and TalentPool.module.css. */
+
   /* ---------- what every seat includes: dark navy strip + glass rate card ---------- */
   .xs-navy-strip {
     position: relative;
@@ -85,18 +88,13 @@
   .xs-h2--on-navy { color: #fff; }
   .xs-lede--on-navy { color: rgba(255, 255, 255, 0.78); margin-bottom: 36px; }
 
-  .xs-incl {
-    display: grid;
-    grid-template-columns: 1.28fr 0.72fr;
-    gap: 48px;
-    /* stretch, not start: the rate card is meant to stand the same height as
-       the six feature cards beside it. */
-    align-items: stretch;
-  }
-
+  /* The strip is one full-width grid of feature cards now. It used to be a
+     1.28fr / 0.72fr split with the rate card in the narrow column; the rates
+     moved to their own section below, so there is no second column to size
+     against and the six cards get three across instead of two. */
   .xs-features-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
   }
 
@@ -150,147 +148,12 @@
     color: var(--ink-600);
   }
 
-  /* Floating glassmorphism Rate Card */
-  /* Solid white, not glass. Two published rates are the most concrete thing on
-     this page, and a translucent card on a navy strip made the figures the
-     faintest text in the section. White also matches every other card on the
-     site — the glass treatment existed nowhere else. */
-  .xs-rate-glass {
-    /* Not sticky any more — a sticky card cannot also match its neighbour's
-       height, and matching is what the layout asks for. */
-    position: static;
-    height: 100%;
-    background: #fff;
-    border: 1px solid var(--border-default);
-    border-radius: 20px;
-    padding: 26px 24px;
-    box-shadow: 0 30px 60px -28px rgba(0, 5, 67, 0.55);
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  .xs-rate-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--border-default);
-  }
-  .xs-rate-badge {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--brand-blue);
-  }
-  .xs-rate-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--ink-500);
-    font-weight: 500;
-  }
-  .xs-rate-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--low-500);
-  }
-
-  .xs-rate-tiers {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .xs-rate-row-glass {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px;
-    border-radius: 12px;
-    background: var(--bg-marketing-paper);
-    border: 1px solid var(--border-default);
-  }
-  .xs-rate-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .xs-rate-name-glass {
-    font-family: var(--font-display);
-    font-size: 16.5px;
-    font-weight: 700;
-    color: var(--brand-navy);
-  }
-  .xs-rate-desc-glass {
-    font-size: 12px;
-    color: var(--ink-500);
-  }
-  .xs-rate-price-glass {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-  }
-  .xs-rate-price-glass small {
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-500);
-    font-weight: 600;
-  }
-  .xs-rate-price-glass b {
-    font-family: var(--font-display);
-    font-size: 32px;
-    font-weight: 800;
-    line-height: 1;
-    color: var(--brand-blue);
-  }
-  .xs-rate-price-glass em {
-    font-style: normal;
-    font-size: 13.5px;
-    font-weight: 700;
-    color: var(--brand-blue);
-  }
-
-  /* margin-top: auto pins the note and the CTA to the foot of the taller card,
-     so the two rate rows stay at the top rather than floating in the middle. */
-  .xs-rate-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-top: auto;
-    padding-top: 2px;
-  }
-  .xs-rate-note-glass {
-    margin: 0;
-    font-size: 12.5px;
-    line-height: 1.55;
-    color: var(--ink-600);
-  }
-  .xs-rate-cta-glass {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 18px;
-    border-radius: 8px;
-    background: var(--brand-blue);
-    color: #fff;
-    font-size: 14.5px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background 150ms, transform 150ms, box-shadow 150ms;
-  }
-  .xs-rate-cta-glass:hover {
-    background: var(--blue-700);
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(81, 141, 224, 0.32);
-  }
+  /* ---------- published rates ----------
+     Gone from this page. The two tier figures were a card inside the navy
+     strip, then briefly a section of their own below it; /pricing and the
+     per-line service pages (via components/services/SeatTiers.tsx) are what
+     quote a rate now. The .xs-price-* / .xs-rate-* rules went with the markup
+     they styled. */
 
   /* ---------- faq ---------- */
   .xs-faq { margin-top: 34px; border-top: 1px solid var(--border-default); }
@@ -311,14 +174,15 @@
 
   @media (max-width: 1024px) {
     .xs-chooses { grid-template-columns: 1fr; }
-    .xs-incl { grid-template-columns: 1fr; gap: 36px; }
-    .xs-rate-glass { height: auto; max-width: 520px; }
+    .xs-talent { grid-template-columns: 1fr; gap: 28px; }
+    .xs-features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 760px) {
     .xs-plain { padding: 58px 0; }
     .xs-navy-strip { padding: 64px 0; }
     .xs-features-grid { grid-template-columns: 1fr; gap: 12px; }
+    .xs-talent-list { grid-template-columns: 1fr; }
 
     .xs-nav { gap: 8px; }
     .xs-nav a { font-size: 12.5px; padding: 7px 13px 7px 8px; }

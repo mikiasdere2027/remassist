@@ -105,9 +105,18 @@ const PRESENTATION: Record<string, {
  * Join stored figures to that design map.
  *
  * The summary sentence is composed here rather than stored as markup: the
- * database holds a rating label and a count, and this decides that they read as
- * "Rated X · based on N reviews". Storing the <b> tags would have made an
- * editor responsible for HTML in order to change a number.
+ * database holds a rating label and a count, and this decides how they read.
+ * Storing the <b> tags would have made an editor responsible for HTML in
+ * order to change a number.
+ *
+ * Trustpilot deliberately does NOT trust its stored rating label for this
+ * line. The label is free text ("Excellent", "5.0", or whatever was typed),
+ * and it leaks straight into the sentence — on the live database it read
+ * "Rated Based on 3 Reviews - Verified 3 Reviews · based on N reviews". The
+ * score and stars already say what the rating is, and the tab pill already
+ * counts the reviews, so Trustpilot's line just says the page shows them all.
+ * Google keeps the composed wording, where its "5.0" label is a number the
+ * reader expects to see spelled out.
  */
 function toSources(data: ReviewSourceData[]): Source[] {
   return data.map((s) => {
@@ -120,11 +129,14 @@ function toSources(data: ReviewSourceData[]): Source[] {
       wordmark: look.wordmark,
       logo: look.logo,
       rating: s.stars,
-      summary: (
-        <>
-          Rated <b>{s.ratingLabel}</b> · based on <b>{s.reviews.length} reviews</b>
-        </>
-      ),
+      summary:
+        s.source === 'trustpilot' ? (
+          <>All reviews, reproduced verbatim</>
+        ) : (
+          <>
+            Rated <b>{s.ratingLabel}</b> · based on <b>{s.reviews.length} reviews</b>
+          </>
+        ),
       footnote: s.footnote ?? undefined,
       reviews: s.reviews.map((r) => ({
         author: r.author,

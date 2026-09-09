@@ -42,18 +42,11 @@
       "sortOrder": 1
     },
     {
-      "key": "mid",
-      "label": "Expert lead + Pro seats",
-      "hourlyRateUsd": "9.00",
-      "note": "One expert lead with Pro seats",
-      "sortOrder": 2
-    },
-    {
       "key": "expert",
       "label": "Expert",
       "hourlyRateUsd": "11.00",
       "note": "Senior seats, all services",
-      "sortOrder": 3
+      "sortOrder": 2
     }
   ],
   "serviceCategories": [

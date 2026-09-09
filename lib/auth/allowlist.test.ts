@@ -7,13 +7,20 @@ import { isAllowedEmail } from './allowlist';
  * not that the rule is right.
  */
 describe('isAllowedEmail', () => {
-  it('admits the two internal domains', () => {
+  it('admits the one internal domain', () => {
     expect(isAllowedEmail('jane@remassistance.com')).toBe(true);
-    expect(isAllowedEmail('jane@remconnect.io')).toBe(true);
   });
 
   it('rejects an outside domain', () => {
     expect(isAllowedEmail('jane@gmail.com')).toBe(false);
+  });
+
+  it('no longer admits remconnect.io', () => {
+    // Dropped on 2026-09-09. Asserted rather than merely absent: a domain
+    // silently reappearing in that array is a change nobody would see in a
+    // diff of this file, and it grants access to every lead in the database.
+    expect(isAllowedEmail('jane@remconnect.io')).toBe(false);
+    expect(isAllowedEmail('jane@auth.remconnect.io')).toBe(false);
   });
 
   it('rejects a domain that merely ends with an allowed one', () => {

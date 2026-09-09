@@ -18,6 +18,7 @@
  */
 
 import { hasConsent } from './consent';
+import { gtagPush } from './gtag';
 
 export interface EventParams {
   [key: string]: string | number | boolean | undefined;
@@ -42,6 +43,17 @@ export interface EventMap {
   chat_open: { placement: string };
   /** An interview clip was played. */
   video_play: { video_id: string };
+  /**
+   * A popup ad became visible to the visitor.
+   *
+   * `popup_id` is the popup's tracking key — the campaign's identity in admin —
+   * never its headline or message. The visitor's copy is content, not a
+   * measurement, and it is exactly the free text this file's NO-PII rule exists
+   * to keep out of a GA property.
+   */
+  popup_view: { popup_id: string; campaign: string; placement: string };
+  /** The popup's CTA was clicked. The view always happens first. */
+  popup_click: { popup_id: string; campaign: string; placement: string };
 }
 
 /**
@@ -61,11 +73,8 @@ export interface EventMap {
  * home page" becomes unanswerable.
  */
 
-declare global {
-  interface Window {
-    dataLayer?: Record<string, unknown>[];
-  }
-}
+/* `window.dataLayer` is declared once, in ./gtag.ts, alongside the only
+   function that writes to it in Google's calling convention. */
 
 /**
  * Whether events should actually leave the browser.
@@ -86,29 +95,68 @@ declare global {
  * the production property is exactly the failure this function exists to
  * prevent; Vercel's own variable is authoritative about which deploy this is.
  */
-export function analyticsEnabled(): boolean {
-  if (typeof window === 'undefined') return false;
-  if (!process.env.NEXT_PUBLIC_GTM_ID) return false;
+export function measurementEnv(): boolean {
   if (process.env.NEXT_PUBLIC_ANALYTICS_ENV !== 'production') return false;
   if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') return false;
-  /* Consent is checked here, at the emit, and not only in GTM's own Consent
-     Mode. Consent Mode governs what Google's tags do with an event; it does
-     not stop the event reaching the container in the first place, and an
-     event we were not permitted to collect should not be sent at all. */
+  return true;
+}
+
+/**
+ * Which tag is on the page, if any.
+ *
+ * 'gtm'  a container: events are pushed as `{event, ...params}` objects and
+ *        the container decides which tags they fire.
+ * 'ga4'  gtag.js on its own: there is no container to route anything, so
+ *        events have to be emitted as GA4 events directly.
+ * null   nothing is configured, so nothing is emitted.
+ *
+ * GTM wins when both ids are set, and components/analytics/GoogleAnalytics.tsx
+ * makes the same call by rendering null — the two files have to agree, or the
+ * events would go somewhere the tag is not.
+ */
+export function measurementTag(): 'gtm' | 'ga4' | null {
+  if (process.env.NEXT_PUBLIC_GTM_ID) return 'gtm';
+  if (process.env.NEXT_PUBLIC_GA_ID) return 'ga4';
+  return null;
+}
+
+export function analyticsEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (!measurementTag()) return false;
+  if (!measurementEnv()) return false;
+  /* Consent is checked here, at the emit, and not only in Google's own
+     Consent Mode. Consent Mode governs what Google's tags do with an event;
+     it does not stop the event reaching the container in the first place, and
+     an event we were not permitted to collect should not be sent at all. */
   return hasConsent('analytics');
 }
 
 /**
  * Emit one event.
  *
- * Pushing to `dataLayer` rather than calling `gtag` directly keeps GTM as the
- * single point of configuration: which tags fire on which events, and under
- * which consent state, is decided in the container, not recompiled into the
- * app. The array is created if GTM has not loaded yet — GTM drains whatever
- * it finds when it initialises, so early events are not lost.
+ * The payload shape follows the tag, and the two are not interchangeable.
+ *
+ * With a container, pushing a `{event, ...params}` object rather than calling
+ * `gtag` keeps GTM as the single point of configuration: which tags fire on
+ * which events, and under which consent state, is decided in the container,
+ * not recompiled into the app.
+ *
+ * gtag.js on its own ignores those objects completely — it reads Arguments
+ * objects — so with GA4 direct the same event has to be emitted as
+ * `gtag('event', name, params)`. Push the container shape at a bare GA4 tag
+ * and nothing arrives, while `dataLayer` fills with entries nothing reads and
+ * no error is raised anywhere.
+ *
+ * Either way the array is created if the tag has not loaded yet: gtm.js and
+ * gtag.js both drain what they find on arrival, so early events are not lost.
  */
 export function track<K extends keyof EventMap>(event: K, params: EventMap[K]): void {
   if (!analyticsEnabled()) return;
-  window.dataLayer = window.dataLayer ?? [];
-  window.dataLayer.push({ event, ...params });
+
+  if (measurementTag() === 'gtm') {
+    window.dataLayer = window.dataLayer ?? [];
+    window.dataLayer.push({ event, ...params });
+    return;
+  }
+  gtagPush('event', event, params);
 }

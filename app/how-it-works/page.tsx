@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { pageOg } from '@/lib/site';
+import Hero from '@/components/how-it-works/Hero';
+import PhaseScroller from '@/components/how-it-works/PhaseScroller';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
@@ -18,169 +20,13 @@ export default function Page() {
     
   
     
-  <section style={{ background: "linear-gradient(180deg,#f7faff 0%,var(--bg-marketing-paper) 62%)", borderBottom: "1px solid var(--border-default)" }}>
-      <div className={`${styles['hw-wrap']} ${styles['hw-hero']}`}>
-        <span className={styles['hw-kicker']}>How it works</span>
-        <h1 className={styles['hw-h1']}>From first call to <span>a working pod.</span></h1>
-        <p className={styles['hw-lede']}>Four phases, roughly two weeks, and you approve the people before they start.
-          Here is the whole thing written down — including what we need from you, and what happens
-          if it does not work out.</p>
-  
-        <div className={styles['hw-chips']}>
-          <span className={styles['hw-chip']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Consultation is always free</span>
-          <span className={styles['hw-chip']}><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' /><path d='M12 7.5V12l3 2' /></svg>About two weeks to live</span>
-          <span className={styles['hw-chip']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>You interview and approve</span>
-          <span className={styles['hw-chip']}><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Pilot before a full rollout</span>
-        </div>
-  
-        <div className={styles['hw-hero-cta']}>
-          <a className={styles['hw-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
-            Book a free consult
-            <svg width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
-          </a>
-          <a className={`${styles['hw-btn']} ${styles['hw-btn--ghost']}`} href='/qualify'>Qualify in two minutes</a>
-        </div>
-      </div>
-    </section>
+  <Hero />
   
   
     
   
     
-  <section className={styles['hw-section']} style={{ background: "var(--bg-marketing-paper)" }}>
-      <div className={styles['hw-wrap']}>
-        <span className={styles['hw-kicker']}>The four phases</span>
-        <h2 className={styles['hw-h2']} style={{ marginTop: "14px" }}>What actually happens, <span>and who does it.</span></h2>
-        <p className={styles['hw-lede']}>Most of what goes wrong in outsourcing happens because nobody agreed who owns
-          what. So each phase below says what we do, and what we need from you.</p>
-  
-        <ol className={styles['hw-phases']}>
-          <li className={styles['hw-phase']}>
-            <span className={styles['hw-num']}>01</span>
-            <div className={styles['hw-card']}>
-              <div className={styles['hw-card-top']}>
-                <h3>Free consultation</h3>
-                <span className={styles['hw-when']}>Day 1 · 30–45 min</span>
-              </div>
-              <p>You tell us the work that is piling up and the volume behind it. We tell you the seats, the
-                tier and the rate for your hours — and if we are not the right fit, we say so on the
-                call rather than three weeks later.</p>
-              <div className={styles['hw-split']}>
-                <div className={styles['hw-col']}>
-                  <h4>What we do</h4>
-                  <ul>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Map the function to seats and coverage</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Give you the exact rate, not a range</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Flag anything we think you should not outsource</li>
-                  </ul>
-                </div>
-                <div className={styles['hw-col']}>
-                  <h4>What we need from you</h4>
-                  <ul>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Rough interaction or transaction volume</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>The hours you actually need covered</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Which tools the work lives in</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </li>
-  
-          <li className={styles['hw-phase']}>
-            <span className={styles['hw-num']}>02</span>
-            <div className={styles['hw-card']}>
-              <div className={styles['hw-card-top']}>
-                <h3>Team design</h3>
-                <span className={styles['hw-when']}>Days 2–3</span>
-              </div>
-              <p>We scope the personnel mix — generalists, specialists, or both — and put the
-                pricing and terms in writing. This is also where we decide whether a mixed-tier pod is
-                cheaper for you than a single senior seat.</p>
-              <div className={styles['hw-split']}>
-                <div className={styles['hw-col']}>
-                  <h4>What we do</h4>
-                  <ul>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Design the pod shape and the rota</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Confirm pricing and terms in writing</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Name the supervisor who will own the account</li>
-                  </ul>
-                </div>
-                <div className={styles['hw-col']}>
-                  <h4>What we need from you</h4>
-                  <ul>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Any SOPs or notes that already exist</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Your escalation rules and SLAs, if you have them</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>One person who can approve decisions</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </li>
-  
-          <li className={styles['hw-phase']}>
-            <span className={styles['hw-num']}>03</span>
-            <div className={styles['hw-card']}>
-              <div className={styles['hw-card-top']}>
-                <h3>Pick your agents</h3>
-                <span className={styles['hw-when']}>Days 3–5</span>
-              </div>
-              <p>Real profiles at the tiers you scoped. Interview them yourself, or leave the selection to
-                our team and approve the shortlist. Nobody is assigned to your account without your
-                sign-off — that is the part most of this industry skips.</p>
-              <div className={styles['hw-split']}>
-                <div className={styles['hw-col']}>
-                  <h4>What we do</h4>
-                  <ul>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Shortlist from the bench against your criteria</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Set up interviews, or recommend and explain why</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Hold profiles if your start date is later</li>
-                  </ul>
-                </div>
-                <div className={styles['hw-col']}>
-                  <h4>What we need from you</h4>
-                  <ul>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>An hour or so for interviews, if you want them</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Approval on the shortlist</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Scoped access to the tools they will work in</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </li>
-  
-          <li className={styles['hw-phase']}>
-            <span className={styles['hw-num']}>04</span>
-            <div className={styles['hw-card']}>
-              <div className={styles['hw-card-top']}>
-                <h3>Monitored training and delivery</h3>
-                <span className={styles['hw-when']}>Week 2 onward</span>
-              </div>
-              <p>Full training against your process, then live work under supervision. If your process was
-                never written down, we document it as we go and hand the SOP to you — you keep it
-                whether or not you stay with us.</p>
-              <div className={styles['hw-split']}>
-                <div className={styles['hw-col']}>
-                  <h4>What we do</h4>
-                  <ul>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Train on your product, macros and tone</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Write or rewrite the SOP and hand it over</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Hourly work logs and daily email reports</li>
-                  </ul>
-                </div>
-                <div className={styles['hw-col']}>
-                  <h4>What we need from you</h4>
-                  <ul>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>A named contact for questions in week one</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Feedback on the first few days of output</li>
-                    <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Nothing else. That is rather the point.</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ol>
-      </div>
-    </section>
+  <PhaseScroller />
   
   
     

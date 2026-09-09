@@ -4,9 +4,12 @@ import { getDb, isDatabaseConfigured } from '@/db';
 import { invitations, users } from '@/db/schema/auth';
 import { requireRole } from '@/lib/auth/require';
 import { ALLOWED_DOMAINS } from '@/lib/auth/allowlist';
-import { formatDate } from '@/lib/leads/display';
+import { formatDate, formatDateShort } from '@/lib/leads/display';
 import { inviteManager, setUserDisabled } from './actions';
 import { teamMessage } from './messages';
+import InfoTooltip from './InfoTooltip';
+import MenuButton from '../../MenuButton';
+import AdminTopbar from '../../AdminTopbar';
 import styles from '../../../admin.module.css';
 
 /**
@@ -102,12 +105,18 @@ export default async function TeamPage({
           </p>
         )}
 
+        {/* Invite + pending share the top row — the narrow invite form on the
+            left (35%), the wider invitation list beside it (65%). Accounts
+            follows beneath, full width. */}
+        <div className={styles.teamTopGrid}>
         <section className={`${styles.panel} ${styles.section}`}>
           <div className={styles.panelHead}>
             <h2 className={styles.panelTitle}>Invite a manager</h2>
-            <span className={styles.panelNote}>
-              They can read leads and change status. They cannot invite anyone.
-            </span>
+            <InfoTooltip
+              text="They can read leads and change status. They cannot invite anyone."
+              position="bottom-left"
+              autoShowMs={5000}
+            />
           </div>
           <form className={styles.inviteRow} action={inviteManager}>
             <div className={`${styles.field} ${styles.grow}`}>
@@ -123,22 +132,74 @@ export default async function TeamPage({
               />
             </div>
             <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit">
-              Send invitation
+              Invite
             </button>
           </form>
-          <p className={styles.panelFoot}>
-            The link expires in 7 days. Opening it emails a second, short-lived code — both
-            are needed, so a forwarded message is not an account.
-          </p>
         </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2 className={styles.panelTitle}>Pending invitations</h2>
+            <span className={styles.panelNote} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              {live.length} outstanding
+              {pending.length > live.length && `, ${pending.length - live.length} expired`}
+              <InfoTooltip
+                text="Outstanding invitations are waiting to be accepted. Expired links are kept as a record of who invited whom."
+                position="bottom-left"
+              />
+            </span>
+          </div>
+          {pending.length === 0 ? (
+            <p className={styles.empty}>
+              <strong>Nothing outstanding</strong>
+              Everyone who was invited has either accepted or let the link expire.
+            </p>
+          ) : (
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Invited by</th>
+                    <th>Sent</th>
+                    <th>Expires</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pending.map((p) => {
+                    const expired = p.expiresAt.getTime() <= now.getTime();
+                    return (
+                      <tr key={p.id}>
+                        <td className={styles.mono}>{p.email}</td>
+                        <td>
+                          {expired
+                            ? <span className={`${styles.pill} ${styles.pillOff}`}>Expired</span>
+                            : <span className={`${styles.pill} ${styles.pillWait}`}>Waiting</span>}
+                        </td>
+                        <td className={styles.mono}>
+                          {p.invitedByEmail ?? <span className={styles.none}>Unknown</span>}
+                        </td>
+                        <td className={`${styles.mono} ${styles.nowrap}`}>
+                          {formatDateShort(p.createdAt)}
+                        </td>
+                        <td className={`${styles.mono} ${styles.nowrap}`}>
+                          {formatDateShort(p.expiresAt)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+        </div>
 
         <section className={`${styles.panel} ${styles.section}`}>
           <div className={styles.panelHead}>
             <h2 className={styles.panelTitle}>Accounts</h2>
-            <span className={styles.panelNote}>
-              {people.length} total — &ldquo;not invited&rdquo; means the account predates
-              invitations or was created directly
-            </span>
+            <span className={styles.panelNote}>{people.length} total</span>
           </div>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -150,7 +211,7 @@ export default async function TeamPage({
                   <th>Verified</th>
                   <th>Invited by</th>
                   <th>Since</th>
-                  <th aria-label="Actions" />
+                  <th className={styles.thActions}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -187,17 +248,46 @@ export default async function TeamPage({
                     </td>
                     <td className={`${styles.mono} ${styles.nowrap}`}>{formatDate(p.createdAt)}</td>
                     <td className={styles.nowrap}>
-                      {/* No control at all for the admin's own row or for the
+                      {/* No menu at all for the admin's own row or for the
                           admin role generally — the action refuses both, and a
-                          button that always errors is worse than no button. */}
+                          control that always errors is worse than no control.
+                          There is still no delete here: see the note at the top
+                          of this file and canDelete in lib/auth/roles.ts. */}
                       {p.role === 'manager' && p.id !== admin.id && (
-                        <form action={setUserDisabled}>
-                          <input type="hidden" name="userId" value={p.id} />
-                          <input type="hidden" name="disable" value={p.disabledAt ? '0' : '1'} />
-                          <button className={`${styles.btn} ${styles.btnGhost}`} type="submit">
-                            {p.disabledAt ? 'Re-enable' : 'Disable'}
-                          </button>
-                        </form>
+                        <div className={styles.actions}>
+                          <MenuButton label={`Options for ${p.email}`}>
+                            <form action={setUserDisabled} style={{ margin: 0 }}>
+                              <input type="hidden" name="userId" value={p.id} />
+                              <input type="hidden" name="disable" value={p.disabledAt ? '0' : '1'} />
+                              <button
+                                className={
+                                  p.disabledAt
+                                    ? styles.memberDropdownItem
+                                    : `${styles.memberDropdownItem} ${styles.memberDropdownItemDanger}`
+                                }
+                                type="submit"
+                              >
+                                {p.disabledAt ? (
+                                  <>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                      <path d="M20 11a8 8 0 1 0-1.5 5.2" />
+                                      <path d="M20 4v7h-7" />
+                                    </svg>
+                                    Re-enable
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                      <circle cx="12" cy="12" r="10" />
+                                      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                                    </svg>
+                                    Disable
+                                  </>
+                                )}
+                              </button>
+                            </form>
+                          </MenuButton>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -206,64 +296,6 @@ export default async function TeamPage({
             </table>
           </div>
         </section>
-
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <h2 className={styles.panelTitle}>Pending invitations</h2>
-            <span className={styles.panelNote}>
-              {live.length} outstanding
-              {pending.length > live.length && `, ${pending.length - live.length} expired`}
-            </span>
-          </div>
-          {pending.length === 0 ? (
-            <p className={styles.empty}>
-              <strong>Nothing outstanding</strong>
-              Everyone who was invited has either accepted or let the link expire.
-            </p>
-          ) : (
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Invited by</th>
-                    <th>Sent</th>
-                    <th>Expires</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pending.map((p) => {
-                    const expired = p.expiresAt.getTime() <= now.getTime();
-                    return (
-                      <tr key={p.id}>
-                        <td className={styles.mono}>{p.email}</td>
-                        <td>
-                          {expired
-                            ? <span className={`${styles.pill} ${styles.pillOff}`}>Expired</span>
-                            : <span className={`${styles.pill} ${styles.pillWait}`}>Waiting</span>}
-                        </td>
-                        <td className={styles.mono}>
-                          {p.invitedByEmail ?? <span className={styles.none}>Unknown</span>}
-                        </td>
-                        <td className={`${styles.mono} ${styles.nowrap}`}>
-                          {formatDate(p.createdAt)}
-                        </td>
-                        <td className={`${styles.mono} ${styles.nowrap}`}>
-                          {formatDate(p.expiresAt)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-          <p className={styles.panelFoot}>
-            Expired invitations are kept rather than removed — the row is the record of who
-            invited whom. Sending a new invitation to the same address expires the old link.
-          </p>
-        </section>
       </div>
     </>
   );
@@ -271,13 +303,9 @@ export default async function TeamPage({
 
 function Topbar() {
   return (
-    <header className={styles.topbar}>
-      <div className={styles.tbInner}>
-        <div>
-          <h1 className={styles.tbTitle}>Team</h1>
-          <p className={styles.tbSub}>Who can reach the admin, and who let them in</p>
-        </div>
-      </div>
-    </header>
+    <AdminTopbar
+      title="Team"
+      subtitle="Who can reach the admin, and who let them in"
+    />
   );
 }

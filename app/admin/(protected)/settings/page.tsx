@@ -1,8 +1,10 @@
 import { requireUser } from '@/lib/auth/require';
 import { MIN_PASSWORD_LENGTH } from '@/lib/auth/password';
 import { formatDate } from '@/lib/leads/display';
+import { verifyDeadline } from '@/lib/auth/verify';
 import { changePassword } from './actions';
 import { settingsMessage } from './messages';
+import AdminTopbar from '../AdminTopbar';
 import styles from '../../admin.module.css';
 
 /**
@@ -29,14 +31,7 @@ export default async function SettingsPage({
 
   return (
     <>
-      <header className={styles.topbar}>
-        <div className={styles.tbInner}>
-          <div>
-            <h1 className={styles.tbTitle}>Settings</h1>
-            <p className={styles.tbSub}>Your account</p>
-          </div>
-        </div>
-      </header>
+      <AdminTopbar title="Settings" subtitle="Your account" />
 
       <div className={styles.view}>
         {message && (
@@ -71,7 +66,14 @@ export default async function SettingsPage({
             <dd>
               {user.emailVerified
                 ? <span className={styles.mono}>{formatDate(user.emailVerified)}</span>
-                : <span className={styles.none}>Not verified yet</span>}
+                /* The date, not just the fact: this screen is where somebody
+                   comes to find out what the banner meant, and "not yet" alone
+                   does not say what happens or when. */
+                : (
+                  <span className={styles.none}>
+                    Not yet, and locked after {formatDate(verifyDeadline(user.createdAt))}
+                  </span>
+                )}
             </dd>
 
             <dt>Member since</dt>

@@ -1,0 +1,155 @@
+/* PhaseScroller — the four onboarding phases, one screen at a time.
+
+   Read the component's header comment first; it explains why the section is
+   built this way. What matters here is the order the rules are written in:
+   everything above the media queries is the plain stacked version, and the
+   pinned, one-at-a-time version is only ever added on top of it. Nothing in
+   the base layer hides a phase or moves it, so a browser that never matches
+   the query at the foot of this file still gets four readable cards — which is
+   also what a print stylesheet, a screenshot service and a very short window
+   end up with. */
+
+.section { background: var(--bg-marketing-paper); padding: 84px 0; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* Says what the scroll is about to do. Rendered only where the pinning is
+   actually on, so it never promises behaviour this viewport will not get. */
+.hint { display: flex; align-items: center; gap: 9px; margin: 22px 0 0;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--brand-blue); }
+.hint svg { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2;
+  stroke-linecap: round; stroke-linejoin: round; animation: nudge 2.4s var(--ease-in-out) infinite; }
+@keyframes nudge { 0%, 62%, 100% { transform: translateY(0); } 78% { transform: translateY(3px); } }
+
+/* ---------- the phases ---------- */
+
+.track { margin-top: 44px; }
+.triggers { display: none; }
+
+.slides { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+.slide { display: grid; background: #fff; border: 1px solid var(--border-default);
+  border-radius: 24px; overflow: hidden; box-shadow: var(--shadow-sm); }
+
+.card { padding: 26px 24px 24px; min-width: 0; }
+.cardHead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.badge { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%;
+  background: var(--brand-blue); color: #fff; font-family: var(--font-display); font-size: 18px;
+  font-weight: 700; box-shadow: 0 0 0 7px rgba(81, 141, 224, 0.12); }
+.when { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--brand-blue); background: rgba(81, 141, 224, 0.10); border-radius: 999px; padding: 7px 14px;
+  white-space: nowrap; }
+
+.card h3 { margin: 17px 0 0; font-family: var(--font-display); font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 700; letter-spacing: -0.02em; line-height: 1.17; color: var(--brand-navy); }
+.card p { margin: 12px 0 0; font-size: 15.5px; line-height: 1.7; color: var(--ink-600); max-width: 56ch; }
+
+.split { display: grid; gap: 16px; margin-top: 22px; }
+.col { background: rgba(81, 141, 224, 0.055); border: 1px solid rgba(81, 141, 224, 0.14);
+  border-radius: 16px; padding: 16px 16px 17px; }
+.col h4 { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; font-size: 13.5px;
+  font-weight: 700; color: var(--brand-blue); }
+.colIco { display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--brand-blue); }
+.colIco svg { width: 15px; height: 15px; fill: none; stroke: #fff; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; }
+.col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.col li { display: grid; grid-template-columns: 17px 1fr; gap: 10px; font-size: 13.8px; line-height: 1.5;
+  color: var(--ink-700); }
+.col li svg { width: 17px; height: 17px; margin-top: 1px; fill: none; stroke: var(--brand-blue);
+  stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+.shot { position: relative; min-height: 240px; overflow: hidden; background: var(--ink-50); }
+.shot img { object-fit: cover; }
+.shotTag { position: absolute; left: 16px; bottom: 16px; padding: 7px 13px; border-radius: 999px;
+  background: rgba(0, 5, 67, 0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  color: #fff; font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em;
+  text-transform: uppercase; }
+
+/* The rail only exists in the pinned version — the component does not render
+   it otherwise, so these rules describe the pinned state alone. */
+.rail { position: relative; display: grid; align-content: space-between; justify-items: center;
+  height: 340px; }
+.rail::before, .rail::after { content: ""; position: absolute; left: 50%; top: 10px; bottom: 10px;
+  width: 2px; margin-left: -1px; border-radius: 2px; }
+.rail::before { background: rgba(81, 141, 224, 0.20); }
+.rail::after { background: var(--brand-blue); transform-origin: top; transform: scaleY(var(--hw-fill, 0));
+  transition: transform 460ms var(--ease-out); }
+
+.railDot { position: relative; z-index: 1; display: grid; place-items: center; width: 58px; height: 58px;
+  padding: 0; border: 0; background: none; cursor: pointer; }
+.railDot span { display: grid; place-items: center; box-sizing: border-box; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--bg-marketing-paper); border: 2px solid rgba(81, 141, 224, 0.38);
+  font-family: var(--font-display); font-weight: 700; font-size: 0; color: transparent;
+  transition: width 300ms var(--ease-out), height 300ms var(--ease-out), font-size 220ms var(--ease-out),
+    background 300ms, border-color 300ms, box-shadow 300ms, color 220ms; }
+.railDot:hover span { border-color: var(--brand-blue); }
+.railDot:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 2px; border-radius: 50%; }
+.railDotDone span { background: var(--brand-blue); border-color: var(--brand-blue); }
+.railDotOn span { width: 58px; height: 58px; font-size: 19px; color: #fff; background: var(--brand-blue);
+  border-color: var(--brand-blue); box-shadow: 0 0 0 8px rgba(81, 141, 224, 0.13); }
+
+/* ---------- wide enough for two columns ---------- */
+
+@media (min-width: 901px) {
+  .slide { grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.84fr); }
+  .card { padding: 32px 32px 30px; }
+  .split { grid-template-columns: 1fr 1fr; }
+  .shot { min-height: 0; }
+}
+
+/* ---------- the pinned version ----------
+
+   The guard is three conditions and each one is load-bearing: wide enough that
+   the card and the photograph sit side by side, TALL enough that a pinned card
+   is not a clipped card, and no reduced-motion preference, since the whole
+   effect is movement bound to the scroll. Failing any of them leaves the
+   stacked layout above, which is a complete page rather than a degraded one.
+   Keep this in step with PINNED in PhaseScroller.tsx. */
+
+@media (min-width: 901px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  /* One screen of scrolling per phase, plus a tail so the last phase holds for
+     a moment instead of being released the instant it arrives. */
+  .track { position: relative; height: calc(var(--hw-steps, 4) * 100vh + 45vh); margin-top: 40px; }
+
+  /* Invisible, untouchable, and tiling the track exactly: these are what the
+     observer watches. They stop short of the tail so the four bands are equal
+     screens rather than four equal shares of a track with a tail on it. */
+  .triggers { display: grid; grid-auto-rows: 1fr; position: absolute; left: 0; right: 0; top: 0;
+    bottom: 45vh; pointer-events: none; }
+
+  .stage { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h));
+    display: flex; align-items: center; }
+  .stageInner { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 30px;
+    align-items: center; width: 100%; }
+
+  /* All four phases share one grid cell. The panel is therefore the height of
+     the tallest of them and does not resize as they change — a card that grew
+     and shrank under a fixed viewport would read as the page jumping. */
+  /* grid-column, not auto-placement: the rail is rendered by the component
+     rather than by CSS, so between first paint and the effect that turns the
+     pinned version on there is no first child, and the phases would land in
+     the 58px rail column and be squeezed there until React caught up. */
+  .slides { gap: 0; grid-column: 2; }
+  .slide { grid-area: 1 / 1; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none;
+    transform: translateY(18px) scale(0.988);
+    transition: opacity 380ms var(--ease-out), transform 520ms var(--ease-out); }
+  .slideOn { opacity: 1; transform: none; pointer-events: auto; }
+
+  /* The number is on the rail here, and twice on one screen is once too many. */
+  .badge { display: none; }
+  .card { padding: 40px 44px 38px; }
+  .card h3 { margin-top: 4px; }
+
+  /* The pinned panel is not bound to the page's 1200px text column. Once the
+     section pins, nothing above it is on screen to align with, so the width
+     that matters is the one the card and the photograph need rather than the
+     one the headings use. At 1200 a 1600px window left ~200px of paper down
+     each side while the two lists inside the card wrapped every second line
+     and the photograph was the narrowest thing in the section. */
+  .stageInner { max-width: 1480px; }
+  .slide { grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); }
+
+  /* More room across means the blurb would otherwise run to a 90-character
+     line; the lists beside it are what should be taking the extra width. */
+  .card p { max-width: 52ch; }
+}

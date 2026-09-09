@@ -6,10 +6,7 @@ import { LEAD_STATUSES } from '@/lib/leads/display';
 import styles from '../../../admin.module.css';
 
 /**
- * The status control.
- *
- * A client component only because it needs pending and error state — the write
- * itself is the server action, which does its own authorisation.
+ * The status control — placed directly in the topbar header slot.
  */
 export default function StatusForm({ id, current }: { id: string; current: string }) {
   const [value, setValue] = useState(current);
@@ -18,10 +15,10 @@ export default function StatusForm({ id, current }: { id: string; current: strin
 
   return (
     <div className={styles.statusForm}>
-      <label className={styles.fieldLabel} htmlFor="lead-status">Status</label>
       <select
-        className={styles.control}
+        className={`${styles.control} ${styles.statusSelect} ${styles[`s_${value}`]}`}
         id="lead-status"
+        aria-label="Lead status"
         value={value}
         disabled={pending}
         onChange={(e) => {
@@ -33,8 +30,6 @@ export default function StatusForm({ id, current }: { id: string; current: strin
             try {
               await setLeadStatus(id, next);
             } catch {
-              /* Put the control back where it was. Leaving it showing the value
-                 we failed to save would misreport the database. */
               setValue(previous);
               setFailed(true);
             }
@@ -42,15 +37,18 @@ export default function StatusForm({ id, current }: { id: string; current: strin
         }}
       >
         {LEAD_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
+          <option key={s} value={s}>
+            Status: {s}
+          </option>
         ))}
       </select>
-      {pending && <span className={styles.panelNote}>Saving…</span>}
+      {pending && <span className={styles.statusNote}>Saving…</span>}
       {failed && (
-        <span className={styles.panelNote} role="alert">
-          That did not save — the status is unchanged.
+        <span className={styles.statusErr} role="alert">
+          Save failed
         </span>
       )}
     </div>
   );
 }
+

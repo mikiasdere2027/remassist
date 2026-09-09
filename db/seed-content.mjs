@@ -50,12 +50,17 @@ try {
   for (const p of seed.posts) {
     const { rowCount } = await c.query(
       `insert into posts
-         (slug, title, excerpt, body, date, read_time, category, image,
+         (slug, title, excerpt, body, article_layout, date, read_time, category, image,
           author_name, author_avatar, published)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-       on conflict (slug) do nothing`,
-      [p.slug, p.title, p.excerpt, p.body, p.date, p.readTime, p.category,
-        p.image, p.authorName, p.authorAvatar, p.published],
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       /* Columns added after the original import are filled only while null.
+          This upgrades the former hard-coded article without overwriting an
+          editor's body or layout on later seed runs. */
+       on conflict (slug) do update set
+         body = coalesce(posts.body, excluded.body),
+         article_layout = coalesce(posts.article_layout, excluded.article_layout)`,
+      [p.slug, p.title, p.excerpt, p.body, p.articleLayout ?? null, p.date, p.readTime,
+        p.category, p.image, p.authorName, p.authorAvatar, p.published],
     );
     bump(rowCount ? added : skipped, 'posts');
   }
@@ -131,11 +136,30 @@ try {
     );
     if (rows.length) { bump(skipped, 'faq_items'); continue; }
     await c.query(
-      `insert into faq_items (group_id, question, answer, sort_order, published)
-       values ($1,$2,$3,$4,$5)`,
-      [groupId, f.question, f.answer, f.sortOrder, f.published],
+      `insert into faq_items (group_id, question, answer, sort_order, published, featured, featured_order)
+       values ($1,$2,$3,$4,$5,$6,$7)`,
+      [groupId, f.question, f.answer, f.sortOrder, f.published, f.featured ?? false, f.featuredOrder ?? 0],
     );
     bump(added, 'faq_items');
+  }
+
+  for (const m of seed.teamMembers ?? []) {
+    /* A person is the natural key: the team has exactly one Johnathan Zemene,
+       and the only meaningful duplicate would be a second person of the same
+       name, which the editor renames before it becomes a problem in the admin. */
+    const { rows } = await c.query(
+      'select 1 from team_members where name = $1 limit 1',
+      [m.name],
+    );
+    if (rows.length) { bump(skipped, 'team_members'); continue; }
+    await c.query(
+      `insert into team_members
+         (name, role, initials, tag, blurb, linkedin, image, sort_order, published)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [m.name, m.role, m.initials, m.tag, m.blurb ?? null, m.linkedin ?? null,
+        m.image ?? null, m.sortOrder, m.published],
+    );
+    bump(added, 'team_members');
   }
 
   await c.query('COMMIT');
@@ -149,7 +173,7 @@ try {
 }
 
 if (process.exitCode !== 1) {
-  const tables = ['posts', 'review_sources', 'reviews', 'faq_groups', 'faq_items'];
+  const tables = ['posts', 'review_sources', 'reviews', 'faq_groups', 'faq_items', 'team_members'];
   console.log('\n  content seed');
   for (const t of tables) {
     console.log(`    ${t.padEnd(15)} +${added[t] ?? 0} added, ${skipped[t] ?? 0} already present`);

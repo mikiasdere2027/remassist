@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { pageOg } from '@/lib/site';
 import { getFaq } from '@/lib/faq/content';
+import FaqTabs from './FaqTabs';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
@@ -26,59 +27,29 @@ export default async function Page() {
 
   return (
     <main>
-  
-    
-  <section style={{ background: "linear-gradient(180deg,#f7faff 0%,var(--bg-marketing-paper) 72%)" }}>
-      <div className={styles['rs-wrap']} style={{ paddingTop: "76px", paddingBottom: "52px" }}>
-        <p className={styles['rs-eyebrow']}>FAQ</p>
-        <h1 className={styles['rs-h1']}>Everything we get <span>asked, in one place.</span></h1>
-        <p className={styles['rs-lede']}>The questions from every service page, collected and answered here —
-          including the ones with awkward answers. Each group links back to the page it came from.</p>
-        <nav className={styles['rs-jump']} aria-label='Question groups'>
-          {groups.map((g) => (
-            <a key={g.slug} href={`#${g.slug}`}>{g.title}</a>
-          ))}
-        </nav>
-      </div>
-    </section>
+      <section style={{ background: "linear-gradient(180deg,#f7faff 0%,var(--bg-marketing-paper) 72%)" }}>
+        <div className={styles['rs-wrap']} style={{ paddingTop: "76px", paddingBottom: "44px" }}>
+          <p className={styles['rs-eyebrow']}>FAQ</p>
+          <h1 className={styles['rs-h1']}>Everything we get <span>asked, in one place.</span></h1>
+          <p className={styles['rs-lede']}>The questions from every service page, collected and answered here —
+            including the ones with awkward answers. Pick a topic on the left, or jump straight to a group
+            by its link on the page it came from.</p>
+        </div>
+      </section>
 
-      {groups.map((g) => (
-        <section key={g.slug} id={g.slug} className={styles['rs-group']}>
-          <div className={`${styles['rs-wrap']} ${styles['rs-narrow']}`}>
-            <div className={styles['rs-group-head']}>
-              <div>
-                <h2 className={styles['rs-h2']}>{g.title}</h2>
-                {g.blurb && <p>{g.blurb}</p>}
-              </div>
-              {g.linkHref && g.linkLabel && (
-                <a className={styles['rs-source']} href={g.linkHref}>{g.linkLabel}</a>
-              )}
-            </div>
-            <div className={styles['rs-faq']}>
-              {g.items.map((it) => (
-                <details key={it.question}>
-                  <summary>{it.question}</summary>
-                  <p>{it.answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-      ))}
+      <FaqTabs groups={groups} />
 
       <section className={styles['rs-close']}>
-      <div className={styles['rs-wrap']}>
-        <h2>Still not answered?</h2>
-        <p>Ask it on the consult. It is free, and if the answer is that we are not the right fit we
-          will say so on the call rather than three weeks later.</p>
-        <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "13px", marginTop: "28px" }}>
-          <a className={styles['rs-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>Book a free consult <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
-          <a className={styles['rs-ghost-dark']} href='/qualify'>Qualify in two minutes</a>
+        <div className={styles['rs-wrap']}>
+          <h2>Still not answered?</h2>
+          <p>Ask it on the consult. It is free, and if the answer is that we are not the right fit we
+            will say so on the call rather than three weeks later.</p>
+          <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "13px", marginTop: "28px" }}>
+            <a className={styles['rs-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>Book a free consult <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
+            <a className={styles['rs-ghost-dark']} href='/qualify'>Qualify in two minutes</a>
+          </div>
         </div>
-      </div>
-    </section>
-  
-  
+      </section>
     </main>
   );
 }

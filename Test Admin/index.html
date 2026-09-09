@@ -25,7 +25,7 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    Brand tokens — ported verbatim from styles/globals.css
@@ -173,9 +173,6 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
   margin-top: auto; padding-top: 14px;
   border-top: 1px solid rgba(244, 246, 251, 0.08); flex: none;
 }
-.admin-card { display: flex; align-items: center; gap: 10px; padding: 6px 10px 10px; }
-.admin-name { font-size: 13.5px; font-weight: 700; color: var(--fg-on-dark); line-height: 1.3; }
-.admin-role { font-size: 11.5px; color: var(--fg-on-dark-muted); }
 .sidebar-links { display: flex; justify-content: space-between; padding: 0 4px; }
 .sidebar-links a {
   display: inline-flex; align-items: center; gap: 6px;
@@ -211,7 +208,7 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
   border-bottom: 1px solid var(--hairline);
 }
 .topbar-inner {
-  max-width: 1280px; margin: 0 auto;
+  max-width: 1520px; margin: 0 auto;
   height: 72px; padding: 0 32px;
   display: flex; align-items: center; gap: 24px;
 }
@@ -221,6 +218,33 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
 .tb-sub { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-500);
   text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 .tb-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+/* Identity chip in the top-right — avatar, name, "role · email" and a gear.
+   The whole pill is clickable through to Settings (data-view="settings"), like
+   the real app's topbar chip. */
+.tb-user {
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 44px; padding: 5px 12px 5px 6px;
+  background: #fff; border: 1px solid var(--hairline); border-radius: 999px;
+  font: inherit; color: inherit; text-decoration: none; cursor: pointer;
+  appearance: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.tb-user:hover { border-color: var(--brand-blue);
+  box-shadow: 0 8px 22px -14px rgba(0, 5, 67, 0.35); }
+.tb-user .avatar { width: 32px; height: 32px; font-size: 11px; }
+.tb-user-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; text-align: left; }
+.tb-user-name { font-size: 13px; font-weight: 700; color: var(--ink-900);
+  line-height: 1.25; white-space: nowrap; }
+.tb-user-role { font-size: 11.5px; color: var(--ink-500); line-height: 1.3; white-space: nowrap; }
+.tb-user-gear { width: 15px; height: 15px; flex: none; fill: none;
+  stroke: var(--ink-400); stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: stroke 150ms; }
+.tb-user:hover .tb-user-gear { stroke: var(--blue-700); }
+@media (max-width: 720px) {
+  .tb-user { padding: 5px 6px; }
+  .tb-user-text { display: none; }
+}
 
 .tb-search {
   display: flex; align-items: center; gap: 8px;
@@ -267,7 +291,7 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
 .btn-soft { background: rgba(81, 141, 224, 0.10); color: var(--blue-700); }
 .btn-soft:hover { background: rgba(81, 141, 224, 0.18); }
 
-.page { max-width: 1280px; margin: 0 auto; padding: 28px 32px 56px; }
+.page { max-width: 1520px; margin: 0 auto; padding: 28px 32px 56px; }
 
 /* ============================================================
    Dashboard
@@ -331,6 +355,29 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
 .panel-link:hover { color: var(--blue-700); }
 .panel-foot { padding: 14px 22px; font-size: 12.5px; color: var(--ink-500);
   border-top: 1px solid var(--hairline); }
+/* Settings — account details + password */
+.kv { padding: 6px 22px; }
+.kv-row { display: flex; align-items: baseline; gap: 24px; padding: 13px 0; border-bottom: 1px solid var(--hairline); }
+.kv-row:last-child { border-bottom: 0; }
+.kv-key { flex: none; width: 220px; font-size: 13px; color: var(--ink-500); }
+.kv-val { font-size: 14px; font-weight: 600; color: var(--ink-900); }
+.kv-val .pill { font-size: 11.5px; padding: 2px 10px; }
+.mono { font-family: var(--font-sans);
+  font-size: 13px; font-weight: 300; letter-spacing: 0; }
+.stack { display: flex; flex-direction: column; gap: 14px; padding: 22px; max-width: 460px; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field > span { font-size: 12.5px; font-weight: 600; color: var(--ink-700); }
+.form-control {
+  height: 40px; padding: 0 14px; width: 100%;
+  background: #fff; border: 1px solid var(--hairline); border-radius: var(--r-sm);
+  font: inherit; font-size: 13.5px; color: var(--ink-900); outline: 0;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.form-control:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.15); }
+@media (max-width: 720px) {
+  .kv-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .kv-key { width: auto; }
+}
 
 .table { width: 100%; border-collapse: collapse; }
 .table th {
@@ -553,11 +600,10 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
   .sidebar-brand { justify-content: center; padding: 2px 0 16px; }
   .sidebar-brand img { height: 26px; }
   .brand-label, .nav-group-title, .nav-link span, .nav-badge, .nav-tag,
-  .admin-card > div, .sidebar-links a span { display: none; }
+  .sidebar-links a span { display: none; }
   .nav-group { margin-top: 14px; }
   .nav-link { justify-content: center; padding: 12px 0; border-left: 0; }
   .nav-link.active { border-left: 0; border-radius: var(--r-sm); }
-  .admin-card { justify-content: center; padding: 6px 0 12px; }
   .sidebar-links { flex-direction: column; align-items: center; gap: 2px; }
   .main { margin-left: 76px; }
   .tb-search { width: 200px; }
@@ -650,13 +696,6 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
   </nav>
 
   <div class="sidebar-foot">
-    <div class="admin-card">
-      <span class="avatar" aria-hidden="true">JZ</span>
-      <div>
-        <div class="admin-name">Johnathan Z.</div>
-        <div class="admin-role">Owner · admin@remconnect.io</div>
-      </div>
-    </div>
     <div class="sidebar-links">
       <a href="https://remassistance.com" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M20 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg><span>View site</span></a>
       <a class="signout" href="#" title="Sign out"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg><span>Sign out</span></a>
@@ -684,7 +723,17 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         <span id="tbCtaLabel">New post</span>
       </button>
-      <span class="avatar" aria-hidden="true">JZ</span>
+      <button type="button" class="tb-user" data-view="settings" title="Open settings">
+        <span class="avatar" aria-hidden="true">JZ</span>
+        <span class="tb-user-text">
+          <span class="tb-user-name">Johnathan Z.</span>
+          <span class="tb-user-role">Owner · admin@remconnect.io</span>
+        </span>
+        <svg class="tb-user-gear" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
     </div>
   </div>
 </header>
@@ -740,14 +789,13 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
       </div>
     </div>
 
-    <div class="grid-2">
-      <div class="panel">
-        <div class="panel-head">
-          <div>
-            <h3 class="panel-title">Recent leads</h3>
+    <div class="panel" style="margin-bottom:24px">
+      <div class="panel-head">
+        <div>
+          <h3 class="panel-title">Recent leads</h3>
             <p class="panel-sub">Newest submissions across the site</p>
           </div>
-          <a class="panel-link" href="#" data-view="leads">View all
+          <a class="panel-link" href="#" data-view="leads">View more
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
           </a>
         </div>
@@ -799,12 +847,12 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
             </tr>
           </tbody>
         </table>
-      </div>
+    </div>
 
-      <div class="panel">
-        <div class="panel-head">
-          <div>
-            <h3 class="panel-title">At a glance</h3>
+    <div class="panel" style="margin-bottom:24px">
+      <div class="panel-head">
+        <div>
+          <h3 class="panel-title">At a glance</h3>
             <p class="panel-sub">What the site is serving right now</p>
           </div>
         </div>
@@ -831,7 +879,6 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
           </div>
         </div>
       </div>
-    </div>
 
     <div class="grid-2-eq">
       <div class="panel">
@@ -1314,7 +1361,7 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
           </div>
         </div>
       </div>
-      <div class="panel-foot">Photo upload and seat status live on each member's card after a real backend lands.</div>
+      <div class="panel-foot">Photos, roles, tags and the order here are managed in the admin CMS at /admin/content/team — the homepage reflects changes immediately after save.</div>
     </div>
   </section>
 
@@ -1481,7 +1528,7 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
         <tbody>
           <tr>
             <td><span class="cell-primary">Part-time</span></td>
-            <td class="cell-secondary">About 80 hrs/month (part-time)</td>
+            <td><span class="cell-secondary">About 80 hrs/month (part-time)</span></td>
             <td>1</td>
             <td>80</td>
             <td><div class="actions">
@@ -1491,7 +1538,7 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
           </tr>
           <tr>
             <td><span class="cell-primary">Full-time</span></td>
-            <td class="cell-secondary">160 hrs/month (one full-time seat)</td>
+            <td><span class="cell-secondary">160 hrs/month (one full-time seat)</span></td>
             <td>1</td>
             <td>160</td>
             <td><div class="actions">
@@ -1501,7 +1548,7 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
           </tr>
           <tr>
             <td><span class="cell-primary">Two on a rota</span></td>
-            <td class="cell-secondary">320 hrs/month (two seats on a rota)</td>
+            <td><span class="cell-secondary">320 hrs/month (two seats on a rota)</span></td>
             <td>2</td>
             <td>320</td>
             <td><div class="actions">
@@ -1511,7 +1558,7 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
           </tr>
           <tr>
             <td><span class="cell-primary">Always on</span></td>
-            <td class="cell-secondary">640 hrs/month (a 24/7 pod)</td>
+            <td><span class="cell-secondary">640 hrs/month (a 24/7 pod)</span></td>
             <td>4</td>
             <td>640</td>
             <td><div class="actions">
@@ -1548,8 +1595,8 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
           <tr>
             <td><span class="cell-primary">Pro</span></td>
             <td><b>$8.00</b></td>
-            <td class="cell-secondary">$1,280</td>
-            <td class="cell-secondary">Entry seats for every service</td>
+            <td><span class="cell-secondary">$1,280</span></td>
+            <td><span class="cell-secondary">Entry seats for every service</span></td>
             <td><div class="actions">
               <button type="button" class="icon-btn" aria-label="Edit tier"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 3 21l.5-4.5z"/></svg></button>
               <button type="button" class="icon-btn danger" aria-label="Delete tier"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg></button>
@@ -1558,8 +1605,8 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
           <tr>
             <td><span class="cell-primary">Expert lead + Pro seats</span></td>
             <td><b>$9.00</b></td>
-            <td class="cell-secondary">$1,440</td>
-            <td class="cell-secondary">One expert lead with Pro seats</td>
+            <td><span class="cell-secondary">$1,440</span></td>
+            <td><span class="cell-secondary">One expert lead with Pro seats</span></td>
             <td><div class="actions">
               <button type="button" class="icon-btn" aria-label="Edit tier"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 3 21l.5-4.5z"/></svg></button>
               <button type="button" class="icon-btn danger" aria-label="Delete tier"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg></button>
@@ -1568,8 +1615,8 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
           <tr>
             <td><span class="cell-primary">Expert</span></td>
             <td><b>$11.00</b></td>
-            <td class="cell-secondary">$1,760</td>
-            <td class="cell-secondary">Senior seats, all services</td>
+            <td><span class="cell-secondary">$1,760</span></td>
+            <td><span class="cell-secondary">Senior seats, all services</span></td>
             <td><div class="actions">
               <button type="button" class="icon-btn" aria-label="Edit tier"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 3 21l.5-4.5z"/></svg></button>
               <button type="button" class="icon-btn danger" aria-label="Delete tier"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg></button>
@@ -1637,6 +1684,67 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
     </div>
   </section>
 
+  <!-- ================= SETTINGS ================= -->
+  <section class="view" data-role="view" data-view="settings" hidden>
+    <div class="panel" style="margin-bottom:24px">
+      <div class="panel-head">
+        <div>
+          <h3 class="panel-title">Your account</h3>
+          <p class="panel-sub">Only an administrator can change a role or invite anyone</p>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="kv-row">
+          <span class="kv-key">Email</span>
+          <span class="kv-val mono">admin@remconnect.io</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Name</span>
+          <span class="kv-val">Johnathan Z.</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Role</span>
+          <span class="kv-val"><span class="pill pill-new">Owner</span></span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Email verified</span>
+          <span class="kv-val mono">12 Aug 2026</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Member since</span>
+          <span class="kv-val mono">1 Jan 2025</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3 class="panel-title">Change your password</h3>
+          <p class="panel-sub">At least 8 characters</p>
+        </div>
+      </div>
+      <form class="stack" onsubmit="return false">
+        <label class="form-field">
+          <span>Current password</span>
+          <input class="form-control" type="password" name="current" autocomplete="current-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;">
+        </label>
+        <label class="form-field">
+          <span>New password</span>
+          <input class="form-control" type="password" name="next" autocomplete="new-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;">
+        </label>
+        <label class="form-field">
+          <span>Repeat new password</span>
+          <input class="form-control" type="password" name="confirm" autocomplete="new-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;">
+        </label>
+        <div>
+          <button type="submit" class="btn btn-primary">Change password</button>
+        </div>
+      </form>
+      <div class="panel-foot">No data is sent from this mockup — the preview assumes this account signs in with an emailed code, so a current password is optional.</div>
+    </div>
+  </section>
+
 </div>
 </main>
 
@@ -1652,7 +1760,8 @@ svg.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor
     team:      { t: 'Team',      s: 'The people behind the services', c: 'Add member' },
     tools:     { t: 'Tools',     s: 'The stack the pods are trained on', c: 'Add tool' },
     rates:     { t: 'Rates',     s: 'Coverage options and agent tiers — the price list', c: 'Save changes' },
-    reviews:   { t: 'Reviews',   s: 'Proof of record — list and resync only', c: 'Sync from source' }
+    reviews:   { t: 'Reviews',   s: 'Proof of record — list and resync only', c: 'Sync from source' },
+    settings:  { t: 'Settings',  s: 'Your account — profile and password', c: 'Save changes' },
   };
 
   var navBtns = document.querySelectorAll('.nav-link[data-view]');

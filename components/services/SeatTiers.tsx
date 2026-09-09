@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getPublishedTiers } from '@/lib/rates/getPublishedTiers';
 import styles from './SeatTiers.module.css';
 
 /**
@@ -17,25 +18,23 @@ import styles from './SeatTiers.module.css';
  * `SeatTiers` is the bare card grid, for /pricing's hero, which brings its own
  * heading and closing line. The default export is the whole section, which is
  * what the service pages drop in.
+ *
+ * Price figures come from the DB via getPublishedTiers(), so an admin edit on
+ * /admin/catalog is immediately reflected here. Falls back to seed values when
+ * the database is not configured.
  */
 
 const CHECK = <path d="m5 13 4 4L19 7" />;
 
-interface Tier {
-  name: string;
+/** Per-tier static copy — the price figure is the only thing that changes. */
+const TIER_COPY: Record<string, {
   tag: string;
-  price: string;
   text: string;
   points: string[];
-  /** The Expert card carries the emphasised border. */
   feature?: boolean;
-}
-
-const TIERS: Tier[] = [
-  {
-    name: 'Pro',
+}> = {
+  pro: {
     tag: 'Best value',
-    price: '$8',
     text: 'Fully trained and fit for work from day one. Pro seats clear our core programme and pick up whatever software you run — CRM, helpdesk, ledger, billing, scheduling, or a tool you built in-house.',
     points: [
       'Works on any stack',
@@ -44,10 +43,8 @@ const TIERS: Tier[] = [
       'Suited to repeatable, rules-based work',
     ],
   },
-  {
-    name: 'Expert',
+  expert: {
     tag: 'Most judgment',
-    price: '$11',
     text: 'More years on the job and a far more rigorous assessment path. Experts arrive already fluent in your kind of operation and need the least direction to get moving.',
     points: [
       'Senior experience',
@@ -57,28 +54,45 @@ const TIERS: Tier[] = [
     ],
     feature: true,
   },
-];
+};
 
 /** The two cards on their own, for a page that supplies its own heading. */
-export function SeatTiers() {
+export async function SeatTiers() {
+  /* Only tiers this file has copy for. A card is an argument — a paragraph
+     saying what the seat is and four points saying what it suits — and none of
+     that can be derived from a rate row, so a tier with no entry in TIER_COPY
+     renders as a heading, a price and then nothing. That is not hypothetical:
+     a third tier added in /admin/catalog put a blank card on /pricing and on
+     every service page, under headings that say "Two tiers" and "Two rates,
+     published". Adding a third tier to the site therefore means adding its
+     copy here, deliberately, rather than a rate row quietly becoming a card.
+
+     Rates still come from the database — this filters which tiers are shown,
+     never what they cost. Object.hasOwn, not `in`: `in` would say yes to
+     'constructor' and every other name on the prototype. */
+  const tiers = (await getPublishedTiers()).filter((t) => Object.hasOwn(TIER_COPY, t.key));
+
   return (
     <div className={styles.tiers}>
-      {TIERS.map((t) => (
-        <div
-          className={`${styles.tier}${t.feature ? ` ${styles['tier--expert']}` : ''}`}
-          key={t.name}
-        >
-          <span className={styles.tag}>{t.tag}</span>
-          <h3>{t.name}</h3>
-          <span className={styles.price}><small>from</small><b>{t.price}</b><em>/hr</em></span>
-          <p>{t.text}</p>
-          <ul>
-            {t.points.map((p) => (
-              <li key={p}><svg viewBox="0 0 24 24" aria-hidden="true">{CHECK}</svg><span>{p}</span></li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      {tiers.map((t) => {
+        const copy = TIER_COPY[t.key];
+        return (
+          <div
+            className={`${styles.tier}${copy.feature ? ` ${styles['tier--expert']}` : ''}`}
+            key={t.key}
+          >
+            <span className={styles.tag}>{copy.tag}</span>
+            <h3>{t.label}</h3>
+            <span className={styles.price}><small>from</small><b>{t.priceDisplay}</b><em>/hr</em></span>
+            <p>{copy.text}</p>
+            <ul>
+              {copy.points.map((p) => (
+                <li key={p}><svg viewBox="0 0 24 24" aria-hidden="true">{CHECK}</svg><span>{p}</span></li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -88,7 +102,7 @@ interface Props {
   surface?: 'white' | 'paper';
 }
 
-export default function SeatTiersSection({ surface = 'paper' }: Props) {
+export default async function SeatTiersSection({ surface = 'paper' }: Props) {
   return (
     <section className={`${styles.section} ${styles[`section--${surface}`]}`} id="rates">
       <div className={styles.wrap}>

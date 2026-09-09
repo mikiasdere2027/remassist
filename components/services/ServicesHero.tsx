@@ -34,24 +34,6 @@ import styles from './ServicesHero.module.css';
  * signed off. Say the word and it goes in with real copy.
  */
 
-const TRUST = [
-  {
-    title: 'Trained & Vetted',
-    text: 'You interview before they start',
-    icon: <><path d="M12 3l7 3v6c0 4.2-2.9 7.4-7 9-4.1-1.6-7-4.8-7-9V6z" /><path d="m9 12 2 2 4-4" /></>,
-  },
-  {
-    title: 'Scalable Teams',
-    text: 'Add or adjust seats, flexible terms',
-    icon: <><circle cx="9" cy="8" r="3.2" /><path d="M3 19v-1.2A4.8 4.8 0 0 1 7.8 13h2.4" /><path d="M17 5.2a3.2 3.2 0 0 1 0 6.2M21 19v-1.2a4.6 4.6 0 0 0-3.2-4.4" /></>,
-  },
-  {
-    title: 'Backed by Support',
-    text: 'QA and oversight on every seat',
-    icon: <><path d="M4 17v-5a8 8 0 0 1 16 0v5" /><path d="M20 18a2 2 0 0 1-2 2h-.8a1.8 1.8 0 0 1-1.8-1.8v-2.4A1.8 1.8 0 0 1 17.2 14H20zM4 18a2 2 0 0 0 2 2h.8a1.8 1.8 0 0 0 1.8-1.8v-2.4A1.8 1.8 0 0 0 6.8 14H4z" /></>,
-  },
-];
-
 export default function ServicesHero() {
   return (
     <section className={styles.hero} aria-labelledby="services-heading">
@@ -73,26 +55,6 @@ export default function ServicesHero() {
             One trained seat often covers several of these at once — that is the point. Take a
             single role, or a whole pod.
           </p>
-
-          {/* Three claims, each one the site already makes in its own words —
-              the vetting and interview step, the flexible-terms line from the
-              FAQ, and the QA commitment from the service pages. Deliberately
-              no seat-count figure: nothing on this site says how many seats an
-              engagement can reach, and a number here would be the only place
-              it was ever stated. */}
-          <ul className={styles.trust}>
-            {TRUST.map((t) => (
-              <li key={t.title}>
-                <span className={styles.trustIco}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true">{t.icon}</svg>
-                </span>
-                <span>
-                  <b>{t.title}</b>
-                  <em>{t.text}</em>
-                </span>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <span className={styles.gap} />

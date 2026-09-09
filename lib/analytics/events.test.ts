@@ -35,6 +35,18 @@ function events(): unknown[] {
   return dataLayer().filter((e) => typeof e.event === 'string');
 }
 
+/**
+ * The same events in gtag's calling convention: Arguments objects, which is
+ * all gtag.js reads. `setConsent` pushes its consent update the same way, so
+ * these are selected on the command name rather than on the shape alone.
+ */
+function gtagEvents(): unknown[][] {
+  return dataLayer()
+    .filter((e) => Object.prototype.toString.call(e) === '[object Arguments]')
+    .map((e) => Array.from(e as unknown as ArrayLike<unknown>))
+    .filter((call) => call[0] === 'event');
+}
+
 beforeEach(() => {
   jar.clear();
   Object.assign(globalThis, {
@@ -46,6 +58,7 @@ beforeEach(() => {
 
   // The everything-permits baseline; each test below removes one thing.
   vi.stubEnv('NEXT_PUBLIC_GTM_ID', 'GTM-TESTONLY');
+  vi.stubEnv('NEXT_PUBLIC_GA_ID', '');
   vi.stubEnv('NEXT_PUBLIC_ANALYTICS_ENV', 'production');
   vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', '');
   setConsent(GRANT_ALL);
@@ -62,11 +75,12 @@ describe('the emit gate', () => {
     expect(events()).toEqual([{ event: 'book_click', placement: 'header' }]);
   });
 
-  it('is silent with no container — an unset GTM id must not half-load anything', () => {
+  it('is silent with no tag at all — neither id set must not half-load anything', () => {
     vi.stubEnv('NEXT_PUBLIC_GTM_ID', '');
     expect(analyticsEnabled()).toBe(false);
     track('chat_open', { placement: 'launcher' });
     expect(events()).toEqual([]);
+    expect(gtagEvents()).toEqual([]);
   });
 
   /* The bug this replaced: the gate tested NEXT_PUBLIC_VERCEL_ENV, which the
@@ -119,5 +133,66 @@ describe('the payload', () => {
     track('book_click', { placement: 'header' });
     track('chat_open', { placement: 'launcher' });
     expect(events()).toHaveLength(2);
+  });
+});
+
+/**
+ * The same events with gtag.js on the page and no container behind it.
+ *
+ * This is the path that fails silently if the shapes are ever collapsed back
+ * into one: a container triggers on `{event: 'name'}` objects, gtag.js reads
+ * Arguments objects and ignores the former completely, so the wrong shape
+ * means a full dataLayer, an empty GA4 property and no error anywhere.
+ */
+describe('the direct GA4 tag', () => {
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_GTM_ID', '');
+    vi.stubEnv('NEXT_PUBLIC_GA_ID', 'G-TESTONLY');
+  });
+
+  it('permits an event with no container, when a measurement id is set', () => {
+    expect(analyticsEnabled()).toBe(true);
+  });
+
+  it("emits gtag('event', name, params), not the container's object literal", () => {
+    track('book_click', { placement: 'header' });
+    expect(gtagEvents()).toEqual([['event', 'book_click', { placement: 'header' }]]);
+    expect(events()).toEqual([]);
+  });
+
+  it('pushes a real Arguments object, the only shape gtag.js reads', () => {
+    track('chat_open', { placement: 'launcher' });
+    const pushed = dataLayer().at(-1);
+    expect(Object.prototype.toString.call(pushed)).toBe('[object Arguments]');
+  });
+
+  /* The gate is the gate whichever tag is loaded — a direct tag must not be a
+     way round the checks the container path passes through. */
+  it('is silent without analytics consent', () => {
+    setConsent(DENY_ALL);
+    expect(analyticsEnabled()).toBe(false);
+    track('quiz_start', { quiz_id: 'fit_finder' });
+    expect(gtagEvents()).toEqual([]);
+  });
+
+  it('is silent unless the production flag is set explicitly', () => {
+    vi.stubEnv('NEXT_PUBLIC_ANALYTICS_ENV', '');
+    expect(analyticsEnabled()).toBe(false);
+    track('video_play', { video_id: 'kalkidan' });
+    expect(gtagEvents()).toEqual([]);
+  });
+
+  /* Both ids set is a misconfiguration, and the safe reading of it is "one
+     tag, not two" — the container. Emitting both shapes would count every
+     conversion twice, which is worse than counting none because it looks
+     right. components/analytics/GoogleAnalytics.tsx renders null in the same
+     case, so the tag and the events agree about which one is live. */
+  it('defers to the container when both ids are set, so nothing counts twice', () => {
+    vi.stubEnv('NEXT_PUBLIC_GTM_ID', 'GTM-TESTONLY');
+    track('generate_lead', { lead_source: 'qualify_quiz', has_quiz: true });
+    expect(events()).toEqual([
+      { event: 'generate_lead', lead_source: 'qualify_quiz', has_quiz: true },
+    ]);
+    expect(gtagEvents()).toEqual([]);
   });
 });

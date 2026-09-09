@@ -5,9 +5,10 @@ import { desc, eq } from 'drizzle-orm';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { leads, quizSubmissions } from '@/db/schema';
 import {
-  SOURCE_LABELS, answerFor, formatDate, orderedAnswers, questionFor, unknownRawKeys,
+  SOURCE_LABELS, answerFor, formatDate, formatUtm, orderedAnswers, questionFor, unknownRawKeys,
 } from '@/lib/leads/display';
 import StatusForm from './StatusForm';
+import AdminTopbar from '../../AdminTopbar';
 import styles from '../../../admin.module.css';
 
 /**
@@ -43,29 +44,60 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
 
   const raw = lead.rawFields ?? null;
   const extraKeys = unknownRawKeys(raw);
+  const campaign = formatUtm(lead.utm);
 
   return (
     <>
-      <header className={styles.topbar}>
-        <div className={styles.tbInner}>
-          <div>
-            <Link className={styles.back} href="/admin/leads">← All leads</Link>
-            <h1 className={styles.tbTitle}>{lead.name || lead.email}</h1>
-            <p className={styles.tbSub}>
-              {SOURCE_LABELS[lead.source] ?? lead.source} · {formatDate(lead.createdAt)}
-            </p>
-          </div>
-          <span className={`${styles.pill} ${styles[`s_${lead.status}`]}`}>{lead.status}</span>
-        </div>
-      </header>
+      <AdminTopbar
+        title="Lead"
+        /* Who it is, the way the list names them: name over email, and email
+           alone when a form did not ask for one. Not the source and date —
+           those are on the strip and the panel note below. */
+        subtitle={lead.name ? `${lead.name} · ${lead.email}` : lead.email}
+        action={<StatusForm id={lead.id} current={lead.status} />}
+      />
 
       <div className={styles.view}>
+        {/* The same back button the team, catalog and review screens use, in the
+            same place. It used to be the topbar's title, which cost the page a
+            title and made this the one detail screen where going back was not
+            where going back is everywhere else. */}
+        <Link className={styles.memberBackBtn} href="/admin/leads">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M19 12H5" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          Back to leads
+        </Link>
+
+        {/* Where the lead came from, on one strip. This was duplicated by a
+            Context panel at the foot of the page which said the same three
+            things again and added two more; the two extras moved up here and
+            the panel went. One place to read context beats two that can
+            disagree. */}
+        <div className={styles.leadTopContextBar}>
+          <ContextItem label="Source" value={SOURCE_LABELS[lead.source] ?? lead.source} />
+          <Divider />
+          <ContextItem label="Page" value={lead.pageUrl} fallback="—" mono />
+          <Divider />
+          <ContextItem label="Referrer" value={lead.referrer} fallback="Direct / None" mono />
+          <Divider />
+          <ContextItem label="Lead ID" value={lead.id} mono />
+          <Divider />
+          {/* The one field here that is genuinely often absent — most leads
+              arrive with no campaign at all — so it says so in words rather
+              than showing a dash that reads like a missing value. */}
+          <ContextItem label="Campaign" value={campaign} fallback="None" mono />
+        </div>
+
         <div className={styles.detailGrid}>
-          {/* 1 — what they typed */}
-          <section className={`${styles.panel} ${styles.detailWide}`}>
+          {/* Top Row — Column 1: Submitted fields */}
+          <section className={styles.panel}>
             <div className={styles.panelHead}>
-              <h2 className={styles.panelTitle}>Submitted fields</h2>
-              <span className={styles.panelNote}>Every field on the form, filled or not</span>
+              <div>
+                <h2 className={styles.panelTitle}>Submitted fields</h2>
+                <span className={styles.panelNote}>Submitted on {formatDate(lead.createdAt)}</span>
+              </div>
             </div>
             <dl className={styles.dl}>
               <Row label="First name" value={lead.firstName} />
@@ -81,22 +113,21 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
                 {lead.consentAt ? (
                   <>Agreed <span className={styles.mono}>{formatDate(lead.consentAt)}</span></>
                 ) : (
-                  /* Honest rather than reassuring: every row written before the
-                     consent column existed lands here, and so does any form
-                     that does not ask. Neither is evidence of agreement. */
                   <span className={styles.none}>Not recorded</span>
                 )}
               </dd>
             </dl>
           </section>
 
-          {/* 2 — everything else it sent, so nothing is silently dropped */}
+          {/* Top Row — Column 2: Raw submission */}
           <section className={styles.panel}>
             <div className={styles.panelHead}>
-              <h2 className={styles.panelTitle}>Raw submission</h2>
-              <span className={styles.panelNote}>
-                {raw ? `${Object.keys(raw).length} fields as submitted` : 'Not captured'}
-              </span>
+              <div>
+                <h2 className={styles.panelTitle}>Raw submission</h2>
+                <span className={styles.panelNote}>
+                  {raw ? `${Object.keys(raw).length} fields captured` : 'Not captured'} · {formatDate(lead.createdAt)}
+                </span>
+              </div>
             </div>
             {raw && Object.keys(raw).length > 0 ? (
               <dl className={styles.dl}>
@@ -113,25 +144,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
             )}
           </section>
 
-          {/* 3 — where they came from */}
-          <section className={styles.panel}>
-            <div className={styles.panelHead}>
-              <h2 className={styles.panelTitle}>Context</h2>
-            </div>
-            <dl className={styles.dl}>
-              <Row label="Source" value={SOURCE_LABELS[lead.source] ?? lead.source} />
-              <Row label="Page" value={lead.pageUrl} mono />
-              <Row label="Referrer" value={lead.referrer} mono />
-              <Row label="Lead ID" value={lead.id} mono />
-            </dl>
-            {lead.utm && Object.keys(lead.utm).length > 0 ? (
-              <pre className={styles.json}>{JSON.stringify(lead.utm, null, 2)}</pre>
-            ) : (
-              <p className={styles.empty}>No campaign attribution recorded.</p>
-            )}
-          </section>
-
-          {/* 4 — the quiz, if they took it */}
+          {/* Fit finder answers (if taken) */}
           {quizzes.map((q) => (
             <section key={q.id} className={`${styles.panel} ${styles.detailWide}`}>
               <div className={styles.panelHead}>
@@ -160,8 +173,6 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
                 <>
                   <div className={styles.panelHead} style={{ borderTop: '1px solid #edf0f6' }}>
                     <h2 className={styles.panelTitle}>The quote they were shown</h2>
-                    {/* Read from the stored snapshot, never recomputed. Rates
-                        change; what this prospect was actually told does not. */}
                     <span className={styles.panelNote}>Snapshot as shown, not recalculated</span>
                   </div>
                   <div className={styles.quote}>
@@ -176,18 +187,34 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
               )}
             </section>
           ))}
-
-          {/* 5 — the one thing that writes */}
-          <section className={styles.panel}>
-            <div className={styles.panelHead}>
-              <h2 className={styles.panelTitle}>Status</h2>
-            </div>
-            <StatusForm id={lead.id} current={lead.status} />
-          </section>
         </div>
       </div>
     </>
   );
+}
+
+/**
+ * One label/value pair on the context strip.
+ *
+ * Every label is a bare word. Two of these used to read "Page =" and
+ * "Referrer =" while the third read "Source", which is the kind of difference
+ * that makes a reader stop and wonder what the equals sign means.
+ */
+function ContextItem({
+  label, value, fallback, mono,
+}: { label: string; value?: string | null; fallback?: string; mono?: boolean }) {
+  return (
+    <div className={styles.leadContextItem}>
+      <span className={styles.leadContextLabel}>{label}</span>
+      <span className={`${styles.leadContextValue} ${mono ? styles.mono : ''}`}>
+        {value || fallback || <span className={styles.none}>Not recorded</span>}
+      </span>
+    </div>
+  );
+}
+
+function Divider() {
+  return <span className={styles.leadContextDivider} aria-hidden="true" />;
 }
 
 /** A labelled row that shows its own absence rather than vanishing. */

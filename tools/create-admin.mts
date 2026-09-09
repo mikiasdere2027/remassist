@@ -123,8 +123,10 @@ try {
 
   console.log(
     `\n  Done. ${email} is the admin.\n` +
-    '  Sign in at /admin/signin. You will be asked to verify the address —\n' +
-    '  that needs working email, and it never blocks sign-in.\n',
+    '  Sign in at /admin/signin, then confirm the address within 24 hours: the\n' +
+    '  admin asks for a code by email, and an account that has not confirmed by\n' +
+    '  then is locked out until it does (lib/auth/verify.ts).\n' +
+    '  If mail is not working yet, npm run admin:verify confirms it from here.\n',
   );
 } catch (err) {
   /* Never print the error object wholesale — a driver error carries the

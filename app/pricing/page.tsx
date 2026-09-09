@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
 import { SeatTiers } from '@/components/services/SeatTiers';
+import { getPublishedTiers } from '@/lib/rates/getPublishedTiers';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -11,7 +12,10 @@ export const metadata: Metadata = {
   openGraph: pageOg('/pricing'),
 };
 
-export default function Page() {
+export default async function Page() {
+  const tiers = await getPublishedTiers();
+  const proRate    = tiers.find((t) => t.key === 'pro')?.priceDisplay    ?? '$8';
+  const expertRate = tiers.find((t) => t.key === 'expert')?.priceDisplay ?? '$11';
   return (
     <main>
   
@@ -56,7 +60,7 @@ export default function Page() {
         <div className={styles['pr-plans']}>
           <div className={styles['pr-plan']}>
             <h3>Customer Service Agents</h3>
-            <span className={styles['pr-plan-price']}>From $8</span>
+            <span className={styles['pr-plan-price']}>From {proRate}</span>
             <span className={styles['pr-plan-unit']}>Per agent per hour,<br />customized in consultation</span>
             <a className={styles['pr-btn']} href='mailto:support@remassistance.com'>Get started</a>
             <ul>
@@ -85,7 +89,7 @@ export default function Page() {
   
           <div className={styles['pr-plan']}>
             <h3>SDR as a Service</h3>
-            <span className={styles['pr-plan-price']}>From $8</span>
+            <span className={styles['pr-plan-price']}>From {proRate}</span>
             <span className={styles['pr-plan-unit']}>Per SDR per hour,<br />customized in consultation</span>
             <a className={styles['pr-btn']} href='mailto:support@remassistance.com'>Get started</a>
             <ul>
@@ -232,14 +236,14 @@ export default function Page() {
         <div className={styles['pr-faq']}>
           <details>
             <summary>Why publish rates when nobody else does?</summary>
-            <p>Because the alternative wastes both our time. If $8 or $11 an hour is outside your range,
+            <p>Because the alternative wastes both our time. If {proRate} or {expertRate} an hour is outside your range,
               you should find that out in two minutes rather than after a discovery call. What genuinely
               needs a conversation is the shape — how many seats, what coverage, which tier —
               and that is what the consult is for.</p>
           </details>
           <details>
             <summary>Do you have set pricing?</summary>
-            <p>Rates start at $8 an hour and the tiers above are real, but the total is assembled from
+            <p>Rates start at {proRate} an hour and the tiers above are real, but the total is assembled from
               options we quote a la carte, so every client gets the customisation benefit. The rate is
               fixed; the scope is yours to choose.</p>
           </details>

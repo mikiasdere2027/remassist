@@ -1,4 +1,5 @@
 import Script from 'next/script';
+import { gtmInitScript, isContainerId } from '@/lib/analytics/tag-script';
 
 /**
  * The GTM container.
@@ -19,12 +20,11 @@ import Script from 'next/script';
  * CONSENT: the Consent Mode v2 defaults are pushed in the same script tag,
  * above the loader, because they only bind to tags that load *after* them —
  * a separate <Script> would be a race, and losing it means tags firing
- * unconsented. Everything starts denied and is relaxed by setConsent() in
- * lib/analytics/consent.ts once the visitor decides.
- *
- * `wait_for_update` gives the banner a moment to restore an earlier decision
- * before tags conclude they were denied, so a returning visitor who already
- * accepted is not measured as a refusal.
+ * unconsented. They come from CONSENT_DEFAULT_SCRIPT in
+ * lib/analytics/tag-script.ts — via gtmInitScript — so that this loader and
+ * the direct GA4 one cannot drift apart; everything starts denied and is
+ * relaxed by setConsent() in lib/analytics/consent.ts once the visitor
+ * decides.
  *
  * These defaults cover the container as a whole, including tags added later
  * by someone who never opens this file. That is the point of putting them
@@ -32,22 +32,14 @@ import Script from 'next/script';
  */
 export default function GoogleTagManager() {
   const id = process.env.NEXT_PUBLIC_GTM_ID;
-  if (!id) return null;
+  /* The id reaches an inline <script> and an iframe src, so its shape is
+     checked rather than trusted — see isContainerId. */
+  if (!id || !isContainerId(id)) return null;
 
   return (
     <>
       <Script id="gtm-init" strategy="afterInteractive">
-        {`window.dataLayer=window.dataLayer||[];
-function gtag(){dataLayer.push(arguments);}
-gtag('consent','default',{
-  ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',
-  analytics_storage:'denied',functionality_storage:'granted',
-  security_storage:'granted',wait_for_update:500});
-(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${id}');`}
+        {gtmInitScript(id)}
       </Script>
       <noscript>
         <iframe

@@ -5,8 +5,17 @@ import { getDb, isDatabaseConfigured } from '@/db';
 import { faqGroups, faqItems } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canEditContent } from '@/lib/auth/roles';
-import { moveFaqItem, saveFaqItem, setFaqItemPublished } from '../actions';
+import { MAX_FEATURED } from '@/lib/faq/content';
+import {
+  moveFaqItem,
+  moveFeaturedFaqItem,
+  saveFaqItem,
+  setFaqItemFeatured,
+  setFaqItemPublished,
+} from '../actions';
 import { faqMessage } from '../messages';
+import RichEditor from '../../posts/RichEditor';
+import AdminTopbar from '../../../AdminTopbar';
 import styles from '../../../../admin.module.css';
 
 /**
@@ -49,6 +58,7 @@ export default async function EditFaqItemPage({
       question: faqItems.question,
       answer: faqItems.answer,
       published: faqItems.published,
+      featured: faqItems.featured,
       sortOrder: faqItems.sortOrder,
       groupId: faqItems.groupId,
       groupTitle: faqGroups.title,
@@ -62,30 +72,42 @@ export default async function EditFaqItemPage({
   if (!row) notFound();
 
   /* Needed to know whether this is the first or last in its section, so the
-     move controls can be disabled at the ends rather than failing silently. */
-  const siblings = await db
-    .select({ id: faqItems.id })
-    .from(faqItems)
-    .where(eq(faqItems.groupId, row.groupId))
-    .orderBy(asc(faqItems.sortOrder));
+     move controls can be disabled at the ends rather than failing silently.
+     The starred set is fetched for the same reason one panel down, and because
+     the Show-on-the-homepage button has to know whether there is a place left
+     before it offers one. */
+  const [siblings, starred] = await Promise.all([
+    db
+      .select({ id: faqItems.id })
+      .from(faqItems)
+      .where(eq(faqItems.groupId, row.groupId))
+      .orderBy(asc(faqItems.sortOrder)),
+    db
+      .select({ id: faqItems.id })
+      .from(faqItems)
+      .where(eq(faqItems.featured, true))
+      .orderBy(asc(faqItems.featuredOrder), asc(faqItems.id)),
+  ]);
   const at = siblings.findIndex((s) => s.id === row.id);
+  const featuredAt = starred.findIndex((s) => s.id === row.id);
+  const homepageFull = starred.length >= MAX_FEATURED;
 
   return (
     <>
-      <header className={styles.topbar}>
-        <div className={styles.tbInner}>
-          <div>
-            <h1 className={styles.tbTitle}>Edit answer</h1>
-            <p className={styles.tbSub}>
-              In <strong>{row.groupTitle}</strong> · shown on{' '}
-              <code>/faq#{row.groupSlug}</code>
-            </p>
-          </div>
+      <AdminTopbar
+        title="Edit answer"
+        subtitle={
+          <>
+            In <strong>{row.groupTitle}</strong> · shown on{' '}
+            <code>/faq#{row.groupSlug}</code>
+          </>
+        }
+        action={
           <Link className={`${styles.btn} ${styles.btnGhost}`} href="/admin/content/faq">
             ← All questions
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <div className={styles.view}>
         {message && (
@@ -128,17 +150,37 @@ export default async function EditFaqItemPage({
               />
             </div>
             <div className={styles.field}>
-              <label className={styles.fieldLabel} htmlFor="a">Answer</label>
-              <textarea
-                className={styles.textarea}
-                id="a"
-                name="answer"
-                defaultValue={row.answer}
-                maxLength={4000}
-                rows={10}
-                required
-                readOnly={!mayEdit}
-              />
+              {/* A span, not a label: the rich editor's editable region is a div
+                  TipTap owns, so htmlFor would point at nothing. It is named
+                  with ariaLabel instead. The read-only textarea keeps a real
+                  label, because it has a real id to point at. */}
+              {mayEdit ? (
+                <span className={styles.fieldLabel}>Answer</span>
+              ) : (
+                <label className={styles.fieldLabel} htmlFor="a">Answer</label>
+              )}
+              {/* Rich text for anyone who may edit; the read-only view stays a
+                  textarea, because an editor nobody can type into is a
+                  toolbar of dead buttons. It shows the stored markup, which is
+                  the honest thing for a view that cannot render it. */}
+              {mayEdit ? (
+                <RichEditor
+                  content={row.answer}
+                  name="answer"
+                  variant="answer"
+                  ariaLabel="Answer"
+                  placeholder="Answer the question the way you would on a call…"
+                />
+              ) : (
+                <textarea
+                  className={styles.textarea}
+                  id="a"
+                  name="answer"
+                  defaultValue={row.answer}
+                  rows={10}
+                  readOnly
+                />
+              )}
             </div>
             {mayEdit && (
               <div className={styles.rowActions} style={{ padding: 0 }}>
@@ -199,6 +241,89 @@ export default async function EditFaqItemPage({
                   not an omission. */}
               There is no delete. Unpublishing takes a question off the page and keeps its
               wording — the record of what the site once said is worth keeping.
+            </p>
+          </section>
+        )}
+
+        {mayEdit && (
+          <section className={styles.panel}>
+            <div className={styles.panelHead}>
+              <div>
+                <h2 className={styles.panelTitle}>Homepage</h2>
+                <p className={styles.panelSub}>
+                  {featuredAt === -1
+                    ? `The homepage card holds ${MAX_FEATURED} questions — ${starred.length} chosen so far.`
+                    : `Position ${featuredAt + 1} of ${starred.length} on the homepage card.`}
+                </p>
+              </div>
+              {featuredAt !== -1 && (
+                <span className={`${styles.pill} ${styles.pillHome}`}>On the homepage</span>
+              )}
+            </div>
+
+            <div className={styles.rowActions}>
+              <form action={setFaqItemFeatured}>
+                <input type="hidden" name="id" value={row.id} />
+                <input type="hidden" name="featured" value={featuredAt === -1 ? '1' : '0'} />
+                <button
+                  className={`${styles.btn} ${styles.btnGhost}`}
+                  type="submit"
+                  /* Disabled rather than left to fail: setFaqItemFeatured
+                     refuses a seventh, and a button whose only outcome is an
+                     error message is a button that should not be pressable. */
+                  disabled={featuredAt === -1 && homepageFull}
+                >
+                  {featuredAt === -1 ? 'Show on the homepage' : 'Take off the homepage'}
+                </button>
+              </form>
+
+              {featuredAt !== -1 && (
+                <>
+                  <form action={moveFeaturedFaqItem}>
+                    <input type="hidden" name="id" value={row.id} />
+                    <input type="hidden" name="direction" value="up" />
+                    <button
+                      className={`${styles.btn} ${styles.btnGhost}`}
+                      type="submit"
+                      disabled={featuredAt === 0}
+                    >
+                      Move up
+                    </button>
+                  </form>
+                  <form action={moveFeaturedFaqItem}>
+                    <input type="hidden" name="id" value={row.id} />
+                    <input type="hidden" name="direction" value="down" />
+                    <button
+                      className={`${styles.btn} ${styles.btnGhost}`}
+                      type="submit"
+                      disabled={featuredAt === starred.length - 1}
+                    >
+                      Move down
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
+
+            <p className={styles.panelFoot}>
+              {featuredAt === -1 && homepageFull ? (
+                <>
+                  All {MAX_FEATURED} places are taken. Take one of the others off the homepage
+                  first — none of them is deleted by that, they stay on{' '}
+                  <code>/faq</code> either way.
+                </>
+              ) : featuredAt !== -1 && !row.published ? (
+                <>
+                  Chosen, but not live: this question is a draft, so the homepage skips it.
+                  Put it live above and it appears in this position.
+                </>
+              ) : (
+                <>
+                  The homepage shows the same wording as <code>/faq</code> — there is one copy
+                  of this answer, not two. Its position here is separate from its position in
+                  its section.
+                </>
+              )}
             </p>
           </section>
         )}

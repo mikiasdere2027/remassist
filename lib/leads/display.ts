@@ -72,12 +72,73 @@ export function answerFor(key: string, value: string): { label: string; note?: s
   return opt ? { label: opt.label, note: opt.note } : { label: value };
 }
 
+/**
+ * Campaign attribution as one line, for the context strip.
+ *
+ * The detail page used to print this column as pretty JSON in its own panel,
+ * which is three lines of braces to say two things. On a strip it has to be a
+ * single value, so the pairs are joined the way a query string reads —
+ * `utm_source=linkedin · utm_campaign=q3` — which is the form whoever set the
+ * campaign up actually typed.
+ *
+ * Returns null rather than an empty string for "nothing recorded", so the
+ * caller decides what absence looks like instead of printing a blank.
+ */
+export function formatUtm(utm: Record<string, string> | null | undefined): string | null {
+  if (!utm) return null;
+  const pairs = Object.entries(utm)
+    /* A key that arrived with an empty value is not attribution, and printing
+       `utm_term=` invites somebody to go looking for a term that was never
+       set. */
+    .filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== '')
+    .map(([k, v]) => `${k}=${v}`);
+  return pairs.length > 0 ? pairs.join(' · ') : null;
+}
+
 /** Absolute, unambiguous, and stable regardless of where the viewer sits. */
 export function formatDate(d: Date | string | null | undefined): string {
   if (!d) return '';
   const date = typeof d === 'string' ? new Date(d) : d;
   if (Number.isNaN(date.getTime())) return '';
   return date.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+}
+
+/** Short month-day format for compact table cells, e.g. "Sep 04". Uses UTC. */
+export function formatDateShort(d: Date | string | null | undefined): string {
+  if (!d) return '';
+  const date = typeof d === 'string' ? new Date(d) : d;
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' });
+}
+
+/** Human-friendly relative time (e.g. "12 min ago", "1 h ago", "1 d ago"). */
+export function formatRelativeTime(d: Date | string | null | undefined, now = new Date()): string {
+  if (!d) return '';
+  const date = typeof d === 'string' ? new Date(d) : d;
+  if (Number.isNaN(date.getTime())) return '';
+
+  const diffMs = now.getTime() - date.getTime();
+  if (diffMs < 0) return 'just now';
+
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return 'just now';
+
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} min ago`;
+
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours} h ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return '1 d ago';
+  if (diffDays < 30) return `${diffDays} d ago`;
+
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths === 1) return '1 mo ago';
+  if (diffMonths < 12) return `${diffMonths} mo ago`;
+
+  const diffYears = Math.floor(diffDays / 365);
+  return `${diffYears} y ago`;
 }
 
 /**

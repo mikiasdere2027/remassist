@@ -6,20 +6,25 @@ import { requireUser } from '@/lib/auth/require';
 import { canEditRates } from '@/lib/auth/roles';
 import { formatDate } from '@/lib/leads/display';
 import {
-  addAgentTier, addCoverageOption, saveAgentTier, saveCoverageOption,
-  setCoverageActive, setTierActive,
+  saveAgentTier, saveCoverageOption, setCoverageActive, setTierActive,
 } from './actions';
 import { rateMessage } from './messages';
+import RowMenu from './RowMenu';
+import AdminTopbar from '../AdminTopbar';
+import InfoTooltip from '../InfoTooltip';
 import styles from '../../admin.module.css';
 
 /**
- * Rates — the Test Admin prototype's shape, MIGRATION-PLAN §6.3.
+ * Rates — the published price list of record.
  *
- * These tables decide what the fit finder quotes: a coverage option's seats and
- * monthly hours, and an hourly rate by tier. Change a number here and every
- * estimate the site produces changes with it — which is exactly why nobody
- * could previously see them from the admin. An estimate you cannot trace back
- * to the figure that produced it is not auditable.
+ * These tables are the single source of truth for the prices shown on the
+ * public site. `components/services/SeatTiers.tsx`, `app/services/page.tsx`,
+ * and `app/pricing/page.tsx` all read from `agent_tiers` via
+ * `lib/rates/getPublishedTiers()` at render time — an edit here is live on
+ * the next page load.
+ *
+ * `lib/quiz/quiz.ts` still carries its own inline rates, guarded by a 432-case
+ * parity test. Point it at these tables only with that test green on both sides.
  *
  * Editing is admin-only, and the reasoning is in canEditRates: canEditContent
  * is deliberately generous because a wrong word is visible and reversible, and
@@ -62,8 +67,8 @@ type Search = {
   edit?: string;
   /** `coverage:<key>` or `tier:<key>` — the row asking to be deactivated. */
   off?: string;
-  /** `coverage` or `tier` — which add form is open. */
-  add?: string;
+  /** `coverage` (default) or `tiers` — which table the tabs are showing. */
+  tab?: string;
 };
 
 /**
@@ -92,7 +97,7 @@ export default async function RatesPage({
   if (!isDatabaseConfigured()) {
     return (
       <>
-        <Topbar />
+        <Topbar mayEdit={mayEdit} />
         <div className={styles.view}>
           <div className={styles.notice}>
             <strong>No database configured</strong>
@@ -119,7 +124,13 @@ export default async function RatesPage({
   const editTier = mayEdit ? target(sp.edit, 'tier') : null;
   const offCoverage = mayEdit ? target(sp.off, 'coverage') : null;
   const offTier = mayEdit ? target(sp.off, 'tier') : null;
-  const adding = mayEdit && (sp.add === 'coverage' || sp.add === 'tier') ? sp.add : null;
+  /* Which of the two price tables is on screen. Coverage is the default
+     because it is what a quote is sized by before it is priced. */
+  const tab: 'coverage' | 'tiers' = sp.tab === 'tiers' ? 'tiers' : 'coverage';
+  /* Every link out of a row has to come back to the tab it was on — a Cancel
+     that lands you on the other table is a Cancel that lost your place. */
+  const listHref = tab === 'tiers' ? '/admin/catalog?tab=tiers' : '/admin/catalog';
+  const rowHref = (q: string) => `${listHref}${listHref.includes('?') ? '&' : '?'}${q}`;
 
   /* The divisor behind the monthly column, read from the price list rather
      than hardcoded beside it: if somebody changes what a full-time month is,
@@ -131,32 +142,9 @@ export default async function RatesPage({
 
   return (
     <>
-      <Topbar />
+      <Topbar mayEdit={mayEdit} />
 
       <div className={styles.view}>
-        <div className={styles.caution}>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3 2 21h20z" />
-            <path d="M12 10v5" />
-            <path d="M12 18h.01" />
-          </svg>
-          <p>
-            <span className={styles.cautionLead}>Rates are the price list.</span>
-            {mayEdit ? (
-              <>
-                Editing coverage options or agent tiers changes what the site quotes. Every
-                change here is confirmed once and logged with your name.
-              </>
-            ) : (
-              <>
-                Editing coverage options or agent tiers changes what the site quotes, so only
-                the admin may change them. Everything below is what the quote calculator is
-                working from right now.
-              </>
-            )}
-          </p>
-        </div>
-
         {message && (
           <p
             className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
@@ -175,7 +163,42 @@ export default async function RatesPage({
           </div>
         )}
 
+        {/* Said on the screen rather than only in the tooltip beside the panel
+            title: the risk this warns about is somebody editing a rate,
+            believing the site now quotes it, and repeating the new figure to a
+            prospect. That is not a thing to leave to a hover. */}
+        {!empty && (
+          <div className={`${styles.notice} ${styles.section}`}>
+            <strong>Not connected to the public site yet</strong>
+            These are the figures of record. The site quotes from its own copy of them — the
+            fit finder from <code>lib/quiz/quiz.ts</code>, the published $8 and $11 from the
+            page components — so a change here does not change what a visitor is quoted.
+            Wiring them up is MIGRATION-PLAN §6.3.
+          </div>
+        )}
+
+        {/* One table on screen at a time. They are read for different
+            questions — how big is a subscription, and what does an hour cost —
+            and stacking both made the page a scroll rather than a screen. */}
+        <div className={styles.filterbar}>
+          <div className={styles.filterPills} role="group" aria-label="Which rate table to show">
+            <Tab
+              href="/admin/catalog"
+              on={tab === 'coverage'}
+              label="Coverage options"
+              count={coverage.length}
+            />
+            <Tab
+              href="/admin/catalog?tab=tiers"
+              on={tab === 'tiers'}
+              label="Agent tiers"
+              count={tiers.length}
+            />
+          </div>
+        </div>
+
         {/* ---------- coverage options ---------- */}
+        {tab === 'coverage' && (
         <section className={`${styles.panel} ${styles.section}`}>
           <div className={styles.panelHead}>
             <div>
@@ -184,17 +207,18 @@ export default async function RatesPage({
                 How a subscription can be shaped — seats × monthly hours
               </p>
             </div>
-            {mayEdit && (
-              <Link
-                className={`${styles.btn} ${styles.btnGhost}`}
-                href={adding === 'coverage' ? '/admin/catalog' : '/admin/catalog?add=coverage'}
-              >
-                {adding === 'coverage' ? 'Cancel' : '+ Add option'}
-              </Link>
-            )}
+            <InfoTooltip
+              text={
+                mayEdit
+                  ? 'The price list of record. The public site still carries its own copy of these figures, so an edit here does not change what the site quotes yet. Every change is confirmed once and logged with your name.'
+                  : 'The price list of record. The public site still carries its own copy of these figures, so an edit here does not change what the site quotes yet. Only the admin may change them.'
+              }
+              position="bottom-left"
+              maxWidth={280}
+            />
           </div>
 
-          {coverage.length === 0 && adding !== 'coverage' ? (
+          {coverage.length === 0 ? (
             <p className={styles.empty}>
               <strong>No coverage options</strong>
               Nothing to size a quote against.
@@ -256,7 +280,7 @@ export default async function RatesPage({
                                 >
                                   Save option
                                 </button>
-                                <Link className={styles.rowLink} href="/admin/catalog">
+                                <Link className={styles.rowLink} href={listHref}>
                                   Cancel
                                 </Link>
                               </div>
@@ -273,6 +297,7 @@ export default async function RatesPage({
                           action={setCoverageActive}
                           rowKey={c.key}
                           columns={5}
+                          backHref={listHref}
                           what={`Stop quoting “${c.label}”?`}
                           detail="It stays on record with its figures; new quotes will not offer it."
                           verb="Deactivate option"
@@ -282,24 +307,26 @@ export default async function RatesPage({
 
                     return (
                       <tr className={c.active ? undefined : styles.rowOff} key={c.key}>
-                        <td>
-                          <span className={styles.cellPrimary}>{c.label}</span>
-                          {!c.active && <span className={styles.tag}>Off</span>}
-                          <span className={`${styles.cellSecondary} ${styles.mono}`}>{c.key}</span>
+                        <td className={styles.nowrap}>
+                          <span className={styles.rateName}>
+                            <span className={styles.rateLabel}>{c.label}</span>
+                            <span className={styles.rateTag}>{c.key.toUpperCase()}</span>
+                            {!c.active && <span className={styles.tag}>Off</span>}
+                          </span>
                         </td>
-                        <td className={`${styles.cellSecondary} ${styles.cellSentence}`}>
-                          {c.longLabel}
+                        <td>
+                          <span className={`${styles.cellSecondary} ${styles.cellSentence}`}>{c.longLabel}</span>
                         </td>
                         <td>{c.seats}</td>
                         <td>{c.monthlyHours}</td>
                         {mayEdit && (
                           <td>
-                            <RowActions
+                            <RowMenu
                               action={setCoverageActive}
                               rowKey={c.key}
                               active={c.active}
-                              editHref={`/admin/catalog?edit=coverage:${c.key}`}
-                              offHref={`/admin/catalog?off=coverage:${c.key}`}
+                              editHref={rowHref(`edit=coverage:${c.key}`)}
+                              offHref={rowHref(`off=coverage:${c.key}`)}
                               noun="option"
                               label={c.label}
                             />
@@ -309,69 +336,15 @@ export default async function RatesPage({
                     );
                   })}
 
-                  {adding === 'coverage' && (
-                    <tr>
-                      <td className={styles.editCell} colSpan={5}>
-                        <form className={styles.editForm} action={addCoverageOption}>
-                          <Field
-                            formId="new-coverage"
-                            label="Key"
-                            name="key"
-                            className={styles.editNarrow}
-                            pattern="[a-z0-9][a-z0-9\-]*"
-                            title="Lowercase letters, digits and hyphens — the quote calculator matches on it"
-                            hint="Permanent"
-                            autoFocus
-                            required
-                          />
-                          <Field label="Label" name="label" formId="new-coverage" required />
-                          <Field
-                            formId="new-coverage"
-                            label="Long label"
-                            name="longLabel"
-                            className={styles.editWide}
-                            hint="How this reads inside a quote sentence"
-                          />
-                          <Field
-                            formId="new-coverage"
-                            label="Seats"
-                            name="seats"
-                            type="number"
-                            min={1}
-                            max={99}
-                            defaultValue="1"
-                            className={styles.editNarrow}
-                            required
-                          />
-                          <Field
-                            formId="new-coverage"
-                            label="Monthly hours"
-                            name="monthlyHours"
-                            type="number"
-                            min={1}
-                            max={9999}
-                            className={styles.editNarrow}
-                            required
-                          />
-                          <div className={styles.rowActions} style={{ padding: 0 }}>
-                            <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit">
-                              Add option
-                            </button>
-                            <Link className={styles.rowLink} href="/admin/catalog">
-                              Cancel
-                            </Link>
-                          </div>
-                        </form>
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
           )}
         </section>
+        )}
 
         {/* ---------- agent tiers ---------- */}
+        {tab === 'tiers' && (
         <section className={`${styles.panel} ${styles.section}`}>
           <div className={styles.panelHead}>
             <div>
@@ -380,17 +353,18 @@ export default async function RatesPage({
                 Hourly rates feed the quote a prospect sees — this is commercial
               </p>
             </div>
-            {mayEdit && (
-              <Link
-                className={`${styles.btn} ${styles.btnGhost}`}
-                href={adding === 'tier' ? '/admin/catalog' : '/admin/catalog?add=tier'}
-              >
-                {adding === 'tier' ? 'Cancel' : '+ Add tier'}
-              </Link>
-            )}
+            <InfoTooltip
+              text={
+                mayEdit
+                  ? 'The price list of record. The public site still carries its own copy of these figures, so an edit here does not change what the site quotes yet. Every change is confirmed once and logged with your name.'
+                  : 'The price list of record. The public site still carries its own copy of these figures, so an edit here does not change what the site quotes yet. Only the admin may change them.'
+              }
+              position="bottom-left"
+              maxWidth={280}
+            />
           </div>
 
-          {tiers.length === 0 && adding !== 'tier' ? (
+          {tiers.length === 0 ? (
             <p className={styles.empty}>
               <strong>No tiers</strong>
               Nothing to price a quote against.
@@ -450,7 +424,7 @@ export default async function RatesPage({
                                 >
                                   Save tier
                                 </button>
-                                <Link className={styles.rowLink} href="/admin/catalog">
+                                <Link className={styles.rowLink} href={listHref}>
                                   Cancel
                                 </Link>
                               </div>
@@ -467,6 +441,7 @@ export default async function RatesPage({
                           action={setTierActive}
                           rowKey={t.key}
                           columns={5}
+                          backHref={listHref}
                           what={`Stop quoting the “${t.label}” tier?`}
                           detail="Its rate stays on record; no new quote will be priced at it."
                           verb="Deactivate tier"
@@ -476,30 +451,36 @@ export default async function RatesPage({
 
                     return (
                       <tr className={t.active ? undefined : styles.rowOff} key={t.key}>
-                        <td>
-                          <span className={styles.cellPrimary}>{t.label}</span>
-                          {!t.active && <span className={styles.tag}>Off</span>}
-                          <span className={`${styles.cellSecondary} ${styles.mono}`}>{t.key}</span>
+                        <td className={styles.nowrap}>
+                          <span className={styles.rateName}>
+                            <span className={styles.rateLabel}>{t.label}</span>
+                            <span className={styles.rateTag}>{t.key.toUpperCase()}</span>
+                            {!t.active && <span className={styles.tag}>Off</span>}
+                          </span>
                         </td>
                         <td>
                           <b>${Number(t.hourlyRateUsd).toFixed(2)}</b>
                         </td>
                         {/* Derived, never stored: one figure that can disagree
                             with the rate beside it is one too many. */}
-                        <td className={styles.cellSecondary}>
-                          {money.format(Number(t.hourlyRateUsd) * fullTimeHours)}
+                        <td>
+                          <span className={styles.cellSecondary}>
+                            {money.format(Number(t.hourlyRateUsd) * fullTimeHours)}
+                          </span>
                         </td>
-                        <td className={styles.cellSecondary}>
-                          {t.note ?? <span className={styles.none}>—</span>}
+                        <td>
+                          <span className={styles.cellSecondary}>
+                            {t.note ?? <span className={styles.none}>—</span>}
+                          </span>
                         </td>
                         {mayEdit && (
                           <td>
-                            <RowActions
+                            <RowMenu
                               action={setTierActive}
                               rowKey={t.key}
                               active={t.active}
-                              editHref={`/admin/catalog?edit=tier:${t.key}`}
-                              offHref={`/admin/catalog?off=tier:${t.key}`}
+                              editHref={rowHref(`edit=tier:${t.key}`)}
+                              offHref={rowHref(`off=tier:${t.key}`)}
                               noun="tier"
                               label={t.label}
                             />
@@ -509,52 +490,6 @@ export default async function RatesPage({
                     );
                   })}
 
-                  {adding === 'tier' && (
-                    <tr>
-                      <td className={styles.editCell} colSpan={5}>
-                        <form className={styles.editForm} action={addAgentTier}>
-                          <Field
-                            formId="new-tier"
-                            label="Key"
-                            name="key"
-                            className={styles.editNarrow}
-                            pattern="[a-z0-9][a-z0-9\-]*"
-                            title="Lowercase letters, digits and hyphens — the quote calculator matches on it"
-                            hint="Permanent"
-                            autoFocus
-                            required
-                          />
-                          <Field label="Tier" name="label" formId="new-tier" className={styles.editWide} required />
-                          <Field
-                            formId="new-tier"
-                            label="Hourly rate (USD)"
-                            name="hourlyRateUsd"
-                            type="number"
-                            min={0.01}
-                            max={9999}
-                            step={0.01}
-                            className={styles.editNarrow}
-                            required
-                          />
-                          <Field
-                            formId="new-tier"
-                            label="Note"
-                            name="note"
-                            className={styles.editWide}
-                            hint="What this tier buys, in a salesperson's words"
-                          />
-                          <div className={styles.rowActions} style={{ padding: 0 }}>
-                            <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit">
-                              Add tier
-                            </button>
-                            <Link className={styles.rowLink} href="/admin/catalog">
-                              Cancel
-                            </Link>
-                          </div>
-                        </form>
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
@@ -565,6 +500,7 @@ export default async function RatesPage({
             tier stops it appearing in future quotes; nothing here is ever deleted.
           </div>
         </section>
+        )}
 
         {/* ---------- the log ---------- */}
         {/* The other half of "logged with your name". A change log nobody can
@@ -610,7 +546,11 @@ export default async function RatesPage({
                           {ch.rowKey}
                         </span>
                       </td>
-                      <td className={styles.cellSecondary}>{describe(ch.action, ch.before, ch.after)}</td>
+                      <td>
+                        <span className={styles.cellSecondary}>
+                          {describe(ch.action, ch.before, ch.after)}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -657,8 +597,10 @@ export default async function RatesPage({
                         <span className={`${styles.cellSecondary} ${styles.mono}`}>{c.key}</span>
                       </td>
                       <td className={styles.mono}>/{c.slug}</td>
-                      <td className={styles.cellSecondary}>
-                        {c.navBlurb ?? <span className={styles.none}>—</span>}
+                      <td>
+                        <span className={styles.cellSecondary}>
+                          {c.navBlurb ?? <span className={styles.none}>—</span>}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -761,7 +703,7 @@ function Confirm({ id }: { id: string }) {
     <label className={styles.confirmCheck} htmlFor={`ok-${id}`}>
       <input type="checkbox" id={`ok-${id}`} name="confirm" value="1" required />
       <span>
-        I know this changes what the site quotes from now on, and that this edit is logged
+        I know this changes the price list of record, and that this edit is logged
         with my name.
       </span>
     </label>
@@ -779,6 +721,7 @@ function ConfirmOff({
   action,
   rowKey,
   columns,
+  backHref,
   what,
   detail,
   verb,
@@ -786,6 +729,7 @@ function ConfirmOff({
   action: (formData: FormData) => Promise<void>;
   rowKey: string;
   columns: number;
+  backHref: string;
   what: string;
   detail: string;
   verb: string;
@@ -804,7 +748,7 @@ function ConfirmOff({
             <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit" autoFocus>
               {verb}
             </button>
-            <Link className={styles.rowLink} href="/admin/catalog">
+            <Link className={styles.rowLink} href={backHref}>
               Keep it
             </Link>
           </div>
@@ -814,79 +758,47 @@ function ConfirmOff({
   );
 }
 
-/** Edit, and deactivate or bring back — the prototype's icon pair. */
-function RowActions({
-  action,
-  rowKey,
-  active,
-  editHref,
-  offHref,
-  noun,
+/** One of the two table tabs — the same pill the FAQ, reviews and quizzes
+    lists use, so a tab means the same thing on every screen. */
+function Tab({
+  href,
+  on,
   label,
+  count,
 }: {
-  action: (formData: FormData) => Promise<void>;
-  rowKey: string;
-  active: boolean;
-  editHref: string;
-  offHref: string;
-  noun: string;
+  href: string;
+  on: boolean;
   label: string;
+  count?: number;
 }) {
   return (
-    <div className={styles.actions}>
-      <Link className={styles.iconBtn} href={editHref} aria-label={`Edit ${noun}: ${label}`}>
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 20h9" />
-          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
-        </svg>
-      </Link>
-
-      {active ? (
-        /* A link, not a submit: the click opens the confirm step above rather
-           than making the change. */
-        <Link
-          className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
-          href={offHref}
-          aria-label={`Deactivate ${noun}: ${label}`}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 6h18" />
-            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-            <path d="M10 11v6M14 11v6" />
-          </svg>
-        </Link>
-      ) : (
-        /* Bringing one back needs no confirmation: it is additive, and one
-           click undoes it again. */
-        <form action={action}>
-          <input type="hidden" name="key" value={rowKey} />
-          <input type="hidden" name="active" value="1" />
-          <button
-            className={styles.iconBtn}
-            type="submit"
-            aria-label={`Put ${noun} back in use: ${label}`}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M20 11a8 8 0 1 0-1.5 5.2" />
-              <path d="M20 4v7h-7" />
-            </svg>
-          </button>
-        </form>
-      )}
-    </div>
+    <Link
+      className={`${styles.fbtn} ${on ? styles.fbtnOn : ''}`}
+      href={href}
+      aria-current={on ? 'true' : undefined}
+    >
+      {label}
+      {count !== undefined && <span className={styles.fbtnCount}>{count}</span>}
+    </Link>
   );
 }
 
-function Topbar() {
+function Topbar({ mayEdit }: { mayEdit: boolean }) {
   return (
-    <header className={styles.topbar}>
-      <div className={styles.tbInner}>
-        <div>
-          <h1 className={styles.tbTitle}>Rates</h1>
-          <p className={styles.tbSub}>Coverage options and agent tiers — the price list</p>
-        </div>
-      </div>
-    </header>
+    <AdminTopbar
+      title="Rates"
+      subtitle="Coverage options and agent tiers — the price list"
+      action={
+        mayEdit ? (
+          <Link className={styles.btnHeader} href="/admin/catalog/new">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add option
+          </Link>
+        ) : undefined
+      }
+    />
   );
 }

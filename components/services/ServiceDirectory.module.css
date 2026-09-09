@@ -101,7 +101,7 @@
    from the accessibility tree and the tab order, so the `hidden` attribute's
    semantics survive — it just no longer collapses the box. */
 .panelStack { display: grid; }
-.panelBody { grid-area: 1 / 1; padding: 30px 30px 26px; scroll-margin-top: 96px;
+.panelBody { grid-area: 1 / 1; padding: 20px 30px 26px; scroll-margin-top: 96px;
   opacity: 0; visibility: hidden; pointer-events: none;
   transition: opacity 200ms var(--ease-out), visibility 0s linear 200ms; }
 .panelOn { opacity: 1; visibility: visible; pointer-events: auto;

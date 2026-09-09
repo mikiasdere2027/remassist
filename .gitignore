@@ -23,4 +23,7 @@ dev.log
 # 7.4MB of extension bundles and per-user browsing state — never a repo artifact.
 Test Admin/.edge-prof/
 
+# Uploaded files (team headshots, etc.). Written at runtime, never committed.
+.uploads/
+
 /.next-dev*/

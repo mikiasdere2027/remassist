@@ -126,11 +126,29 @@
 .panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .panelOpen { grid-template-rows: 1fr; }
 .panelInner { overflow: hidden; min-height: 0; }
-.a { color: var(--ink-600); font-size: 15px; line-height: 1.75; padding: 4px 4px 26px; max-width: 62ch; margin: 0; }
-.a b { color: var(--brand-navy); }
+/* An answer is editor-authored HTML now — the four that used to live in
+   FaqSection.tsx carried their own class names, and a row out of the database
+   cannot. So these rules address tags, and the tag list is short because the
+   FAQ allowlist in lib/content/sanitize.ts is short. */
+.answer { padding: 4px 4px 26px; }
+.answer p { color: var(--ink-600); font-size: 15px; line-height: 1.75; max-width: 62ch; margin: 0 0 14px; }
+.answer > :last-child { margin-bottom: 0; }
+.answer strong { color: var(--brand-navy); font-weight: 650; }
+.answer a {
+  color: var(--brand-blue);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1.5px solid rgba(81, 141, 224, 0.45);
+}
 
-.chips { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 4px 26px; }
-.chip {
+/* A bulleted list in a homepage answer renders as the artboard's pill row.
+   That is a real decision, not a coincidence of styling: this card sits beside
+   a fixed-height certifications panel, and seven bullets down the left edge
+   push it past the panel and break the two columns the section is built on.
+   The pills wrap instead. An ordered list is left alone — numbers mean sequence
+   and a sequence laid out as pills reads as a set. */
+.answer ul { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 14px; padding: 0; }
+.answer ul li {
   background: #fff;
   border: 1px solid rgba(0, 5, 67, 0.08);
   border-radius: 999px;
@@ -140,7 +158,9 @@
   color: var(--brand-navy);
   transition: 0.3s;
 }
-.chip:hover { border-color: rgba(81, 141, 224, 0.45); box-shadow: 0 8px 18px -12px rgba(0, 5, 67, 0.5); }
+.answer ul li:hover { border-color: rgba(81, 141, 224, 0.45); box-shadow: 0 8px 18px -12px rgba(0, 5, 67, 0.5); }
+.answer ol { color: var(--ink-600); font-size: 15px; line-height: 1.75; max-width: 62ch; margin: 0 0 14px; padding-left: 1.35em; }
+.answer ol li { margin: 0.15em 0; }
 
 @media (max-width: 1024px) {
   .grid { grid-template-columns: 1fr; }

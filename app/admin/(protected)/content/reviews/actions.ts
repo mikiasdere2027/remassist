@@ -58,15 +58,8 @@ function backToReview(id: string, param: 'ok' | 'error', code: string): never {
   redirect(`/admin/content/reviews/${id}?${param}=${code}`);
 }
 
-/**
- * Back to the list with the add form still open.
- *
- * `?add=1` is what reveals that form, so redirecting without it answers a
- * rejected submission by closing the thing the editor was typing into.
- */
-function backToAdd(source: string, code: string): never {
-  redirect(`/admin/content/reviews?tab=${source}&add=1&error=${code}`);
-}
+/** The state a review form's action returns on a refused save. */
+export type ReviewActionState = { error?: string };
 
 /** Which screen the form was submitted from; see backToReview. */
 function cameFromEditPage(formData: FormData): boolean {
@@ -126,12 +119,13 @@ export async function saveReview(formData: FormData): Promise<void> {
   back('ok', 'saved', row.source);
 }
 
-export async function addReview(formData: FormData): Promise<void> {
+export async function addReview(
+  _prev: ReviewActionState,
+  formData: FormData,
+): Promise<ReviewActionState> {
   await assertEditor();
-  if (!isDatabaseConfigured()) back('error', 'no-database');
+  if (!isDatabaseConfigured()) return { error: 'no-database' };
 
-  /* The tab the add form was opened on. Named in every redirect below,
-     including the rejections, so a bad rating does not also move you. */
   const source = String(formData.get('source') ?? '');
   const author = String(formData.get('author') ?? '').trim();
   const meta = String(formData.get('meta') ?? '').trim();
@@ -140,13 +134,16 @@ export async function addReview(formData: FormData): Promise<void> {
   const body = String(formData.get('body') ?? '').trim();
   const rating = ratingOf(formData.get('rating'));
 
-  if (!author || !dateText || !body) backToAdd(source, 'empty');
+  /* A refused save returns the code to the Add review form, which is still
+     mounted — the typed quote is not thrown away by a redirect back to a
+     freshly-rendered page. */
+  if (!author || !dateText || !body) return { error: 'empty' };
   /* The same length gate saveReview applies. The form's maxLength stops a paste
      in a browser; this stops one that did not come from the form. */
   if (author.length > MAX_SHORT || meta.length > MAX_SHORT
-    || dateText.length > MAX_SHORT || headline.length > MAX_SHORT) backToAdd(source, 'too-long');
-  if (body.length > MAX_BODY) backToAdd(source, 'too-long');
-  if (rating === null) backToAdd(source, 'bad-rating');
+    || dateText.length > MAX_SHORT || headline.length > MAX_SHORT) return { error: 'too-long' };
+  if (body.length > MAX_BODY) return { error: 'too-long' };
+  if (rating === null) return { error: 'bad-rating' };
 
   const db = getDb();
   const [known] = await db
@@ -154,7 +151,7 @@ export async function addReview(formData: FormData): Promise<void> {
     .from(reviewSources)
     .where(eq(reviewSources.source, source as 'trustpilot' | 'google'))
     .limit(1);
-  if (!known) backToAdd(source, 'source-not-found');
+  if (!known) return { error: 'source-not-found' };
 
   const [{ n }] = await db
     .select({ n: count() })

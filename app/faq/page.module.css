@@ -18,18 +18,48 @@
   .rs-btn--ghost:hover { background: rgba(81,141,224,0.06); color: var(--brand-blue); }
   .rs-cta-row { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 28px; }
 
-  /* jump chips */
-  .rs-jump { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 26px; }
-  .rs-jump a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px; border-radius: 999px;
-    background: #fff; border: 1px solid var(--border-default); box-shadow: var(--shadow-xs);
-    font-size: 13.5px; font-weight: 600; color: var(--brand-navy); text-decoration: none;
-    transition: border-color 150ms, box-shadow 150ms, transform 150ms; }
-  .rs-jump a:hover { border-color: var(--brand-blue); transform: translateY(-1px);
-    box-shadow: 0 6px 14px -6px rgba(81,141,224,0.5); }
+  /* faq tabs — a vertical rail of group titles beside the group's accordion.
+     Ported from the /services directory layout so the two pages share the
+     pattern; see components/services/ServiceDirectory.module.css. */
+  .rs-tabs-section { padding: 84px 0 0; }
+  .rs-tabs-grid { display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .rs-rail { background: #fff; border: 1px solid var(--border-default); border-radius: 18px;
+    padding: 20px 16px; position: sticky; top: calc(var(--header-h) + 18px); }
+  .rs-rail-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-500); padding: 0 8px 14px; }
 
-  /* faq groups */
-  .rs-group { padding: 54px 0; border-top: 1px solid var(--border-default); scroll-margin-top: 88px; }
-  .rs-group:nth-of-type(even) { background: #fff; }
+  .rs-tabs { display: flex; flex-direction: column; gap: 4px; }
+  .rs-tab { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: center;
+    width: 100%; text-align: left; cursor: pointer; font-family: inherit; background: none;
+    border: 1px solid transparent; border-radius: 12px; padding: 10px 12px;
+    transition: background 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+  .rs-tab:hover { background: var(--bg-marketing-paper); }
+  .rs-tab:focus-visible { outline: 3px solid var(--brand-blue); outline-offset: 2px; }
+  .rs-tab-on { background: rgba(81, 141, 224, 0.09); border-color: rgba(81, 141, 224, 0.28); }
+  .rs-tab-on:hover { background: rgba(81, 141, 224, 0.12); }
+  .rs-tab-count { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--brand-blue);
+    background: rgba(81, 141, 224, 0.10);
+    transition: background 160ms var(--ease-out), color 160ms var(--ease-out); }
+  .rs-tab-on .rs-tab-count { background: var(--brand-blue); color: #fff; }
+  .rs-tab-name { display: block; font-size: 15px; font-weight: 700; line-height: 1.3;
+    color: var(--brand-navy); }
+
+  /* faq groups — now one tab panel inside the card */
+  .rs-panel-card { background: #fff; border: 1px solid var(--border-default); border-radius: 18px;
+    overflow: hidden; }
+  /* Every panel occupies the same grid cell, so the card is as tall as the
+     tallest of the six and never resizes when you switch tabs. The inactive
+     ones are hidden with opacity/visibility rather than display, which is what
+     keeps them taking up that space — and visibility:hidden still removes them
+     from the accessibility tree and the tab order, so `inert`'s semantics
+     survive, it just no longer collapses the box. */
+  .rs-panel-stack { display: grid; }
+  .rs-panel { grid-area: 1 / 1; padding: clamp(28px, 3.2vw, 44px); scroll-margin-top: 96px;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 200ms var(--ease-out), visibility 0s linear 200ms; }
+  .rs-panel-on { opacity: 1; visibility: visible; pointer-events: auto;
+    transition: opacity 240ms var(--ease-out), visibility 0s; }
   .rs-group-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
     flex-wrap: wrap; }
   .rs-group-head p { margin: 7px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-600); max-width: 56ch; }
@@ -46,6 +76,18 @@
     font-size: 18px; font-weight: 600; line-height: 1; }
   .rs-faq details[open] summary::after { content: "\2212"; background: var(--brand-blue); color: #fff; }
   .rs-faq p { margin: 0 4px 21px; font-size: 15px; line-height: 1.75; color: var(--ink-600); max-width: 78ch; }
+
+  /* An answer is rich text now, so the accordion has to style more than a
+     paragraph. The allowlist in lib/content/sanitize.ts is short on purpose —
+     these are every tag an answer can contain. */
+  .rs-answer { padding-bottom: 1px; }
+  .rs-answer > :last-child { margin-bottom: 21px; }
+  .rs-answer ul, .rs-answer ol { margin: 0 4px 21px; padding-left: 1.35em; font-size: 15px;
+    line-height: 1.75; color: var(--ink-600); max-width: 78ch; }
+  .rs-answer li { margin: 0.15em 0; }
+  .rs-answer strong { color: var(--brand-navy); font-weight: 650; }
+  .rs-answer a { color: var(--brand-blue); font-weight: 600; text-decoration: underline;
+    text-underline-offset: 2px; }
 
   /* empty state */
   .rs-empty { margin-top: 42px; background: #fff; border: 1px solid var(--border-default);
@@ -92,13 +134,36 @@
   .rs-ghost-dark:hover { background: rgba(255,255,255,0.1); border-color: #fff; color: #fff; }
 
   @media (prefers-reduced-motion: reduce) {
-    .rs-card, .rs-alt, .rs-jump a, .rs-btn { transition: none; }
-    .rs-card:hover, .rs-alt:hover, .rs-jump a:hover, .rs-btn:hover { transform: none; }
+    .rs-card, .rs-alt, .rs-btn { transition: none; }
+    .rs-card:hover, .rs-alt:hover, .rs-btn:hover { transform: none; }
+    .rs-tab, .rs-tab-count, .rs-panel, .rs-panel-on { transition: none; }
   }
+
+  /* Below the two-column break the rail becomes a horizontal strip above the
+     panel: same tabs, same order, scrolled sideways instead of stacked. The
+     count badge is kept because it fits in the pill; the label stays too, and
+     only the rail's card chrome is dropped. */
+  @media (max-width: 980px) {
+    .rs-tabs-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .rs-rail { position: static; padding: 16px; }
+    .rs-rail-label { padding-bottom: 12px; }
+    .rs-tabs { flex-direction: row; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
+      padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none;
+      /* Full-bleed to the right so the last chip is not clipped mid-card. */
+      margin-right: -16px; padding-right: 16px; }
+    .rs-tabs::-webkit-scrollbar { display: none; }
+    .rs-tab { flex: none; scroll-snap-align: start; grid-template-columns: 30px auto;
+      gap: 9px; align-items: center; padding: 9px 14px 9px 9px;
+      border-color: var(--border-default); border-radius: 999px; }
+    .rs-tab-count { width: 30px; height: 30px; border-radius: 50%; font-size: 11px; }
+    .rs-tab-name { font-size: 13.5px; white-space: nowrap; }
+    .rs-panel { padding: clamp(24px, 4vw, 32px) 20px; scroll-margin-top: 84px; }
+  }
+
   @media (max-width: 900px) {
     .rs-verify, .rs-alts { grid-template-columns: 1fr; }
     .rs-empty { grid-template-columns: 1fr; }
   }
   @media (max-width: 680px) {
-    .rs-group { padding: 40px 0; }
+    .rs-tabs-section { padding-top: 56px; }
   }

@@ -1,0 +1,306 @@
+/* TalentPool.module.css — "What you get" managed talent pool section */
+
+.section {
+  padding: 96px 0;
+  background: #ffffff;
+  border-top: 1px solid var(--border-default, rgba(0, 5, 67, 0.08));
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle background lighting effect */
+.section::before {
+  content: "";
+  position: absolute;
+  top: -140px;
+  right: -80px;
+  width: 540px;
+  height: 540px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(81, 141, 224, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.header {
+  margin-bottom: 44px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brand-blue, #518de0);
+}
+
+.eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-blue, #518de0);
+  box-shadow: 0 0 8px rgba(81, 141, 224, 0.6);
+}
+
+.h2 {
+  margin: 0;
+  font-family: var(--font-display, sans-serif);
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--brand-navy, #000543);
+  max-width: 28ch;
+}
+
+.h2 span {
+  color: var(--brand-blue, #518de0);
+  background: linear-gradient(135deg, #0052ff 0%, #518de0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Main 2-column layout ───────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  gap: 48px;
+  align-items: start;
+}
+
+/* ── Left Column: Aside & Retention Stat Card ────────────────────────────── */
+.aside {
+  display: flex;
+  flex-direction: column;
+}
+
+.lede {
+  margin: 0 0 28px;
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--ink-600, #667180);
+}
+
+/* Retention Stat Card */
+.statCard {
+  position: relative;
+  border-radius: 20px;
+  padding: 28px 26px;
+  background: linear-gradient(145deg, #ffffff 0%, #f7faff 100%);
+  border: 1px solid rgba(81, 141, 224, 0.22);
+  box-shadow:
+    0 16px 36px -12px rgba(0, 5, 67, 0.08),
+    0 2px 8px rgba(0, 5, 67, 0.03);
+  overflow: hidden;
+  transition: transform 0.22s var(--ease-out, ease-out), box-shadow 0.22s var(--ease-out, ease-out), border-color 0.22s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(81, 141, 224, 0.4);
+  box-shadow:
+    0 20px 42px -12px rgba(0, 5, 67, 0.12),
+    0 4px 12px rgba(0, 5, 67, 0.05);
+}
+
+/* Ambient glow corner in stat card */
+.statCard::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle at 100% 0%, rgba(81, 141, 224, 0.14), transparent 70%);
+  pointer-events: none;
+}
+
+.statBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(81, 141, 224, 0.1);
+  border: 1px solid rgba(81, 141, 224, 0.2);
+  color: var(--brand-blue, #518de0);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.statBadge svg {
+  width: 13px;
+  height: 13px;
+}
+
+.statRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.statNumber {
+  font-family: var(--font-display, sans-serif);
+  font-size: clamp(48px, 4.5vw, 60px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--brand-navy, #000543);
+  background: linear-gradient(135deg, #000543 30%, #0052ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.statHeadline {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--brand-navy, #000543);
+  line-height: 1.35;
+}
+
+.statDesc {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-600, #667180);
+}
+
+/* ── Right Column: Benefit Points Grid ───────────────────────────────────── */
+.points {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+}
+
+.point {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px 18px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 5, 67, 0.09);
+  box-shadow:
+    0 10px 24px -10px rgba(0, 5, 67, 0.06),
+    0 2px 6px rgba(0, 5, 67, 0.02);
+  transition: transform 0.2s var(--ease-out, ease-out), box-shadow 0.2s var(--ease-out, ease-out), border-color 0.2s ease;
+}
+
+.point:hover {
+  transform: translateY(-3px);
+  border-color: rgba(81, 141, 224, 0.45);
+  box-shadow:
+    0 18px 36px -12px rgba(0, 5, 67, 0.12),
+    0 3px 10px rgba(0, 5, 67, 0.04);
+}
+
+.pointHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pointIco {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(81, 141, 224, 0.15) 0%, rgba(81, 141, 224, 0.06) 100%);
+  border: 1px solid rgba(81, 141, 224, 0.25);
+  display: grid;
+  place-items: center;
+  color: var(--brand-blue, #518de0);
+  flex-shrink: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.point:hover .pointIco {
+  background: rgba(81, 141, 224, 0.22);
+  transform: scale(1.05);
+}
+
+.pointIco svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pointLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-blue, #518de0);
+}
+
+.pointText {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-700, #384252);
+}
+
+.pointText strong {
+  font-weight: 700;
+  color: var(--brand-navy, #000543);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .section {
+    padding: 72px 0;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .h2 {
+    max-width: 100%;
+  }
+  .statCard {
+    max-width: 540px;
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: 56px 0;
+  }
+  .points {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .statCard {
+    padding: 22px 18px;
+  }
+  .statNumber {
+    font-size: 42px;
+  }
+  .point {
+    padding: 18px 16px;
+  }
+}

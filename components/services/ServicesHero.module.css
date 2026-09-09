@@ -43,29 +43,11 @@
 .lede { margin: 20px 0 0; font-size: 17.5px; line-height: 1.7; max-width: 56ch;
   color: rgba(255, 255, 255, 0.88); }
 
-/* Three proof points under the lede, divided by hairlines. Not cards — they
-   are a caption row, and boxing them would compete with the three real cards
-   directly below. */
-.trust { list-style: none; margin: 26px 0 0; padding: 0; display: flex; flex-wrap: wrap;
-  gap: 14px 0; }
-.trust li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px;
-  align-items: center; padding: 0 26px; }
-.trust li:first-child { padding-left: 0; }
-.trust li + li { border-left: 1px solid rgba(255, 255, 255, 0.16); }
-.trustIco { width: 30px; height: 30px; display: grid; place-items: center; }
-.trustIco svg { width: 26px; height: 26px; fill: none; stroke: var(--blue-300);
-  stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.trust b { display: block; font-family: var(--font-display); font-size: 14.5px;
-  font-weight: 700; line-height: 1.3; color: #fff; }
-.trust em { display: block; margin-top: 2px; font-style: normal; font-size: 13px;
-  line-height: 1.4; color: rgba(255, 255, 255, 0.72); }
-
 /* ---------- bottom half ---------- */
 
 /* The three featured lines moved into FeaturedCarousel, which brings its own
    card, roles and controls. What is left here is the headline half and the
    scroll cue. */
-
 
 /* ---------- responsive ---------- */
 
@@ -76,11 +58,6 @@
   .hero { min-height: 0; }
   .inner { padding: 84px 24px 44px; }
   .gap { height: 28px; }
-  /* Stacked, with the dividers turned from vertical rules into horizontal
-     ones — three of these side by side below 980px give each about 100px. */
-  .trust { flex-direction: column; gap: 0; margin-top: 26px; }
-  .trust li { padding: 12px 0; }
-  .trust li + li { border-left: 0; border-top: 1px solid rgba(255, 255, 255, 0.16); }
 }
 @media (max-width: 720px) {
   .inner { padding: 84px 20px 44px; }

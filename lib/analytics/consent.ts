@@ -22,6 +22,8 @@
  * explicit rather than inferred from geography — see `consentMode()`.
  */
 
+import { gtagPush } from './gtag';
+
 export type ConsentCategory = 'analytics' | 'marketing';
 export type ConsentState = Record<ConsentCategory, boolean>;
 
@@ -121,19 +123,10 @@ export function googleConsentPayload(state: ConsentState): Record<string, 'grant
   };
 }
 
+/* The denied baseline these signals are relaxed *from* is queued in the page
+   itself, before any tag library loads: CONSENT_DEFAULT_SCRIPT in
+   ./tag-script.ts. The two have to agree about signal names. */
+
 function pushConsentUpdate(state: ConsentState): void {
-  if (typeof window === 'undefined') return;
-  const dl = (window.dataLayer = window.dataLayer ?? []);
-  /* Consent Mode reads a genuine Arguments object — the shape `gtag()` pushes
-     when it forwards its own `arguments`. An object literal with 0/1/2 keys
-     looks identical in a console and is silently ignored, so build a real one
-     by applying a function. */
-  /* Declared with no parameters and typed at the cast: `arguments` is the
-     whole point here, and naming parameters we never read would only invite
-     someone to start reading them. */
-  const gtag = function () {
-    // eslint-disable-next-line prefer-rest-params
-    dl.push(arguments as unknown as Record<string, unknown>);
-  } as (...args: unknown[]) => void;
-  gtag('consent', 'update', googleConsentPayload(state));
+  gtagPush('consent', 'update', googleConsentPayload(state));
 }

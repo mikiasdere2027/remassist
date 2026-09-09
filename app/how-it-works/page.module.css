@@ -179,3 +179,19 @@
     .hw-day { border-left: 0; border-top: 1px solid var(--border-default); }
     .hw-day:first-child { border-top: 0; }
   }
+
+/* === hand-additions (preserved by codemod) === */
+
+/* Two blocks above are no longer used by page.tsx, because the sections they
+   styled are components now, each with its own module beside it:
+
+     .hw-hero / .hw-chips / .hw-chip / .hw-hero-cta   → components/how-it-works/Hero.tsx
+     .hw-phases / .hw-phase / .hw-num / .hw-card /
+     .hw-split / .hw-col                              → components/how-it-works/PhaseScroller.tsx
+   They are left where they are because everything above this line is
+   regenerated from the artboard rather than edited by hand — deleting them
+   here would only mean deleting them again after the next run. Nothing on
+   this page references them, so they cost bytes and nothing else; if you are
+   here because a phase card looks wrong, the file you want is the module
+   beside that component. */
+

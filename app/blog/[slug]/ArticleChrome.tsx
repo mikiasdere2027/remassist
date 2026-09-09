@@ -15,7 +15,7 @@ import styles from './page.module.css';
  * they carry the same hash the stylesheet uses — adding the literal strings
  * would toggle a class no selector matches.
  *
- * Renders nothing — it wires up the markup ArticleBody already emits, by id.
+ * Renders nothing — it wires up the CMS article template markup by id.
  * Everything is progressive enhancement: the article reads fine without it,
  * which is why the whole thing stays inside one try/catch like the original.
  */
