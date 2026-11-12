@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { auth } from '@/auth';
-import { isAllowedEmail } from '@/lib/auth/allowlist';
+import { currentUser } from '@/lib/auth/require';
 import { CODE_LENGTH, CODE_TTL_SEC } from '@/lib/auth/code';
 import { PENDING_EMAIL_COOKIE, VERIFY_PENDING_COOKIE } from '@/lib/auth/verify';
 import styles from '../../admin.module.css';
@@ -56,8 +55,11 @@ export default async function SignInCodePage({
    */
   const verifying = jar.get(VERIFY_PENDING_COOKIE)?.value === '1';
 
-  const session = await auth();
-  if (!verifying && isAllowedEmail(session?.user?.email)) redirect('/admin/leads');
+  /* The same decision the gate makes, for the same reason as /admin/signin:
+     a session this allowlist admits but the user row does not is a bounce to
+     a page that bounces straight back. */
+  const user = await currentUser();
+  if (!verifying && user) redirect('/admin/leads');
 
   /* Set when the code was requested, so nobody types their address twice. */
   const pending = jar.get(PENDING_EMAIL_COOKIE)?.value ?? '';

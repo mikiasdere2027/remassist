@@ -41,8 +41,27 @@ export interface EventMap {
   book_click: { placement: string };
   /** The Ask RemAssist widget was opened. */
   chat_open: { placement: string };
-  /** An interview clip was played. */
+  /** A Maya voice session connected. */
+  voice_start: Record<string, never>;
+  /** A Maya voice session ended normally. Bucketed, not exact, so it cannot fingerprint. */
+  voice_end: { duration: string };
+  /** Maya saved a lead. Also fires generate_lead with lead_source voice_agent. */
+  voice_lead: { meeting_requested: boolean };
+  /** Maya booked a consultation in Calendly. The time itself stays out of analytics. */
+  voice_booked: Record<string, never>;
+  /** A Maya session failed to start or dropped. A reason code, never transcript text. */
+  voice_error: { reason: string };
+  /** An interview clip, or the home hero film, was played. */
   video_play: { video_id: string };
+  /**
+   * Sound was turned on for a clip that had been playing muted.
+   *
+   * Worth separating from `video_play`: the hero film autoplays muted for
+   * everyone who has consented, so `video_play` there measures the page, not
+   * the visitor. Unmuting is a deliberate act and the only signal on that
+   * cover that somebody chose to watch it.
+   */
+  video_unmute: { video_id: string };
   /**
    * A popup ad became visible to the visitor.
    *

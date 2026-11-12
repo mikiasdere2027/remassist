@@ -12,6 +12,8 @@
  * This must never fail a lead submission. Every caller is expected to ignore
  * the result, and every path here resolves.
  */
+import { SITE_URL } from '@/lib/site';
+
 export interface LeadNotification {
   id: string;
   email: string;
@@ -39,18 +41,24 @@ export function formatLeadNotification(n: LeadNotification): string {
     lines.push(`Answers: ${Object.entries(n.answers).map(([k, v]) => `${k}=${v}`).join(', ')}`);
   }
   if (n.message) lines.push(`Message: ${n.message}`);
-  lines.push(`Lead id: ${n.id}`);
+  /* One click from the alert to the record, which is where status and notes live. */
+  lines.push(`Open in admin: ${SITE_URL}/admin/leads/${n.id}`);
   return lines.join('\n');
 }
 
 export async function notifyNewLead(n: LeadNotification): Promise<void> {
+  return notifyText(formatLeadNotification(n));
+}
+
+/** Post one plain-text message to the team's webhook (Slack's `{ text }` shape). */
+export async function notifyText(text: string): Promise<void> {
   const url = process.env.LEAD_WEBHOOK_URL;
   if (!url) return;                       // not configured — silently skip
   try {
     await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text: formatLeadNotification(n) }),
+      body: JSON.stringify({ text }),
       signal: AbortSignal.timeout(5_000),
     });
   } catch {

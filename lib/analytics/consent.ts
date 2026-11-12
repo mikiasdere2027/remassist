@@ -37,6 +37,7 @@ export const CONSENT_COOKIE = 'ra_consent';
  * 2: the home hero's clip moved from a self-hosted file to a YouTube embed,
  *    which is a new vendor under `marketing`. Anyone who answered version 1
  *    answered a question that did not include it, so they are asked again.
+
  */
 const CONSENT_VERSION = 2;
 

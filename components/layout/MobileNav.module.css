@@ -13,6 +13,20 @@
     background: #fff; cursor: pointer; color: var(--brand-navy);
   }
   .toggle:hover { border-color: rgba(81, 141, 224, 0.45); }
+
+  /* Over a dark hero at the top of the page the header has no bar behind it
+     (Header.module.css), so a white rounded box floating on the video is the
+     one thing left that looks pasted on. Drop it to bare white strokes and
+     let the video be the background. Conditions and the reason for the
+     `:not([data-scrolled="1"])` form are documented alongside the header
+     rule — the two must stay in step or the bar and the button will disagree
+     about when they are over the hero. */
+  html:not([data-scrolled="1"]) body:has([data-hero="dark"]) .toggle {
+    background: transparent; border-color: transparent; color: #fff;
+  }
+  html:not([data-scrolled="1"]) body:has([data-hero="dark"]) .toggle:hover {
+    border-color: rgba(255, 255, 255, 0.45);
+  }
 }
 
 .bars { display: block; position: relative; width: 18px; height: 12px; }

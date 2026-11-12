@@ -66,10 +66,17 @@
    section's own gradient rather than in a box. */
 /* Squarer on a phone, where the column is narrow: a portrait subject in a
    5:4 box would be scaled to fit the height and leave half the width empty. */
-.shot { position: relative; aspect-ratio: 1 / 1; }
+/* z-index 2 puts the photograph above the markers. The asset is a cut-out on
+   transparency, so a marker that reaches the subject passes behind her rather
+   than across her face, and the pale ground it sits on shows through
+   everywhere she does not. */
+.shot { position: relative; z-index: 2; aspect-ratio: 1 / 1; }
 .shot img { object-fit: contain; object-position: center bottom; }
 
-.markers { display: none; }
+/* Laid over the whole media box rather than left at the foot of the flow, so
+   the markers inside it are placed against the same box as before but sit on
+   their own layer underneath the photograph. */
+.markers { display: none; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 .marker { position: absolute; display: flex; align-items: center; gap: 11px; padding: 11px 13px;
   border-radius: 15px; background: rgba(255, 255, 255, 0.92);
   -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
@@ -89,9 +96,15 @@
    order, and four positions is not four ideas. */
 .marker:nth-child(1) { top: 9%; }
 .marker:nth-child(2) { top: 31%; }
-.marker:nth-child(3) { top: 6%; }
-.marker:nth-child(4) { top: 28%; }
-.markerLeft { left: -3%; }
+.marker:nth-child(3) { top: 4%; }
+/* High enough that only its lower corner reaches the top of her hair. Passing
+   behind her is what keeps the face clear, but a marker buried to the icon
+   would just look broken, so the overlap is kept to a corner. */
+.marker:nth-child(4) { top: 22%; }
+/* Pulled in off the left gutter so the pair sits against the photograph
+   rather than stranded in the white beside it. The photograph is the layer
+   above, so the edge that reaches her tucks behind her instead of over. */
+.markerLeft { left: 9%; }
 .markerRight { right: -3%; }
 .marker:nth-child(2) .markerIco { background: var(--blue-300); }
 .marker:nth-child(3) .markerIco { background: var(--blue-700); }

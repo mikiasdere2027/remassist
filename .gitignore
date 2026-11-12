@@ -27,3 +27,7 @@ Test Admin/.edge-prof/
 .uploads/
 
 /.next-dev*/
+
+# Worktrees another tool keeps here — whole checkouts of this repo, 157MB
+# and counting. Committing or shipping them is never intended.
+.kilo/

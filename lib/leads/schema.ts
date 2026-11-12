@@ -7,7 +7,7 @@ import { z } from 'zod';
  * a running server: this is the boundary that decides what reaches Postgres,
  * and it is the part most worth having tests on.
  */
-export const LEAD_SOURCES = ['qualify_quiz', 'ask_widget', 'contact_form', 'pricing_cta'] as const;
+export const LEAD_SOURCES = ['qualify_quiz', 'ask_widget', 'contact_form', 'pricing_cta', 'voice_agent'] as const;
 
 export const LeadBody = z.object({
   /* Sent by the quiz, which only ever asks for a single name field. The contact

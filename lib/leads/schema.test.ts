@@ -28,7 +28,7 @@ describe('LeadBody', () => {
   });
 
   it('accepts every source the schema enum declares', () => {
-    for (const s of ['qualify_quiz', 'ask_widget', 'contact_form', 'pricing_cta']) {
+    for (const s of ['qualify_quiz', 'ask_widget', 'contact_form', 'pricing_cta', 'voice_agent']) {
       expect(LeadBody.safeParse({ ...valid, source: s }).success, s).toBe(true);
     }
   });

@@ -277,3 +277,40 @@
 .hv-2{background:rgba(81,141,224,0.06);border-color:var(--brand-blue);color:var(--brand-blue)}
 .hv-3{background:var(--blue-700);color:#fff;transform:translateY(-1px);box-shadow:0 6px 16px rgba(81,141,224,0.32)}
 .hv-4{background:rgba(81,141,224,0.06);border-color:var(--brand-blue);color:var(--brand-blue)}
+
+/* ---------- hand-additions sentinel ---------- */
+/* Everything below is hand-written, for the 2026-09 content merge (six service
+   areas, Prevent step, 5-step onboarding, Why Rem Assist, closing band). The
+   modifiers restate their breakpoints because, being later in the file at the
+   same specificity, they would otherwise override the generated media queries. */
+.it-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.it-chan--5, .it-flowrow--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1024px) {
+  .it-grid--3, .it-chan--5, .it-flowrow--5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .it-grid--3, .it-chan--5, .it-flowrow--5 { grid-template-columns: 1fr; }
+}
+
+/* The band's tile style, on a light section. */
+.it-chan-card--light { background: #fff; border-color: var(--border-default); box-shadow: var(--shadow-sm); }
+.it-chan-card--light:hover { background: #fff; border-color: rgba(81, 141, 224, 0.45); }
+.it-chan-card--light em { color: var(--brand-blue); }
+.it-chan-card--light h3 { color: var(--brand-navy); }
+.it-chan-card--light p { color: var(--ink-600); }
+
+/* Why Rem Assist tiles: the card without an icon or list. */
+.it-card--why h3 { margin-top: 0; }
+.it-card--why a { color: var(--brand-blue); }
+
+/* "Best for" line under each engagement model. */
+.it-tier .it-bestfor { margin: 20px 0 0; padding-top: 16px; border-top: 1px solid var(--border-default);
+  font-size: 14px; line-height: 1.6; color: var(--ink-600); }
+.it-tier .it-bestfor b { color: var(--brand-navy); }
+
+/* Closing band: centred, one white button. */
+.it-close { text-align: center; }
+.it-close .it-lede { margin-inline: auto; max-width: 62ch; }
+.it-close .it-cta-row { justify-content: center; }
+.it-btn--light { background: #fff; color: var(--brand-blue); }
+.it-btn--light:hover { background: var(--blue-100, #eef4fd); }

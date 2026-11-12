@@ -79,3 +79,8 @@
   .card { transition: none; }
   .card:hover { transform: none; }
 }
+
+/* RA monogram under the "REM — it's in the name" heading, left column. */
+.titleCol { align-self: start; }
+.raLogo { display: block; width: 168px; height: auto; margin-top: 26px; }
+@media (max-width: 760px) { .raLogo { width: 132px; margin-top: 18px; } }

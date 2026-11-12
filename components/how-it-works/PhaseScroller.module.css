@@ -116,6 +116,11 @@
      screens rather than four equal shares of a track with a tail on it. */
   .triggers { display: grid; grid-auto-rows: 1fr; position: absolute; left: 0; right: 0; top: 0;
     bottom: 45vh; pointer-events: none; }
+  /* The rows above already size these, but the component asks for the class by
+     name — without a rule here `styles.trigger` is undefined and each one is
+     rendered with no class at all, which works only for as long as nobody
+     changes how the wrapper lays its children out. */
+  .trigger { min-height: 0; }
 
   .stage { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h));
     display: flex; align-items: center; }

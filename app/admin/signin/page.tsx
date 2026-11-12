@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { AuthError } from 'next-auth';
-import { auth, signIn } from '@/auth';
+import { signIn } from '@/auth';
+import { currentUser } from '@/lib/auth/require';
 import { isAllowedEmail } from '@/lib/auth/allowlist';
 import { CODE_TTL_SEC } from '@/lib/auth/code';
 import { REMEMBER_COOKIE, rememberCookieOptions } from '@/lib/auth/remember';
@@ -40,10 +41,16 @@ export default async function SignInPage({
 }) {
   const { error } = await searchParams;
 
-  /* Already signed in — no reason to show the form. The (protected) layout
-     does the real authorisation; this only avoids a pointless round trip. */
-  const session = await auth();
-  if (session?.user?.email) redirect('/admin/leads');
+  /* Already signed in — no reason to show the form.
+     
+     This asks the same question the (protected) layout asks, and that is the
+     whole point. Bouncing on `session?.user?.email` alone sent anybody whose
+     session the gate then refuses — an address dropped from the allowlist, a
+     disabled account, a row that no longer exists — straight into a loop: here
+     to /admin/leads, the gate back to here, forever. A session the gate will
+     not honour is not a reason to hide the form; it is a reason to show it. */
+  const user = await currentUser();
+  if (user) redirect('/admin/leads');
 
   async function submit(formData: FormData) {
     'use server';
