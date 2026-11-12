@@ -6,6 +6,7 @@ Next.js app: the public Rem Assist site and the admin UI. The API lives in
 - `docs/ARCHITECTURE.md` — what this app does today, what moves to the API, CMS candidates
 - `../remassist-backend/docs/ARCHITECTURE.md` — the system-wide plan and module order
 - `docs/FRONTEND-GAPS.md` — known performance/code gaps, fixed in a later phase
+- `docs/RESTRUCTURE.md` — shared admin components, the `lib/api` pattern and screens to delete; apply them while rewiring each admin area
 
 ## Commands
 
