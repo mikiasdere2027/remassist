@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { setLeadStatus } from './actions';
-import { LEAD_STATUSES } from '@/lib/leads/display';
+import { SELECTABLE_STATUSES } from '@/lib/leads/display';
+import { STATUS_LABELS } from '@/lib/crm/display';
 import styles from '../../../admin.module.css';
 
 /**
@@ -36,9 +37,16 @@ export default function StatusForm({ id, current }: { id: string; current: strin
           });
         }}
       >
-        {LEAD_STATUSES.map((s) => (
+        {/* A legacy or system status (won, lost, converted) stays visible as the
+            current value but cannot be chosen again. */}
+        {!(SELECTABLE_STATUSES as readonly string[]).includes(current) && (
+          <option value={current} disabled>
+            Status: {STATUS_LABELS[current] ?? current}
+          </option>
+        )}
+        {SELECTABLE_STATUSES.map((s) => (
           <option key={s} value={s}>
-            Status: {s}
+            Status: {STATUS_LABELS[s]}
           </option>
         ))}
       </select>

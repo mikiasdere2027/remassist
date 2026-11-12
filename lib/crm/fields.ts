@@ -61,3 +61,39 @@ export function validateCustomFields(defs: FieldDef[], input: unknown, existing:
   );
   return { success: true as const, data: { ...archived, ...parsed.data } };
 }
+
+/**
+ * Read a submitted form into a `custom` object, typed per definition: numbers
+ * become numbers, multiselects collect every checked box, a blank field
+ * becomes null (clears it). Inputs are named `cf_<key>`. Validation is still
+ * validateCustomFields' job.
+ */
+export function customFromFormData(defs: FieldDef[], fd: FormData): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const d of defs) {
+    if (d.archivedAt) continue;
+    const name = `cf_${d.key}`;
+    if (d.type === 'multiselect') {
+      out[d.key] = fd.getAll(name).map(String).filter(Boolean);
+      continue;
+    }
+    if (d.type === 'boolean') {
+      out[d.key] = fd.get(name) === 'on' || fd.get(name) === 'true';
+      continue;
+    }
+    const raw = fd.get(name);
+    const v = typeof raw === 'string' ? raw.trim() : '';
+    if (!v) out[d.key] = null;
+    else if (d.type === 'number') out[d.key] = Number.isFinite(Number(v)) ? Number(v) : v;
+    else out[d.key] = v;
+  }
+  return out;
+}
+
+/** A stored value as display text. */
+export function formatCustomValue(d: FieldDef, v: unknown): string {
+  if (v === null || v === undefined || v === '') return '';
+  if (Array.isArray(v)) return v.join(', ');
+  if (d.type === 'boolean') return v ? 'Yes' : 'No';
+  return String(v);
+}

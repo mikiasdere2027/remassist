@@ -9,7 +9,15 @@ import { QUIZ } from '@/lib/quiz/quiz';
  * form starts sending.
  */
 
-export const LEAD_STATUSES = ['new', 'contacted', 'qualified', 'won', 'lost', 'spam'] as const;
+/* Every value the column can hold (filters, validation). won/lost are legacy:
+   they become converted/unqualified when deals arrive. */
+export const LEAD_STATUSES = [
+  'new', 'contacted', 'qualified', 'nurturing', 'unqualified', 'spam', 'converted', 'won', 'lost',
+] as const;
+
+/* What a person may choose. converted is set by converting a lead into a deal,
+   never picked by hand; won/lost are no longer offered. */
+export const SELECTABLE_STATUSES = ['new', 'contacted', 'qualified', 'nurturing', 'unqualified', 'spam'] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
 export const SOURCE_LABELS: Record<string, string> = {
@@ -17,6 +25,12 @@ export const SOURCE_LABELS: Record<string, string> = {
   contact_form: 'Contact form',
   ask_widget: 'Ask widget',
   pricing_cta: 'Pricing CTA',
+  voice_agent: 'Voice agent',
+  manual: 'Added by team',
+  import: 'Imported',
+  referral: 'Referral',
+  outbound: 'Outbound',
+  event: 'Event',
 };
 
 /**

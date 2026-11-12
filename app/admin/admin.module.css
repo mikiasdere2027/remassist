@@ -694,6 +694,9 @@ select.control { padding-right: 36px; }
 .s_won       { background: #ecfaf1; color: #0f5c2d; }
 .s_lost      { background: #fef3f2; color: #8a1a12; }
 .s_spam      { background: #f4f4f5; color: #667180; }
+.s_nurturing   { background: #f1ecfd; color: #5b3cc4; }
+.s_unqualified { background: #fef3f2; color: #8a1a12; }
+.s_converted   { background: #ecfaf1; color: #0f5c2d; }
 
 /* ---------- pagination ---------- */
 .pager { display: flex; gap: 8px; align-items: center; }
@@ -747,6 +750,9 @@ select.control { padding-right: 36px; }
 .statusSelect.s_won { background: var(--low-50); color: var(--low-700); border-color: #a4dbc1; }
 .statusSelect.s_lost { background: var(--critical-50); color: var(--critical-600); border-color: #e5bcb8; }
 .statusSelect.s_spam { background: #f4f4f5; color: var(--ink-500); border-color: #dde0e7; }
+.statusSelect.s_nurturing { background: #f1ecfd; color: #5b3cc4; border-color: #d6c9f6; }
+.statusSelect.s_unqualified { background: var(--critical-50); color: var(--critical-600); border-color: #e5bcb8; }
+.statusSelect.s_converted { background: var(--low-50); color: var(--low-700); border-color: #a4dbc1; }
 .statusNote {
   font-size: 12px;
   color: var(--ink-500);

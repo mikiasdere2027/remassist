@@ -2,6 +2,7 @@ import { and, desc } from 'drizzle-orm';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { leads } from '@/db/schema';
 import { currentUser } from '@/lib/auth/require';
+import { currentWorkspaceId } from '@/lib/crm/workspace';
 import { canViewLeads } from '@/lib/auth/roles';
 import { csvRow, formatDate } from '@/lib/leads/display';
 import { buildLeadFilters, type LeadSearch } from '@/lib/leads/query';
@@ -45,8 +46,10 @@ export async function GET(req: Request) {
     source: url.searchParams.get('source') ?? undefined,
     status: url.searchParams.get('status') ?? undefined,
     q: url.searchParams.get('q') ?? undefined,
+    view: url.searchParams.get('view') ?? undefined,
+    owner: url.searchParams.get('owner') ?? undefined,
   };
-  const where = buildLeadFilters(sp);
+  const where = buildLeadFilters(sp, { userId: user.id, workspaceId: currentWorkspaceId() });
 
   const db = getDb();
   const rows = await db

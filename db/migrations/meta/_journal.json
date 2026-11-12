@@ -113,6 +113,13 @@
       "when": 1788892100000,
       "tag": "0015_crm_foundations",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788892200000,
+      "tag": "0016_lead_qualification_fields",
+      "breakpoints": true
     }
   ]
 }

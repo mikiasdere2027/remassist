@@ -62,6 +62,13 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
           </svg>
           <span>Leads</span>
         </Link>
+        <Link {...link('/admin/tasks')} href="/admin/tasks">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="4" width="16" height="17" rx="2" />
+            <path d="M9 2v4M15 2v4M8 11l2 2 4-4M8 17h8" />
+          </svg>
+          <span>Tasks</span>
+        </Link>
         <Link {...link('/admin/quizzes')} href="/admin/quizzes">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M9 11l3 3 7-7" />
