@@ -5,6 +5,10 @@ import { LeadBody, leadColumns, utmFromPage } from '@/lib/leads/schema';
 import { mergeAttribution } from '@/lib/analytics/attribution';
 import { rateLimit } from '@/lib/rate-limit';
 import { notifyNewLead } from '@/lib/notify';
+import { scoreLead } from '@/lib/crm/scoring';
+import { logActivity, recordEvent } from '@/lib/crm/events';
+import { currentWorkspaceId } from '@/lib/crm/workspace';
+import { SOURCE_LABELS } from '@/lib/leads/display';
 
 /**
  * POST /api/leads — MIGRATION-PLAN §9.1.
@@ -50,29 +54,68 @@ export async function POST(req: Request) {
 
   const cols = leadColumns(parsed.data);
 
+  /* Scored at capture so the list can sort by it from the first minute. */
+  const quizResult = quiz?.result as Partial<QuizResult> | undefined;
+  const scored = scoreLead({
+    source: cols.source,
+    email: cols.email,
+    phone: cols.phone,
+    company: cols.company,
+    message: cols.message,
+    serviceInterest: cols.serviceInterest,
+    quiz: quiz
+      ? { completed: quiz.completed ?? true, seats: Number(quizResult?.seats) || 0, timing: (quiz.answers as Partial<Answers>)?.timing }
+      : null,
+  });
+  const workspaceId = currentWorkspaceId();
+
   try {
     const db = getDb();
-    const [row] = await db
-      .insert(leads)
-      .values({
-        ...cols,
-        pageUrl: page,
-        referrer: req.headers.get('referer'),
-        /* Last touch wins over the submitting page's query, and first touch
-           rides alongside under a first_ prefix. A conversion two pages deep
-           into the visit used to land here with utm: null. */
-        utm: mergeAttribution(utmFromPage(page), attribution),
-      })
-      .returning({ id: leads.id });
+    /* One transaction: the lead, its quiz, the event and the timeline entry
+       land together or not at all, so the event log never describes a lead
+       that does not exist. */
+    const row = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(leads)
+        .values({
+          ...cols,
+          workspaceId,
+          score: scored.score,
+          priority: scored.priority,
+          pageUrl: page,
+          referrer: req.headers.get('referer'),
+          /* Last touch wins over the submitting page's query, and first touch
+             rides alongside under a first_ prefix. A conversion two pages deep
+             into the visit used to land here with utm: null. */
+          utm: mergeAttribution(utmFromPage(page), attribution),
+        })
+        .returning({ id: leads.id });
 
-    if (quiz) {
-      await db.insert(quizSubmissions).values({
-        leadId: row.id,
-        answers: quiz.answers as Partial<Answers>,
-        result: quiz.result as unknown as QuizResult,
-        completed: quiz.completed ?? true,
+      if (quiz) {
+        await tx.insert(quizSubmissions).values({
+          leadId: row.id,
+          answers: quiz.answers as Partial<Answers>,
+          result: quiz.result as unknown as QuizResult,
+          completed: quiz.completed ?? true,
+        });
+      }
+
+      await recordEvent(tx, {
+        workspaceId,
+        type: 'lead.created',
+        subjectType: 'lead',
+        subjectId: row.id,
+        payload: { source: cols.source, score: scored.score, priority: scored.priority },
       });
-    }
+      await logActivity(tx, {
+        workspaceId,
+        type: 'system',
+        leadId: row.id,
+        body: `Captured from ${SOURCE_LABELS[cols.source] ?? cols.source}`,
+        meta: { source: cols.source, page, score: scored.score, reasons: scored.reasons },
+      });
+      return row;
+    });
 
     // Notification failures never fail the request — the lead is already saved.
     void notifyNewLead({

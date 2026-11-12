@@ -54,7 +54,7 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
       </div>
 
       <div className={styles.navGroup}>
-        <div className={styles.navGroupTitle}>Pipeline</div>
+        <div className={styles.navGroupTitle}>CRM</div>
         <Link {...link('/admin/leads')} href="/admin/leads">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 12h5l2 3h4l2-3h5" />
