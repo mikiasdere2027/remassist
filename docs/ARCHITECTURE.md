@@ -15,7 +15,7 @@ directly (Drizzle), runs admin auth (Auth.js), handles uploads to disk, and
 receives leads through its own `app/api` routes and server actions.
 
 **Target:** this app becomes a **client of the NestJS API**
-(`remassist-backend`, Drizzle + Neon, Cloudinary for uploads). It keeps:
+(`remassist-backend`, Drizzle + PostgreSQL in Docker, Cloudinary for uploads). It keeps:
 
 - rendering the public site (server components, static where possible)
 - the admin UI (forms, tables, editors)

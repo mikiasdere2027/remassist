@@ -1,7 +1,7 @@
 # remassist (frontend) — rules
 
 Next.js app: the public Rem Assist site and the admin UI. The API lives in
-`../remassist-backend` (NestJS + Drizzle + Neon). Read:
+`../remassist-backend` (NestJS + Drizzle + PostgreSQL in Docker). Read:
 
 - `docs/ARCHITECTURE.md` — what this app does today, what moves to the API, CMS candidates
 - `../remassist-backend/docs/ARCHITECTURE.md` — the system-wide plan and module order
