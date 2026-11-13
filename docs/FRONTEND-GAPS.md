@@ -1,6 +1,6 @@
 # Frontend gaps — performance, code quality, robustness
 
-Findings from the 2026-11-12 review. **Fixing these is phase F1, which starts
+Findings from the 2026-11-12 review. ✅ = fixed (batch log at the end). **Fixing these is phase F1, which starts
 after the backend port (B2/B3).** Don't take them on during the port; add new
 findings here instead. Items marked _(unverified)_ need confirming before work.
 
@@ -37,7 +37,7 @@ Full list of files that touch the database: see `docs/ARCHITECTURE.md` §3.
 | Medium | Admin shares the public root layout | Six Sora weights load in `app/layout.tsx:24`; public chrome is hidden at runtime by `usePathname` in `SiteChrome.tsx:33` | Split into `app/(site)` and `app/admin` route groups with their own layouts; load fewer font weights |
 | Medium | Build depends on Google Fonts at build time | `next/font/google` network failure breaks the build | Self-host the font with `next/font/local` |
 | Medium | Oversized source images | Team headshots 0.4–0.85 MB each; `Agents/Pro.jpg` and `Expert.jpg` ~0.7 MB | Re-export at 2× display size or serve from Cloudinary |
-| Medium | Unused image | `public/images/Agents/Virtual-assitant.jpg` (1.2 MB) isn't referenced anywhere | Delete it |
+| ✅ Medium | Unused image | `public/images/Agents/Virtual-assitant.jpg` (1.2 MB) isn't referenced anywhere | Delete it |
 | Medium | Too much CSS | 662 KB across app, components and styles; `app/admin/admin.module.css` is ~5,000 lines | Split per page/section; remove dead rules |
 | Low | Client components | Sampled 28 public `'use client'` files; all need state or effects | No action. Re-check with the bundle analyzer once the build runs |
 
@@ -45,24 +45,34 @@ Full list of files that touch the database: see `docs/ARCHITECTURE.md` §3.
 
 | Priority | Gap | Evidence | Fix |
 |---|---|---|---|
-| **High** | Dead component | `app/blog/[slug]/ArticleBody.tsx` (436 lines) isn't imported anywhere | Delete it |
+| ✅ **High** | Dead component | `app/blog/[slug]/ArticleBody.tsx` (436 lines) isn't imported anywhere | Delete it |
 | Medium | Leftovers from the artboard codemod | 691 inline `style={{}}` on public pages (terms 207, privacy 195); 1,560 `styles['x-y']` lookups in 30 files; blank whitespace blocks (e.g. hr-and-recruiting 88, pricing 49) | Move styles into CSS modules, camelCase the class names (`tools/css-module-classnames.js`), strip the blank blocks. Leave the `/services/*` pages until the CEO decides |
 | Medium | Very large files | `admin/(protected)/catalog/page.tsx` is 804 lines | Split into components |
 | Medium | Direct DOM access in React | `ArticleChrome.tsx`: 7 `getElementById` calls | Use refs |
 | Medium | Hardcoded business data | Rates, Calendly link, contact details and service lists are duplicated (see ARCHITECTURE.md §4) | Handled in B3 (CMS additions) |
-| Low | Stray files committed | `$log` (dev-server log); `Test Admin/` (prototype `index.html`, README, logo) | `git rm` them; add `$log` to `.gitignore` |
-| Low | Stale plan doc | `MIGRATION-PLAN.md` §0 says the admin is "not started" | Mark it as history; point to `docs/ARCHITECTURE.md` |
+| ✅ Low | Stray files committed | `$log` (dev-server log); `Test Admin/` (prototype `index.html`, README, logo) | `git rm` them; add `$log` to `.gitignore` |
+| ✅ Low | Stale plan doc | `MIGRATION-PLAN.md` §0 says the admin is "not started" | Mark it as history; point to `docs/ARCHITECTURE.md` |
 
 ## D. Robustness, accessibility, SEO, security (F1)
 
 | Priority | Gap | Evidence | Fix |
 |---|---|---|---|
 | **High** | No error or loading boundaries | Only `not-found.tsx` exists; no `error.tsx`, `global-error.tsx` or `loading.tsx` | Add `global-error`, plus `error` and `loading` for the admin segment and the data-backed public routes. Needed once data comes over the network |
-| Medium | JSON-LD can break out of its `<script>` | `components/layout/JsonLd.tsx:49` uses raw `JSON.stringify`, and the data includes post titles from the database | Escape `<` as `<` before injecting |
+| ✅ Medium | JSON-LD can break out of its `<script>` | `components/layout/JsonLd.tsx:49` uses raw `JSON.stringify`, and the data includes post titles from the database | Escape `<` as `<` before injecting |
 | Medium | Focus styles removed | `app/blog/page.module.css:22,105` set `outline: none`; no replacement found _(unverified)_ | Add `:focus-visible` styles |
-| Low | `h1` placement | `page.tsx` for home, how-it-works and services has no `h1`; it may be in child components _(unverified)_ | Check there is exactly one `h1` per page |
+| ✅ Low | `h1` placement (verified 2026-11-13: exactly one per page) | `page.tsx` for home, how-it-works and services has no `h1`; it may be in child components _(unverified)_ | Check there is exactly one `h1` per page |
 | Low | No Content-Security-Policy | Next sets nosniff, Referrer-Policy and X-Frame-Options; no CSP. Whether Nginx adds one is unchecked | Add a CSP that allows GTM/GA, Calendly and Cloudinary |
 | Low | Sitemap after the split | `app/sitemap.ts` will need blog slugs from the API _(unverified)_ | Fetch from the API at build time or on revalidate |
 
 Fine as they are: robots, sitemap, per-page metadata, admin `noindex`,
 JSON-LD coverage, `poweredByHeader: false`, no secrets committed.
+
+---
+
+## Fix log
+
+- **2026-11-13, batch 1 (cleanup):** deleted `ArticleBody.tsx`, the legacy-body
+  exemption (`lib/blog/legacy-bodies.ts` — the article's body is stored now),
+  `$log`, `Test Admin/`, the unused agent JPG; JSON-LD is escaped via
+  `lib/json-script.ts` (tested); MIGRATION-PLAN.md marked as history; verified
+  one `h1` per page in a real browser at 390px and 1280px.

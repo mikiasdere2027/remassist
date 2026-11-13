@@ -53,9 +53,9 @@ copies of redirect helpers, and 3 different submit styles.
 
 ## 4. Remove or fix things that look like features but do nothing
 
-- ☐ The topbar **search box** (no form, no handler — shown on 29 pages) → remove, or build real search later
-- ☐ The topbar **bell** (no handler, dot always lit) → remove until notifications exist
-- ☐ Unused: `addFaqItem` (faq/actions.ts), `moveTeamMember` (team/actions.ts), `team/PhotoField.tsx`, `settings/team/InfoTooltip.tsx` (2-line re-export)
+- ☑ The topbar **search box** (no form, no handler — shown on 29 pages) → remove, or build real search later
+- ☑ The topbar **bell** (no handler, dot always lit) → remove until notifications exist
+- ☑ Unused: `addFaqItem` (faq/actions.ts), `moveTeamMember` (team/actions.ts), `team/PhotoField.tsx`, `settings/team/InfoTooltip.tsx` (2-line re-export)
 - ☐ "Not connected to the public site yet" banner on the catalog page — remove when rates are wired
 - ☐ "No database configured" notices (15 pages, 32 checks) → gone with the API; replaced by `error.tsx` (FRONTEND-GAPS D)
 

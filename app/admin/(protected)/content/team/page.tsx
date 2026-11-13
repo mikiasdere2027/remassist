@@ -78,7 +78,6 @@ function Topbar() {
     <AdminTopbar
       title="Team"
       subtitle="The people behind the services"
-      hideSearch={true}
       action={
         <Link href="/admin/content/team/new" className={styles.btnHeader}>
           <svg viewBox="0 0 24 24" aria-hidden="true">

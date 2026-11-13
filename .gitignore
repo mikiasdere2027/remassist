@@ -27,3 +27,7 @@ Test Admin/.edge-prof/
 .uploads/
 
 /.next-dev*/
+
+# dev-server logs
+$log
+*.log

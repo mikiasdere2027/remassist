@@ -6,7 +6,7 @@ import { posts } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canDeletePost, canEditContent } from '@/lib/auth/roles';
 import { formatDate, formatRelativeTime } from '@/lib/leads/display';
-import { isPublishable } from '@/lib/blog/legacy-bodies';
+import { hasBody } from '@/lib/blog/completeness';
 import { deletePost, setPostPublished } from './actions';
 import { postMessage } from './messages';
 import RowMenu from './RowMenu';
@@ -228,7 +228,7 @@ export default async function PostsListPage({
                 </thead>
                 <tbody>
                   {visible.map((p) => {
-                    const publishable = isPublishable(p.slug, p.body);
+                    const publishable = hasBody(p.body);
                     return (
                       <Fragment key={p.id}>
                         <tr>

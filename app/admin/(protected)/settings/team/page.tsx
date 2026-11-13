@@ -7,7 +7,7 @@ import { ALLOWED_DOMAINS } from '@/lib/auth/allowlist';
 import { formatDate, formatDateShort } from '@/lib/leads/display';
 import { inviteManager, setUserDisabled } from './actions';
 import { teamMessage } from './messages';
-import InfoTooltip from './InfoTooltip';
+import InfoTooltip from '../../InfoTooltip';
 import MenuButton from '../../MenuButton';
 import AdminTopbar from '../../AdminTopbar';
 import styles from '../../../admin.module.css';

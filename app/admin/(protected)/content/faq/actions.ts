@@ -120,48 +120,6 @@ export async function saveFaqItem(formData: FormData): Promise<void> {
   back('ok', 'saved');
 }
 
-export async function addFaqItem(formData: FormData): Promise<void> {
-  await assertEditor();
-  if (!isDatabaseConfigured()) back('error', 'no-database');
-
-  const groupId = String(formData.get('groupId') ?? '');
-  const question = String(formData.get('question') ?? '').trim();
-  const { html: answer, error } = readAnswer(formData.get('answer'));
-
-  if (!question) back('error', 'empty');
-  if (error) back('error', error);
-  if (question.length > MAX_QUESTION) back('error', 'too-long');
-
-  const db = getDb();
-  const [group] = await db
-    .select({ id: faqGroups.id })
-    .from(faqGroups)
-    .where(eq(faqGroups.id, groupId))
-    .limit(1);
-  if (!group) back('error', 'group-not-found');
-
-  /* Appended to the end of its section rather than inserted at the top: the
-     order on the page is editorial, and a new question arriving above a
-     carefully placed one is a change nobody asked for. */
-  const [{ n }] = await db
-    .select({ n: count() })
-    .from(faqItems)
-    .where(eq(faqItems.groupId, groupId));
-
-  await db.insert(faqItems).values({
-    groupId,
-    question,
-    answer,
-    sortOrder: Number(n),
-    /* Unpublished by default. A half-written answer should not appear on the
-       public page the instant it is saved. */
-    published: false,
-  });
-
-  published();
-  back('ok', 'added');
-}
-
 /**
  * Returns the *cleaned* answer alongside the id.
  *

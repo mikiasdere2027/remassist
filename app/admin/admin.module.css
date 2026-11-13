@@ -408,66 +408,6 @@
   flex-shrink: 0;
 }
 
-/* Topbar search box */
-.tbSearch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 14px;
-  width: 240px;
-  background: #fff;
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-sm);
-  color: var(--ink-400);
-  transition: border-color 150ms, box-shadow 150ms;
-  flex-shrink: 0;
-}
-.tbSearch:focus-within {
-  border-color: var(--brand-blue);
-  box-shadow: 0 0 0 3px rgba(81,141,224,0.14);
-}
-.tbSearch svg { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.tbSearch input {
-  border: 0;
-  outline: 0;
-  background: transparent;
-  width: 100%;
-  font: inherit;
-  font-size: 13.5px;
-  color: var(--ink-700);
-}
-.tbSearch input::placeholder { color: var(--ink-400); }
-
-/* Bell icon button */
-.tbBell {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--hairline);
-  background: #fff;
-  color: var(--ink-600);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 150ms, color 150ms;
-}
-.tbBell svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.tbBell:hover { background: var(--ink-50); color: var(--ink-900); }
-.tbBellDot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #e05151;
-  border: 1.5px solid #fff;
-}
-
 /* ---------- panels ---------- */
 .panel {
   background: #fff;

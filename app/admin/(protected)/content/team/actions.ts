@@ -261,19 +261,10 @@ export async function setTeamMemberPublished(formData: FormData): Promise<void> 
 }
 
 /**
- * Move a member up or down the homepage order.
- *
- * Swaps sortOrder with its neighbour rather than renumbering, so two editors
- * reordering different pairs at the same time do not overwrite each other's
- * work. Both writes are one transaction: a half-applied swap leaves two
- * members sharing a position, which reads as a random order.
- */
-/**
  * Move a member to an absolute position in the homepage order.
  *
- * The counterpart to moveTeamMember's one-step swap: the edit page now offers
- * the position as a number you type or step, and going from ninth to first
- * should not be eight round trips. A swap is not enough here — moving into the
+ * The edit page offers the position as a number you type or step, and going
+ * from ninth to first should not be eight round trips. A swap is not enough here — moving into the
  * middle shifts everything between, so the whole run is renumbered.
  *
  * The sortOrder values themselves are reused rather than recomputed: whatever
@@ -323,39 +314,4 @@ export async function setTeamMemberPosition(formData: FormData): Promise<void> {
 
   published();
   backToItem(id, 'ok', 'moved');
-}
-
-export async function moveTeamMember(formData: FormData): Promise<void> {
-  await assertEditor();
-  if (!isDatabaseConfigured()) back('error', 'no-database');
-
-  const id = String(formData.get('id') ?? '');
-  const direction = formData.get('direction') === 'up' ? 'up' : 'down';
-
-  const db = getDb();
-  const [item] = await db
-    .select({ id: teamMembers.id, sortOrder: teamMembers.sortOrder })
-    .from(teamMembers)
-    .where(eq(teamMembers.id, id))
-    .limit(1);
-  if (!item) back('error', 'not-found');
-
-  const siblings = await db
-    .select({ id: teamMembers.id, sortOrder: teamMembers.sortOrder })
-    .from(teamMembers)
-    .orderBy(asc(teamMembers.sortOrder));
-
-  const at = siblings.findIndex((s) => s.id === item.id);
-  const swapWith = direction === 'up' ? siblings[at - 1] : siblings[at + 1];
-  /* Already at the end it was asked to move towards. Not an error — the button
-     is disabled there, so this is a double-submit or a stale page. */
-  if (!swapWith) back('ok', 'moved');
-
-  await db.transaction(async (tx) => {
-    await tx.update(teamMembers).set({ sortOrder: swapWith.sortOrder }).where(eq(teamMembers.id, item.id));
-    await tx.update(teamMembers).set({ sortOrder: item.sortOrder }).where(eq(teamMembers.id, swapWith.id));
-  });
-
-  published();
-  back('ok', 'moved');
 }

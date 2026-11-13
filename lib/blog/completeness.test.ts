@@ -34,14 +34,14 @@ describe('missingForPublish', () => {
     expect(missingForPublish({ ...complete, body: '   ' })).toEqual(['Body']);
   });
 
-  it('accepts the one post whose body still lives in a component', () => {
+  it('has no exemptions: every post needs a stored body', () => {
     expect(
       missingForPublish({
         ...complete,
         slug: 'hiring-offshore-without-losing-quality-control',
         body: null,
       }),
-    ).toEqual([]);
+    ).toEqual(['Body']);
   });
 });
 

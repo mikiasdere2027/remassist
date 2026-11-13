@@ -1,3 +1,4 @@
+import { safeJsonForScript } from '@/lib/json-script';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 import { serviceByPath } from '@/lib/services';
 import type { Post } from '@/lib/blog/posts';
@@ -46,7 +47,7 @@ function Graph({ data }: { data: object }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonForScript(data) }}
     />
   );
 }

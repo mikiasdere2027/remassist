@@ -1,3 +1,8 @@
+> **HISTORY — not the current plan.** This document records the artboard →
+> Next.js port (Aug–Sep 2026). Since then the data layer moved to a separate
+> NestJS API with PostgreSQL in Docker. Current plan and status:
+> `docs/ARCHITECTURE.md` here and `../remassist-backend/docs/ARCHITECTURE.md`.
+
 # Migration Plan — Static Artboards to Self-Hosted Next.js + Postgres
 
 **Target:** move the 25-page marketing site off the browser-compiled Claude Design runtime onto a

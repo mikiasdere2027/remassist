@@ -54,8 +54,7 @@ export async function publishedPosts(): Promise<Post[]> {
  *
  * The body comes back separately from the Post because Post is the shape the
  * index cards and the JSON-LD want, and neither has any use for the article
- * text. Null body plus a legacy slug means the route renders ArticleBody
- * instead — see lib/blog/legacy-bodies.ts.
+ * text.
  */
 export async function postBySlug(
   slug: string,
