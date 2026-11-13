@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { readTouch, mergeAttribution } from './attribution';
+import { readTouch } from './attribution';
 
 const SELF = 'https://remassist.vercel.app';
 
@@ -50,37 +50,6 @@ describe('readTouch', () => {
   it('strips the query from landing_page, which is a page not a URL', () => {
     const t = readTouch(`${SELF}/pricing?utm_source=x&secret=shh`, undefined);
     expect(t?.landing_page).toBe(`${SELF}/pricing`);
-  });
-});
-
-describe('mergeAttribution', () => {
-  it('is undefined when there is nothing at all to record', () => {
-    expect(mergeAttribution(undefined, undefined)).toBeUndefined();
-  });
-
-  it('keeps the bare utm_ keys readable, so existing consumers are unaffected', () => {
-    const merged = mergeAttribution({ utm_source: 'page' }, undefined);
-    expect(merged).toEqual({ utm_source: 'page' });
-  });
-
-  it('prefixes first touch and leaves last touch bare', () => {
-    const merged = mergeAttribution(undefined, {
-      first: { utm_source: 'google' },
-      last: { utm_source: 'linkedin' },
-    });
-    expect(merged).toEqual({ utm_source: 'linkedin', first_utm_source: 'google' });
-  });
-
-  /* The cookie was written on arrival at a campaign URL; the page query may
-     just have been carried along by a share or a copy-paste. */
-  it('lets a recorded last touch override the submitting page query', () => {
-    const merged = mergeAttribution({ utm_source: 'stale' }, { last: { utm_source: 'real' } });
-    expect(merged?.utm_source).toBe('real');
-  });
-
-  it('still records first touch when the visitor converted on a direct visit', () => {
-    const merged = mergeAttribution(undefined, { first: { utm_campaign: 'spring' } });
-    expect(merged).toEqual({ first_utm_campaign: 'spring' });
   });
 });
 

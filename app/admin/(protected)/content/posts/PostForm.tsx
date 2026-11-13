@@ -1,12 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import type { AuthorOption } from '@/lib/blog/authors';
+import { useRouter } from 'next/navigation';
+import { useMemo, useState, type FormEvent } from 'react';
+import { api } from '@/lib/api/client';
+import { ApiError } from '@/lib/api/errors';
+import {
+  publishMissing,
+  type AdminPost,
+  type AuthorOption,
+  type FaqOption,
+  type PostInput,
+} from '@/lib/api/posts';
 import { listFields, missingForPublish } from '@/lib/blog/completeness';
 import { slugify } from '@/lib/blog/slug';
-import { addPost, savePost, setPostPublished } from './actions';
-import ImageField from './ImageField';
+import ImageUploadField from '@/components/admin/ImageUploadField';
 import PreviewModal from './PreviewModal';
 import RichEditor from './RichEditor';
 import DatePicker from './DatePicker';
@@ -25,9 +33,9 @@ import styles from '../../../admin.module.css';
  * the author sets the avatar, every text box counts its own characters,
  * Publish knows what is still missing, and Preview renders the article from
  * what is on the form rather than from what is stored. Each of those needs the
- * values while they are being typed. The form still posts to the same server
- * actions — `action={savePost}` on a plain <form> — so saving, sanitation and
- * the publish gate are unchanged and unmoved.
+ * values while they are being typed. Saving, publishing and sanitising happen
+ * in the backend API (POST/PATCH /v1/admin/posts); this form sends the values
+ * and shows what the API answers, then refreshes the server-rendered page.
  *
  * Two tabs, not two columns. The body is the part of a post that wants room:
  * side by side, the editor had half a screen for an article and the metadata
@@ -36,8 +44,9 @@ import styles from '../../../admin.module.css';
  * stay mounted — hidden with `display`, never unmounted — because TipTap owns
  * its document and remounting it mid-edit would throw the article away.
  *
- * Publish is gated on lib/blog/completeness.ts, the same list the action
- * enforces, so the button's state and the server's answer cannot disagree. The
+ * Publish is gated on lib/blog/completeness.ts, a copy of the backend's
+ * publish gate, kept for the live checklist while typing. The backend's own
+ * `missing` list is shown if it refuses anyway. The
  * gate reads form state rather than the saved row: an editor who has just
  * filled in the last missing field should see Publish come alive, not be told
  * to save first and look again.
@@ -58,9 +67,6 @@ export type PostFormValues = {
   articleLayout: string;
   published: boolean;
 };
-
-/** One staged upload: the object URL for the preview, and the file's name. */
-type Staged = { url: string; name: string } | null;
 
 const MAX = {
   title: 300,
@@ -105,17 +111,26 @@ export default function PostForm({
   categories,
   canEdit,
   faqOptions = [],
+  notice,
 }: {
   mode: 'new' | 'edit';
   values: PostFormValues;
   /** Team members, recently-used authors first. See the page that builds it. */
   authors: AuthorOption[];
-  /** Categories posts already use, most recent first — lib/blog/categories.ts. */
+  /** Categories posts already use, most recent first — GET /v1/admin/posts/categories. */
   categories: string[];
   canEdit: boolean;
   /** Published central FAQ entries an article may reuse. */
-  faqOptions?: Array<{ id: string; question: string }>;
+  faqOptions?: FaqOption[];
+  /** A message to open with, e.g. after creating the draft. */
+  notice?: string;
 }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ tone: 'ok' | 'err'; text: string } | null>(
+    notice ? { tone: 'ok', text: notice } : null,
+  );
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [tab, setTab] = useState<'details' | 'body' | 'layout'>('details');
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -128,7 +143,7 @@ export default function PostForm({
     return parsed === null ? '' : String(parsed);
   });
   const [excerpt, setExcerpt] = useState(values.excerpt);
-  const [image] = useState(values.image);
+  const [image, setImage] = useState(values.image);
   const [body, setBody] = useState(values.body);
   const [articleLayout, setArticleLayout] = useState(values.articleLayout);
 
@@ -138,8 +153,6 @@ export default function PostForm({
   /* Shown only when the stored value was not a minute count we could read. */
   const unreadableReadTime =
     readMinutes(values.readTime) === null && values.readTime.trim() ? values.readTime : null;
-
-  const [cover, setCover] = useState<Staged>(null);
 
   /**
    * The slug follows the title only while it is still being derived from it.
@@ -173,21 +186,6 @@ export default function PostForm({
   const slugMoving = slugLocked && slugUnlocked && slug.trim() !== values.slug;
 
   /**
-   * Stage a picked file, or clear the staged one.
-   *
-   * The previous object URL is revoked through the setter's own previous value
-   * rather than a captured one, so picking twice in a row cannot leak the
-   * first URL.
-   */
-  const stage =
-    (set: React.Dispatch<React.SetStateAction<Staged>>) => (file: File | null) => {
-      set((previous) => {
-        if (previous) URL.revokeObjectURL(previous.url);
-        return file ? { url: URL.createObjectURL(file), name: file.name } : null;
-      });
-    };
-
-  /**
    * Which team member this post's stored byline refers to.
    *
    * Exactly by name where that works. Failing that, by headshot: the four
@@ -213,8 +211,6 @@ export default function PostForm({
      screen holds for the person selected. */
   const authorAvatar = author?.avatar ?? '';
 
-  /* A staged file is an image the post is about to have, so the publish gate
-     counts it as present — its name stands in for the URL it will be given. */
   const missing = missingForPublish({
     slug,
     title,
@@ -222,7 +218,7 @@ export default function PostForm({
     category,
     date,
     readTime,
-    image: image || (cover ? cover.name : ''),
+    image,
     authorName,
     authorAvatar,
     body: body || null,
@@ -235,13 +231,107 @@ export default function PostForm({
     category,
     date,
     readTime,
-    image: cover?.url ?? image,
+    image,
     authorName,
     authorAvatar,
   };
 
+  /** What the API is sent on create and save — the form as it stands. */
+  const input = (): PostInput => ({
+    title: title.trim(),
+    slug: slug.trim(),
+    excerpt: excerpt.trim(),
+    body,
+    articleLayout: articleLayout || null,
+    date,
+    readTime,
+    category: category.trim(),
+    image: image.trim(),
+    authorName,
+    authorAvatar,
+  });
+
+  /** One API call: show its outcome, then refresh the server-rendered data. */
+  async function run(action: () => Promise<string | void>) {
+    setBusy(true);
+    setMessage(null);
+    setFieldErrors({});
+    try {
+      const ok = await action();
+      if (ok) setMessage({ tone: 'ok', text: ok });
+      router.refresh();
+    } catch (err) {
+      const gaps = publishMissing(err);
+      const text = err instanceof Error ? err.message : 'Something went wrong.';
+      setMessage({
+        tone: 'err',
+        text: gaps?.length ? `${text} Still needed: ${listFields(gaps)}.` : text,
+      });
+      if (err instanceof ApiError) {
+        const fe = err.fieldErrors();
+        setFieldErrors(fe);
+        /* A refused field on the hidden tab is no use to anybody. */
+        if (fe.body) setTab('body');
+        else if (Object.keys(fe).length > 0) setTab('details');
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function save(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!canEdit || busy) return;
+    if (mode === 'new') {
+      setBusy(true);
+      setMessage(null);
+      setFieldErrors({});
+      try {
+        const created = await api.post<AdminPost>('/admin/posts', input());
+        router.push(`/admin/content/posts/${created.id}?created=1`);
+        /* Stays busy: the page is about to change. */
+      } catch (err) {
+        setBusy(false);
+        setMessage({ tone: 'err', text: err instanceof Error ? err.message : 'Something went wrong.' });
+        if (err instanceof ApiError) setFieldErrors(err.fieldErrors());
+      }
+      return;
+    }
+    await run(async () => {
+      await api.patch<AdminPost>(`/admin/posts/${values.id}`, input());
+      return 'Saved.';
+    });
+  }
+
+  /**
+   * Publishing sends the form as it stands along with the switch, so what goes
+   * live is what is on screen (and what the checklist above judged), not the
+   * last save. Unpublishing sends only the switch and is never gated.
+   */
+  const togglePublished = () =>
+    run(async () => {
+      if (values.published) {
+        await api.patch<AdminPost>(`/admin/posts/${values.id}`, { published: false });
+        return 'That post is off the blog. Nothing was deleted — the draft is kept.';
+      }
+      await api.patch<AdminPost>(`/admin/posts/${values.id}`, { ...input(), published: true });
+      return 'Saved and published — that post is live on the blog.';
+    });
+
+  const err = (field: string) =>
+    fieldErrors[field] ? <span className={styles.fieldErr}>{fieldErrors[field]}</span> : null;
+
   return (
     <>
+      {message && (
+        <p
+          className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
+          role={message.tone === 'ok' ? 'status' : 'alert'}
+        >
+          {message.text}
+        </p>
+      )}
+
       <div className={styles.memberTopRow}>
         <Link className={styles.memberBackBtn} href="/admin/content/posts">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -296,8 +386,9 @@ export default function PostForm({
               className={`${styles.btn} ${styles.btnGhost}`}
               type="submit"
               form="post-form"
+              disabled={busy}
             >
-              {mode === 'new' ? 'Create draft' : 'Save changes'}
+              {busy ? 'Saving…' : mode === 'new' ? 'Create draft' : 'Save changes'}
             </button>
 
             <button
@@ -309,13 +400,11 @@ export default function PostForm({
             </button>
 
             {mode === 'edit' && (
-              <form action={setPostPublished} style={{ display: 'inline' }}>
-                <input type="hidden" name="id" value={values.id} />
-                <input type="hidden" name="published" value={values.published ? '0' : '1'} />
                 <button
                   className={`${styles.btn} ${values.published ? styles.btnGhost : styles.btnPrimary}`}
-                  type="submit"
-                  disabled={!values.published && !ready}
+                  type="button"
+                  onClick={togglePublished}
+                  disabled={busy || (!values.published && !ready)}
                   title={
                     !values.published && !ready
                       ? `Still missing: ${listFields(missing)}`
@@ -324,7 +413,6 @@ export default function PostForm({
                 >
                   {values.published ? 'Unpublish' : 'Publish'}
                 </button>
-              </form>
             )}
           </div>
         )}
@@ -340,9 +428,7 @@ export default function PostForm({
         </p>
       )}
 
-      <form id="post-form" action={mode === 'new' ? addPost : savePost}>
-        {mode === 'edit' && <input type="hidden" name="id" value={values.id} />}
-
+      <form id="post-form" onSubmit={save}>
         <section
           className={styles.panel}
           style={{
@@ -389,6 +475,7 @@ export default function PostForm({
                   required
                   readOnly={!canEdit}
                 />
+                {err('title')}
               </div>
 
               <div className={styles.field}>
@@ -462,6 +549,7 @@ export default function PostForm({
                           : 'Lowercase letters, numbers and hyphens.'}
                   </span>
                 )}
+                {err('slug')}
               </div>
             </div>
 
@@ -481,6 +569,7 @@ export default function PostForm({
                   categories={categories}
                   canEdit={canEdit}
                 />
+                {err('category')}
               </div>
 
               <div className={styles.field}>
@@ -494,11 +583,11 @@ export default function PostForm({
                   onChange={setAuthorName}
                   disabled={!canEdit}
                 />
-                {/* The headshot is the team's, not the post's: it is shown here
-                    and submitted here, and there is nothing to edit. Changing a
-                    byline photo is a change to that person, on the Team screen,
+                {/* The headshot is the team's, not the post's: it is sent with
+                    the post, and there is nothing to edit. Changing a byline
+                    photo is a change to that person, on the Team screen,
                     where it also fixes every other place they appear. */}
-                <input type="hidden" name="authorAvatar" value={authorAvatar} />
+                {err('authorName') ?? err('authorAvatar')}
               </div>
 
               <div className={styles.field}>
@@ -512,6 +601,7 @@ export default function PostForm({
                   onChange={setDate}
                   canEdit={canEdit}
                 />
+                {err('date')}
               </div>
 
               <div className={styles.field}>
@@ -537,11 +627,10 @@ export default function PostForm({
                     min read
                   </span>
                 </div>
-                {/* The composed string is what the column stores, so the
-                    action, the publish gate and the byline all keep reading
-                    one value instead of a number each would have to phrase
-                    for itself. */}
-                <input type="hidden" name="readTime" value={readTime} />
+                {/* The composed string ("7 min read") is what is stored, so
+                    the API, the publish gate and the byline all keep reading
+                    one value. */}
+                {err('readTime')}
                 {unreadableReadTime && (
                   <span className={styles.panelNote}>
                     Was <strong>{unreadableReadTime}</strong> — set the minutes to replace it.
@@ -568,18 +657,18 @@ export default function PostForm({
                 required
                 readOnly={!canEdit}
               />
+              {err('excerpt')}
             </div>
 
-            <ImageField
-              name="image"
+            <ImageUploadField
               label="Cover image"
+              kind="posts"
               required
               value={image}
-              preview={cover?.url ?? null}
-              fileName={cover?.name ?? null}
-              onFileChange={stage(setCover)}
+              onChange={(url) => setImage(url ?? '')}
               canEdit={canEdit}
             />
+            {err('image')}
 
             {!canEdit && (
               <p className={styles.panelNote}>
@@ -602,6 +691,7 @@ export default function PostForm({
 
           <div className={styles.blogEditRightBody}>
             <RichEditor content={values.body} onChange={setBody} />
+            {err('body')}
           </div>
         </section>
 

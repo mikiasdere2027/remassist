@@ -1,15 +1,11 @@
-import { asc, eq } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { reviewSources, reviews } from '@/db/schema';
+import { apiPublic, TAGS } from '@/lib/api/public';
 import seed from '@/lib/content/seed/content.json';
 
 /**
- * Reviews, read from the database.
- *
- * Same fallback rule as lib/faq/content.ts, for the same reasons:
- *
- *   DATABASE_URL absent  -> use the seed, because CI builds without one
- *   DATABASE_URL present -> query, and let an error fail the build loudly
+ * Reviews, from the backend (GET /v1/public/reviews): sources in order, each
+ * with its published reviews in order. Cached under the `reviews` tag, which
+ * the backend revalidates on every edit. If the backend can't be reached the
+ * bundled seed is served instead (see lib/api/public.ts).
  *
  * Returns plain data only. Logos, tone colours, the source's display name and
  * whether its logo is a wordmark stay in the page as a presentation map: they
@@ -60,36 +56,8 @@ function fromSeed(): ReviewSourceData[] {
 }
 
 export async function getReviews(): Promise<ReviewSourceData[]> {
-  if (!isDatabaseConfigured()) return fromSeed();
-
-  const db = getDb();
-  const [sources, rows] = await Promise.all([
-    db.select().from(reviewSources).orderBy(asc(reviewSources.sortOrder)),
-    db
-      .select()
-      .from(reviews)
-      /* Unpublished reviews exist so one can be drafted, or taken down without
-         losing its wording. Filtered in the query so a draft never reaches the
-         page even inside a serialised payload. */
-      .where(eq(reviews.published, true))
-      .orderBy(asc(reviews.sortOrder)),
-  ]);
-
-  return sources.map((s) => ({
-    source: s.source,
-    url: s.url,
-    stars: s.stars,
-    ratingLabel: s.ratingLabel,
-    footnote: s.footnote,
-    reviews: rows
-      .filter((r) => r.source === s.source)
-      .map((r) => ({
-        author: r.author,
-        meta: r.meta,
-        dateText: r.dateText,
-        headline: r.headline,
-        body: r.body,
-        rating: r.rating,
-      })),
-  }));
+  return apiPublic<ReviewSourceData[]>('/public/reviews', {
+    tags: [TAGS.reviews],
+    fallback: fromSeed,
+  });
 }

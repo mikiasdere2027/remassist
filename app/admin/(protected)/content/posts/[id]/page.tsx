@@ -1,12 +1,9 @@
 import { notFound } from 'next/navigation';
-import { eq } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { faqItems, posts } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canEditContent } from '@/lib/auth/roles';
-import { authorOptions } from '@/lib/blog/authors';
-import { categoryOptions } from '@/lib/blog/categories';
-import { postMessage } from '../messages';
+import { isApiError } from '@/lib/api/errors';
+import { apiServer } from '@/lib/api/server';
+import type { AdminPost, AuthorOption, FaqOption } from '@/lib/api/posts';
 import PostForm from '../PostForm';
 import AdminTopbar from '../../../AdminTopbar';
 import styles from '../../../../admin.module.css';
@@ -21,15 +18,10 @@ import styles from '../../../../admin.module.css';
  * run through PostForm — see that file for why the editor is a client
  * component and why the body has a tab of its own.
  *
- * Everything the form does still lands on the same server actions. Saving
- * sanitizes the body against an allowlist before anything reaches the
- * database; publishing checks the same completeness list the form shows.
- * Neither is the editor's decision to make, because a hand-rolled POST can
- * carry anything.
- *
- * One article's body still lives in a React component. Its Body tab says so
- * rather than showing an empty editor somebody would reasonably try to fill
- * and then lose.
+ * Everything the form does goes to the backend API. Saving sanitizes the
+ * body against an allowlist before anything reaches the database; publishing
+ * checks the same completeness list the form shows. Neither is the editor's
+ * decision to make, because a hand-rolled request can carry anything.
  */
 export const dynamic = 'force-dynamic';
 
@@ -38,49 +30,50 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+/** Not a UUID → the API answers 400; either way there is no such post. */
+async function loadPost(id: string): Promise<AdminPost | null> {
+  try {
+    return await apiServer<AdminPost>(`/admin/posts/${encodeURIComponent(id)}`);
+  } catch (err) {
+    if (isApiError(err, 404) || isApiError(err, 400)) return null;
+    throw err;
+  }
+}
+
 export default async function EditPostPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string; error?: string }>;
+  searchParams: Promise<{ created?: string }>;
 }) {
   const [user, { id }, sp] = await Promise.all([requireUser(), params, searchParams]);
-  const message = postMessage(sp.ok, sp.error);
   const mayEdit = canEditContent(user.role);
 
-  if (!isDatabaseConfigured()) notFound();
-
-  const db = getDb();
-  const [p] = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
-  if (!p) notFound();
-
-  const [authors, categories, faqOptions] = await Promise.all([
-    authorOptions(),
-    categoryOptions(),
-    db.select({ id: faqItems.id, question: faqItems.question }).from(faqItems).where(eq(faqItems.published, true)),
+  const [p, authors, categories, faqOptions] = await Promise.all([
+    loadPost(id),
+    apiServer<AuthorOption[]>('/admin/posts/authors'),
+    apiServer<string[]>('/admin/posts/categories'),
+    apiServer<FaqOption[]>('/admin/posts/faq-options'),
   ]);
+  if (!p) notFound();
 
   return (
     <>
       <AdminTopbar title="Edit post" subtitle={p.title} />
 
       <div className={styles.view}>
-        {message && (
-          <p
-            className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
-            role="status"
-          >
-            {message.text}
-          </p>
-        )}
-
         <PostForm
+          /* Remount when a different post opens, so the form state is its own. */
+          key={p.id}
           mode="edit"
           canEdit={mayEdit}
           authors={authors}
           categories={categories}
           faqOptions={faqOptions}
+          notice={
+            sp.created ? 'Draft created. It is not on the blog until you publish it.' : undefined
+          }
           values={{
             id: p.id,
             title: p.title,
@@ -93,7 +86,7 @@ export default async function EditPostPage({
             authorName: p.authorName,
             authorAvatar: p.authorAvatar,
             body: p.body ?? '',
-            articleLayout: p.articleLayout ?? '',
+            articleLayout: JSON.stringify(p.articleLayout ?? {}),
             published: p.published,
           }}
         />

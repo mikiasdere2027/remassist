@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import MenuButton from '../../MenuButton';
 import styles from '../../../admin.module.css';
@@ -6,8 +8,9 @@ import styles from '../../../admin.module.css';
  * The three-dot row menu on a popup — the same control everywhere else in the
  * admin, so a menu means the same thing on every screen.
  *
- * Two items: Edit, then Publish or Suspend. Publish/Suspend is a submit because
- * it is one state flip that another click undoes. Nothing here ever deletes —
+ * Two items: Edit, then Publish or Suspend. Publish/Suspend is one click
+ * because it is one state flip that another click undoes; the table calls the
+ * API and shows the backend's answer (including what is still missing). Nothing here ever deletes —
  * suspending keeps the record of what the site once showed, which is what the
  * whole popup module is about (see the list page notes).
  */
@@ -15,12 +18,14 @@ export default function PopupRowMenu({
   id,
   name,
   published,
-  publish,
+  disabled,
+  onToggle,
 }: {
   id: string;
   name: string;
   published: boolean;
-  publish: (formData: FormData) => Promise<void>;
+  disabled?: boolean;
+  onToggle: () => void;
 }) {
   return (
     <MenuButton label={`Options for popup: ${name}`}>
@@ -32,10 +37,7 @@ export default function PopupRowMenu({
         Edit
       </Link>
 
-      <form action={publish} style={{ margin: 0 }}>
-        <input type="hidden" name="id" value={id} />
-        <input type="hidden" name="published" value={published ? '0' : '1'} />
-        <button type="submit" className={styles.memberDropdownItem}>
+      <button type="button" className={styles.memberDropdownItem} onClick={onToggle} disabled={disabled}>
           {published ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M3 3l18 18" />
@@ -48,9 +50,8 @@ export default function PopupRowMenu({
               <circle cx="12" cy="12" r="3" />
             </svg>
           )}
-          {published ? 'Suspend' : 'Publish'}
-        </button>
-      </form>
+        {published ? 'Suspend' : 'Publish'}
+      </button>
     </MenuButton>
   );
 }

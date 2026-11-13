@@ -4954,3 +4954,75 @@ a.glanceRow:hover { color: var(--blue-700); }
 .copyRow { display: flex; gap: 8px; align-items: stretch; margin: 4px 0 0; }
 .copyRow input { flex: 1; min-width: 0; font: inherit; font-size: 13px; padding: 9px 11px;
   border: 1px solid var(--hairline); border-radius: var(--r-sm); background: var(--ink-50, #f7f9fc); color: var(--ink-700); }
+
+/* ── Area B: FAQ (backend port) ─────────────────────────────────────────── */
+/* A section cell in the sections editor holds five fields and a row of
+   actions, so it stacks instead of sitting on one baseline. */
+.faqSectionCell { flex-direction: column; align-items: stretch; }
+.faqSectionRow { display: flex; gap: 10px; flex-wrap: wrap; }
+.faqSectionRow > * { flex: 1 1 12rem; }
+.faqSectionActions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.faqFieldError { display: block; margin-top: 4px; font-size: 12.5px; line-height: 1.5; color: #8a1a12; }
+.faqPlacementSelect { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.faqPlacementSelect .control { width: auto; min-width: 12rem; }
+/* ── end Area B: FAQ ───────────────────────────────────────────────────── */
+
+/* ── Area A: activity log ──────────────────────────────────────────────── */
+.activityDiff { margin-top: 6px; font-size: 12.5px; color: var(--ink-500); }
+.activityDiff summary { cursor: pointer; width: fit-content; color: var(--blue-700); font-weight: 600; }
+.activityDiffGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+.activityDiffLabel { display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.activityDiffPre {
+  margin: 0;
+  padding: 8px 10px;
+  max-height: 16rem;
+  overflow: auto;
+  border-radius: 8px;
+  background: #f6f8fb;
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* ── end Area A: activity log ──────────────────────────────────────────── */
+/* ── Area C: blog posts ─────────────────────────────────────────────────── */
+/* "Keep it" in the delete-confirm row: a button that reads as .rowLink. */
+.postsLinkButton {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+/* ── end Area C: blog posts ─────────────────────────────────────────────── */
+
+/* ---------- phone width: keep the icon nav inside the screen ----------
+   With Activity and Users added, the row of nav icons outgrew 390px and the
+   whole page scrolled sideways. Cap the sidebar at the viewport and let the
+   nav row scroll on its own. */
+@media (max-width: 720px) {
+  .sidebar { max-width: 100vw; min-width: 0; overflow-x: hidden; }
+  .navScroll { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+}
+
+/* ---------- phone width: dashboard grid and filter rows ----------
+   Grid and flex children default to min-width:auto, so a wide table inside a
+   dashboard panel pushed the whole column (and page) past 390px. Let the
+   columns shrink and give the tables their own horizontal scroll; let the
+   FAQ/filter pills wrap instead of running off-screen. */
+@media (max-width: 720px) {
+  .grid, .grid2, .grid2eq { grid-template-columns: minmax(0, 1fr); }
+  .colStack, .panel, .section { min-width: 0; max-width: 100%; }
+  .tableWrap { max-width: 100%; overflow-x: auto; }
+  .filterPills { display: flex; flex-wrap: wrap; max-width: 100%; }
+}
+
+/* ---------- phone width: team toolbar and cards ---------- */
+@media (max-width: 720px) {
+  .teamToolsGroup { flex-wrap: wrap; max-width: 100%; min-width: 0; }
+  .memberCardInsp { max-width: 100%; min-width: 0; }
+}

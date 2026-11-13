@@ -1,10 +1,8 @@
 import Link from 'next/link';
-import { count } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { teamMembers } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
+import { apiServer } from '@/lib/api/server';
+import type { AdminTeamMember } from '@/lib/api/team';
 import { canEditContent } from '@/lib/auth/roles';
-import { addTeamMember } from '../actions';
 import MemberForm from '../MemberForm';
 import AdminTopbar from '../../../AdminTopbar';
 import styles from '../../../../admin.module.css';
@@ -26,12 +24,9 @@ export default async function NewTeamMemberPage() {
   const user = await requireUser();
   const mayEdit = canEditContent(user.role);
 
-  /* How many are already on the homepage, so the order field can offer the
-     next number up. Without a database there is nothing to count and the field
-     is simply the first slot. */
-  const existing = isDatabaseConfigured()
-    ? Number((await getDb().select({ n: count() }).from(teamMembers))[0]?.n ?? 0)
-    : 0;
+  /* How many members there are, so the order field can offer the next number
+     up. The API clamps whatever is sent into range. */
+  const existing = (await apiServer<AdminTeamMember[]>('/admin/team')).length;
   const nextPosition = existing + 1;
 
   return (
@@ -86,7 +81,7 @@ export default async function NewTeamMemberPage() {
             <p className={styles.memberFormSub}>Create a draft member profile</p>
           </div>
 
-          <MemberForm action={addTeamMember} canEdit={mayEdit} />
+          <MemberForm canEdit={mayEdit} />
         </section>
       </div>
     </>

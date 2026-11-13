@@ -19,9 +19,9 @@ import styles from './SeatTiers.module.css';
  * heading and closing line. The default export is the whole section, which is
  * what the service pages drop in.
  *
- * Price figures come from the DB via getPublishedTiers(), so an admin edit on
- * /admin/catalog is immediately reflected here. Falls back to seed values when
- * the database is not configured.
+ * Price figures come from the backend via getPublishedTiers() (cache tag
+ * `pricing`), so an admin edit on /admin/catalog is reflected here once the
+ * backend revalidates. Falls back to seed values if the API is unreachable.
  */
 
 const CHECK = <path d="m5 13 4 4L19 7" />;

@@ -1,8 +1,6 @@
 import Link from 'next/link';
-import { desc, eq, isNull, sql } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { leads, quizSubmissions } from '@/db/schema';
-import { requireUser } from '@/lib/auth/require';
+import type { QuizPage } from '@/lib/api/leads';
+import { apiServer } from '@/lib/api/server';
 import { answerFor, formatDate, orderedAnswers, questionFor } from '@/lib/leads/display';
 import styles from '../../admin.module.css';
 import AdminTopbar from '../AdminTopbar';
@@ -27,59 +25,29 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-const PAGE_SIZE = 50;
-
 export default async function QuizzesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ only?: string }>;
+  searchParams: Promise<{ only?: string; before?: string }>;
 }) {
-  const [, sp] = await Promise.all([requireUser(), searchParams]);
+  const sp = await searchParams;
   const anonymousOnly = sp.only === 'anonymous';
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <Topbar total={null} anonymousOnly={anonymousOnly} />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there are no
-            submissions to show.
-          </div>
-        </div>
-      </>
-    );
-  }
+  const query = (before?: string) => {
+    const p = new URLSearchParams();
+    if (anonymousOnly) p.set('only', 'anonymous');
+    if (before) p.set('before', before);
+    return p.toString();
+  };
 
-  const db = getDb();
-  const [rows, allCountRes, anonCountRes] = await Promise.all([
-    db
-      .select({
-        id: quizSubmissions.id,
-        createdAt: quizSubmissions.createdAt,
-        answers: quizSubmissions.answers,
-        result: quizSubmissions.result,
-        completed: quizSubmissions.completed,
-        leadId: quizSubmissions.leadId,
-        leadEmail: leads.email,
-        leadName: leads.name,
-      })
-      .from(quizSubmissions)
-      .leftJoin(leads, eq(quizSubmissions.leadId, leads.id))
-      .where(anonymousOnly ? isNull(quizSubmissions.leadId) : undefined)
-      .orderBy(desc(quizSubmissions.createdAt))
-      .limit(PAGE_SIZE),
-    db.select({ count: sql<number>`count(*)::int` }).from(quizSubmissions),
-    db.select({ count: sql<number>`count(*)::int` }).from(quizSubmissions).where(isNull(quizSubmissions.leadId)),
-  ]);
-
-  const totalCount = Number(allCountRes[0]?.count ?? 0);
-  const anonCount = Number(anonCountRes[0]?.count ?? 0);
+  const page = await apiServer<QuizPage>(`/admin/quiz-submissions?${query(sp.before)}`);
+  const rows = page.items;
+  const totalCount = page.total;
+  const anonCount = page.anonymousTotal;
 
   return (
     <>
-      <Topbar total={totalCount} anonymousOnly={anonymousOnly} />
+      <Topbar total={anonymousOnly ? anonCount : totalCount} anonymousOnly={anonymousOnly} />
 
       <div className={styles.view}>
         <div className={styles.filterbar}>
@@ -197,10 +165,26 @@ export default async function QuizzesPage({
           })
         )}
 
-        {rows.length === PAGE_SIZE && (
-          <p className={styles.panelNote}>
-            Showing the {PAGE_SIZE} most recent. Older submissions are not paged yet.
-          </p>
+        {(sp.before || page.nextCursor) && (
+          <div className={styles.panelFoot}>
+            <span>Showing {rows.length}{sp.before ? ' (paged)' : ''}</span>
+            <span className={styles.pager}>
+              {sp.before ? (
+                <Link className={styles.pagerLink} href={`/admin/quizzes?${query()}`}>
+                  ← Newest
+                </Link>
+              ) : (
+                <span className={styles.pagerOff}>← Newest</span>
+              )}
+              {page.nextCursor ? (
+                <Link className={styles.pagerLink} href={`/admin/quizzes?${query(page.nextCursor)}`}>
+                  Older →
+                </Link>
+              ) : (
+                <span className={styles.pagerOff}>Older →</span>
+              )}
+            </span>
+          </div>
         )}
       </div>
     </>
@@ -218,14 +202,12 @@ function Quote({ label, value }: { label: string; value?: string | number }) {
   );
 }
 
-function Topbar({ total, anonymousOnly }: { total: number | null; anonymousOnly: boolean }) {
+function Topbar({ total, anonymousOnly }: { total: number; anonymousOnly: boolean }) {
   return (
     <AdminTopbar
       title="Fit finder"
       subtitle={
-        total === null
-          ? 'Database not configured'
-          : anonymousOnly
+        anonymousOnly
             ? `${total} with no contact details`
             : `${total} submissions`
       }

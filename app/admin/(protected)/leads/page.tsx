@@ -1,95 +1,47 @@
 import Link from 'next/link';
-import { and, desc, lt, sql } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { leads } from '@/db/schema';
-import { LEAD_SOURCES } from '@/lib/leads/schema';
-import { LEAD_STATUSES, SOURCE_LABELS, formatDate, formatRelativeTime } from '@/lib/leads/display';
-import { buildLeadFilters, type LeadSearch } from '@/lib/leads/query';
+import { apiServer } from '@/lib/api/server';
+import {
+  LEAD_SOURCES, LEAD_STATUSES, leadExportHref, leadQuery, type LeadPage,
+} from '@/lib/api/leads';
+import { SOURCE_LABELS, formatDate, formatRelativeTime } from '@/lib/leads/display';
 import { SourceTag } from '../DashboardPanels';
 import AdminTopbar from '../AdminTopbar';
 import styles from '../../admin.module.css';
 
 /**
- * Lead list — MIGRATION-PLAN §10.
- *
- * A server component reading Postgres directly. No client-side fetching and no
- * JSON endpoint: the gate is a server check, so not having an API to leak is
- * the simplest way to keep it un-leakable.
+ * Lead list — GET /v1/admin/leads (filters, search, keyset paging). The
+ * backend owns the query; this page only renders it.
  */
 export const dynamic = 'force-dynamic';
 
-const PAGE_SIZE = 50;
+type LeadSearch = { q?: string; source?: string; status?: string; before?: string };
 
 export default async function LeadsPage({
   searchParams,
 }: {
   searchParams: Promise<LeadSearch>;
 }) {
-  const sp = await searchParams;
+  const raw = await searchParams;
+  /* Only values the backend accepts: an unknown enum value would be a 400. */
+  const sp: LeadSearch = {
+    q: raw.q?.trim() || undefined,
+    source: (LEAD_SOURCES as readonly string[]).includes(raw.source ?? '') ? raw.source : undefined,
+    status: (LEAD_STATUSES as readonly string[]).includes(raw.status ?? '') ? raw.status : undefined,
+    before: raw.before || undefined,
+  };
 
   /* Whether any filter is narrowing the list — drives the bold funnel icon. */
   const filtered = Boolean(sp.q || sp.source || sp.status);
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <Topbar total={null} />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there are no leads to
-            show. The public form degrades too — <code>/api/leads</code> answers 503 and visitors
-            fall back to composing an email, so nothing is being lost while this is unset.
-          </div>
-        </div>
-      </>
-    );
-  }
+  const { items: visible, total: count, nextCursor } = await apiServer<LeadPage>(
+    `/admin/leads?${leadQuery(sp)}`,
+  );
 
-  const db = getDb();
-  const where = buildLeadFilters(sp);
-
-  /* Keyset pagination on created_at, which leads_created_idx already covers.
-     OFFSET would get slower the deeper you page; a cursor does not. */
-  const page = [...where];
-  const before = sp.before ? new Date(sp.before) : null;
-  if (before && !Number.isNaN(before.getTime())) page.push(lt(leads.createdAt, before));
-
-  const [rows, [{ count }]] = await Promise.all([
-    db
-      .select({
-        id: leads.id,
-        createdAt: leads.createdAt,
-        name: leads.name,
-        email: leads.email,
-        company: leads.company,
-        country: leads.country,
-        source: leads.source,
-        status: leads.status,
-      })
-      .from(leads)
-      .where(page.length ? and(...page) : undefined)
-      .orderBy(desc(leads.createdAt))
-      .limit(PAGE_SIZE + 1),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(leads)
-      .where(where.length ? and(...where) : undefined),
-  ]);
-
-  const hasMore = rows.length > PAGE_SIZE;
-  const visible = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
-  const nextCursor = hasMore ? visible[visible.length - 1].createdAt.toISOString() : null;
-
-  const qs = (extra: Record<string, string | undefined>) => {
-    const p = new URLSearchParams();
-    for (const [k, v] of Object.entries({ ...sp, ...extra })) if (v) p.set(k, v);
-    return p.toString();
-  };
+  const qs = (extra: Partial<LeadSearch>) => leadQuery({ ...sp, ...extra });
 
   return (
     <>
-      <Topbar total={count} exportQs={qs({ before: undefined })} />
+      <Topbar exportHref={leadExportHref(sp)} />
 
       <div className={styles.view}>
         <section className={styles.panel}>
@@ -251,29 +203,22 @@ export default async function LeadsPage({
   );
 }
 
-function Topbar({ total, exportQs }: { total: number | null; exportQs?: string }) {
+function Topbar({ exportHref }: { exportHref: string }) {
   return (
     <AdminTopbar
       title="Leads"
-      subtitle={
-        total === null
-          ? 'Database not configured'
-          : 'Every submission across the site, in one inbox'
-      }
+      subtitle="Every submission across the site, in one inbox"
       action={
-        exportQs !== undefined ? (
-          <a
-            className={styles.btnHeader}
-            href={`/admin/leads/export${exportQs ? `?${exportQs}` : ''}`}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <path d="m7 10 5 5 5-5" />
-              <path d="M12 15V3" />
-            </svg>
-            Export CSV
-          </a>
-        ) : undefined
+        /* A plain link: the browser downloads the backend's CSV through the
+           /api/v1 proxy, sending the session cookie itself. */
+        <a className={styles.btnHeader} href={exportHref} download>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M12 15V3" />
+          </svg>
+          Export CSV
+        </a>
       }
     />
   );

@@ -14,8 +14,8 @@ import type { PublicTeamMember } from '@/lib/team/content';
  * for 8s so it never fights the visitor; it pauses off-screen and on a hidden
  * tab; and prefers-reduced-motion disables the auto-advance entirely.
  *
- * Members arrive from the server (app/page.tsx loads them from the database
- * via lib/team/content.ts, or the content seed when no DB is configured), so
+ * Members arrive from the server (app/(site)/page.tsx loads them from the
+ * backend via lib/team/content.ts, or the content seed if it is unreachable), so
  * the homepage reflects the admin Team CMS. `image` is set only when a
  * headshot exists — the rest fall back to the initials monogram the artboard
  * already designed for that case.

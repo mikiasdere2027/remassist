@@ -1,9 +1,10 @@
 import Image from 'next/image';
+import { getPublishedTiers } from '@/lib/rates/getPublishedTiers';
 import styles from './HomeSections.module.css';
 
 /**
  * TiersSection — "One bench, two kinds of depth" (index.html, Phase 02).
- * Pro ($8/hr) + Expert ($11/hr) tiers, each a photo plate with the detail card
+ * Pro + Expert tiers (rates from getPublishedTiers — the admin price list), each a photo plate with the detail card
  * floating over its lower edge. Both cards share one grid row, so the two plates
  * and the two white cards line up whatever the copy length.
  * The ISO statement lives in the section header; the id below is the link target
@@ -11,8 +12,8 @@ import styles from './HomeSections.module.css';
  */
 const TIERS = [
   {
+    key: 'pro',
     title: 'Pro',
-    price: '$8',
     text: 'Fully trained, fit for work from day one. They clear our core program and pick up any software you run — CRM, helpdesk, billing, or your in-house tools.',
     chips: ['Any stack', 'Core certified', 'Best value per seat'],
     img: '/images/Agents/Pro.jpg',
@@ -22,8 +23,8 @@ const TIERS = [
     focus: '62% 34%',
   },
   {
+    key: 'expert',
     title: 'Expert',
-    price: '$11',
     text: 'More years on the job and a far tougher assessment path. Experts arrive fluent in your motion and need the least direction.',
     chips: ['Client-facing', 'Highest-vetted seat', 'Owns outcomes'],
     img: '/images/Agents/Expert.jpg',
@@ -35,7 +36,12 @@ const TIERS = [
 const CHECK =
   <><circle cx="12" cy="12" r="9" /><path d="m8.4 12.2 2.4 2.4 4.8-5" /></>;
 
-export default function TiersSection() {
+export default async function TiersSection() {
+  /* The copy is fixed; only the rate comes from the price list (which falls
+     back to the seed rates itself). A tier the list no longer has shows no
+     price rather than a stale one. */
+  const published = await getPublishedTiers();
+  const priceOf = (key: string) => published.find((p) => p.key === key)?.priceDisplay;
   return (
     <section
       className={styles.section}
@@ -72,7 +78,9 @@ export default function TiersSection() {
               <div className={styles.tierBody}>
                 <div className={styles.tierTop}>
                   <h3 className={styles.tierTitle}>{t.title}</h3>
-                  <span className={styles.tierPrice}><small>from</small><b>{t.price}</b><em>/hr</em></span>
+                  {priceOf(t.key) && (
+                    <span className={styles.tierPrice}><small>from</small><b>{priceOf(t.key)}</b><em>/hr</em></span>
+                  )}
                 </div>
                 <p className={styles.tierText}>{t.text}</p>
                 {/* Chips and the arrow share the last row, so the arrow sits on

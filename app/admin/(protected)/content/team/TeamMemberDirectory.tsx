@@ -3,7 +3,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { setTeamMemberPublished } from './actions';
+import { useRouter } from 'next/navigation';
+import { teamApi, teamErrorText } from '@/lib/api/team';
 import styles from '../../../admin.module.css';
 
 export interface TeamMemberItem {
@@ -51,6 +52,30 @@ export default function TeamMemberDirectory({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const sortMenuRef = useRef<HTMLDivElement>(null);
+
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
+
+  async function togglePublished(m: TeamMemberItem) {
+    setOpenMenuId(null);
+    setBusy(true);
+    setMessage(null);
+    try {
+      await teamApi.setPublished(m.id, !m.published);
+      setMessage({
+        tone: 'ok',
+        text: m.published
+          ? `${m.name} is off the homepage. Nothing was deleted — their card is kept.`
+          : `${m.name} is live on the homepage.`,
+      });
+      router.refresh();
+    } catch (err) {
+      setMessage({ tone: 'err', text: teamErrorText(err) });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -109,6 +134,15 @@ export default function TeamMemberDirectory({
 
   return (
     <div className={styles.teamContainer}>
+      {message && (
+        <p
+          className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
+          role={message.tone === 'ok' ? 'status' : 'alert'}
+        >
+          {message.text}
+        </p>
+      )}
+
       {/* ── Toolbar: Status tabs on Left, Action Tools on Right ── */}
       <div className={styles.teamToolbar}>
         {/* Left: Filter tabs */}
@@ -354,13 +388,12 @@ export default function TeamMemberDirectory({
                           )}
 
                           {mayEdit && (
-                            <form action={setTeamMemberPublished} style={{ margin: 0 }}>
-                              <input type="hidden" name="id" value={m.id} />
-                              <input type="hidden" name="published" value={m.published ? '0' : '1'} />
+                            <>
                               <button
-                                type="submit"
+                                type="button"
                                 className={styles.memberDropdownItem}
-                                onClick={() => setOpenMenuId(null)}
+                                disabled={busy}
+                                onClick={() => togglePublished(m)}
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                   {m.published ? (
@@ -376,7 +409,7 @@ export default function TeamMemberDirectory({
                                 </svg>
                                 {m.published ? 'Set as Draft' : 'Set as Published'}
                               </button>
-                            </form>
+                            </>
                           )}
                         </div>
                       )}

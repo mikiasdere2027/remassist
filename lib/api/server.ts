@@ -1,5 +1,5 @@
 import 'server-only';
-import { cookies } from 'next/headers';
+import { cookies, headers as requestHeaders } from 'next/headers';
 import { ApiError, readApiResponse } from './errors';
 
 /**
@@ -32,6 +32,10 @@ export async function apiServer<T>(path: string, init: Init = {}): Promise<T> {
   h.set('accept', 'application/json');
   if (body !== undefined) h.set('content-type', 'application/json');
   if (withCookies) {
+    // Who the visitor is, for the backend's per-IP rate limits, lockout and
+    // activity log. Without this every visitor looks like this server.
+    const fwd = (await requestHeaders()).get('x-forwarded-for');
+    if (fwd) h.set('x-forwarded-for', fwd);
     const jar = await cookies();
     const cookie = jar
       .getAll()

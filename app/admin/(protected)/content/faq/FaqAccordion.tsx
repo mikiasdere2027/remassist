@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { deleteFaqItem, setFaqItemFeatured, setFaqItemPublished } from './actions';
+import { faqApi, MAX_FEATURED } from '@/lib/api/faq';
+import { FaqNotice, useFaqAction } from './useFaqAction';
 import MenuButton from '../../MenuButton';
 import styles from '../../../admin.module.css';
 
@@ -14,18 +15,15 @@ import styles from '../../../admin.module.css';
  * at a time reads like one section, not six stacked. Nothing is open until you
  * open it, so the page opens on the six sections themselves.
  *
- * The rows themselves are plain server-friendly markup (a link and a server
- * action), so only the open/closed state is client state. `children` never
- * matters: the rows are rendered here from props the server passes in.
+ * The rows arrive from the server page (fetched from the backend); the row
+ * menu's actions call the API directly and then refresh that data.
  */
 export type FaqAccordionRow = {
   id: string;
   question: string;
   published: boolean;
-  /** Starred for the homepage card. See setFaqItemFeatured. */
+  /** Starred for the homepage card. */
   featured: boolean;
-  /** Opens this row's confirm step, or null when it may not be removed. */
-  removeHref?: string | null;
 };
 
 export type FaqAccordionSection = {
@@ -38,22 +36,51 @@ export type FaqAccordionSection = {
 export default function FaqAccordion({
   sections,
   mayEdit,
-  confirming = null,
-  backHref = '/admin/content/faq',
+  mayDelete,
+  featuredCount,
 }: {
   sections: FaqAccordionSection[];
   mayEdit: boolean;
-  /** The row whose remove confirm step is open, by id. */
-  confirming?: string | null;
-  /** Where "Keep it" goes — the list with its filters intact. */
-  backHref?: string;
+  /** May remove a draft question (canDeleteFaqItem). */
+  mayDelete: boolean;
+  /** Starred questions, drafts included — the cap counts them all. */
+  featuredCount: number;
 }) {
+  const { busy, message, run } = useFaqAction();
+  /** The row whose remove confirm step is open, by id. */
+  const [confirming, setConfirming] = useState<string | null>(null);
+
+  const setPublished = (r: FaqAccordionRow, published: boolean) =>
+    run(async () => {
+      await faqApi.updateItem(r.id, { published });
+      return published
+        ? 'That question is live on the FAQ page.'
+        : 'That question is off the FAQ page. Nothing was deleted — its wording is kept.';
+    });
+
+  const setFeatured = (r: FaqAccordionRow, featured: boolean) =>
+    run(async () => {
+      await faqApi.updateItem(r.id, { featured });
+      return featured
+        ? 'That question is on the homepage.'
+        : 'That question is off the homepage. It is still on the FAQ page.';
+    });
+
+  const remove = (r: FaqAccordionRow) =>
+    run(async () => {
+      await faqApi.deleteItem(r.id);
+      setConfirming(null);
+      return 'That draft question was removed.';
+    });
+
   /* -1: every section starts closed. Opening the first one by default put a
      list of questions above five collapsed headers, which reads as the page
      having one section and some leftovers rather than six you choose from. */
   const [open, setOpen] = useState(-1);
 
   return (
+    <>
+    <FaqNotice message={message} />
     <div className={styles.faqAccordion}>
       {sections.map((s, i) => {
         const expanded = open === i;
@@ -82,7 +109,13 @@ export default function FaqAccordion({
               <div className={styles.faqAccordionRows}>
                 {s.rows.map((r) =>
                   r.id === confirming ? (
-                    <ConfirmRemove key={r.id} row={r} backHref={backHref} />
+                    <ConfirmRemove
+                      key={r.id}
+                      row={r}
+                      busy={busy}
+                      onConfirm={() => remove(r)}
+                      onCancel={() => setConfirming(null)}
+                    />
                   ) : (
                   <div className={styles.faqRow} key={r.id}>
                     {/* Decorative: this admin has no client-side drag, and
@@ -122,10 +155,12 @@ export default function FaqAccordion({
                             Edit question
                           </Link>
 
-                          <form action={setFaqItemPublished} style={{ margin: 0 }}>
-                            <input type="hidden" name="id" value={r.id} />
-                            <input type="hidden" name="published" value={r.published ? '0' : '1'} />
-                            <button className={styles.memberDropdownItem} type="submit">
+                          <button
+                            className={styles.memberDropdownItem}
+                            type="button"
+                            disabled={busy}
+                            onClick={() => setPublished(r, !r.published)}
+                          >
                               {r.published ? (
                                 <>
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -144,27 +179,30 @@ export default function FaqAccordion({
                                   Put live on the FAQ page
                                 </>
                               )}
-                            </button>
-                          </form>
+                          </button>
 
-                          <form action={setFaqItemFeatured} style={{ margin: 0 }}>
-                            <input type="hidden" name="id" value={r.id} />
-                            <input type="hidden" name="featured" value={r.featured ? '0' : '1'} />
-                            <button className={styles.memberDropdownItem} type="submit">
+                          {/* Disabled rather than left to fail: the backend
+                              refuses a star past the cap. */}
+                          <button
+                            className={styles.memberDropdownItem}
+                            type="button"
+                            disabled={busy || (!r.featured && featuredCount >= MAX_FEATURED)}
+                            onClick={() => setFeatured(r, !r.featured)}
+                          >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill={r.featured ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <path d="m12 3 2.7 5.6 6.3.9-4.5 4.4 1 6.1L12 17.1 6.5 20l1-6.1L3 9.5l6.3-.9z" />
                               </svg>
                               {r.featured ? 'Take off the homepage' : 'Show on the homepage'}
-                            </button>
-                          </form>
+                          </button>
 
-                          {/* Only a draft has one: deleteFaqItem refuses a
-                              published question, and an item that always fails
-                              is worse than an item that is not there. */}
-                          {r.removeHref && (
-                            <Link
+                          {/* Only a draft has one: the backend refuses to
+                              remove a published question, and an item that
+                              always fails is worse than one that is not there. */}
+                          {mayDelete && !r.published && (
+                            <button
                               className={`${styles.memberDropdownItem} ${styles.memberDropdownItemDanger}`}
-                              href={r.removeHref}
+                              type="button"
+                              onClick={() => setConfirming(r.id)}
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <polyline points="3 6 5 6 21 6" />
@@ -172,7 +210,7 @@ export default function FaqAccordion({
                                 <path d="M10 11v6M14 11v6" />
                               </svg>
                               Remove question
-                            </Link>
+                            </button>
                           )}
                         </MenuButton>
                       </div>
@@ -186,29 +224,33 @@ export default function FaqAccordion({
         );
       })}
     </div>
+    </>
   );
 }
 
 /**
- * Removing asks first, in the row's own place.
- *
- * A server-rendered confirm step rather than a browser dialog, matching the
- * posts list and the rate tables. The checkbox is `required` in the browser and
- * re-checked in deleteFaqItem, because a required attribute is a courtesy and
- * not a control.
- *
- * Laid out as question-on-the-left, buttons-on-the-right, which is where the
- * row's own menu button was a moment ago — the confirm replaces that row in
- * place, so the thing you click next is where you were already looking.
+ * Removing asks first, in the row's own place — question on the left, buttons
+ * on the right, where the row's menu button was a moment ago. The tickbox is
+ * a courtesy; what protects anything is the backend refusing a published row.
  */
-function ConfirmRemove({ row, backHref }: { row: FaqAccordionRow; backHref: string }) {
+function ConfirmRemove({
+  row,
+  busy,
+  onConfirm,
+  onCancel,
+}: {
+  row: FaqAccordionRow;
+  busy: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    onConfirm();
+  }
   return (
     <div className={styles.faqConfirmRow}>
-      <form className={styles.faqConfirmForm} action={deleteFaqItem}>
-        <input type="hidden" name="id" value={row.id} />
-        {/* The question and its tickbox are one block: what is being asked, and
-            the acknowledgement of it. The buttons answer that block, so they
-            sit opposite it rather than under it. */}
+      <form className={styles.faqConfirmForm} onSubmit={submit}>
         <div className={styles.faqConfirmText}>
           <p className={styles.faqConfirmLead}>
             Remove &ldquo;{row.question}&rdquo;? The question and its answer go for good.
@@ -219,12 +261,12 @@ function ConfirmRemove({ row, backHref }: { row: FaqAccordionRow; backHref: stri
           </label>
         </div>
         <div className={styles.rowActions} style={{ padding: 0 }}>
-          <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit" autoFocus>
-            Remove this draft
+          <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit" disabled={busy} autoFocus>
+            {busy ? 'Removing…' : 'Remove this draft'}
           </button>
-          <Link className={styles.rowLink} href={backHref}>
+          <button className={styles.rowLink} type="button" onClick={onCancel} disabled={busy}>
             Keep it
-          </Link>
+          </button>
         </div>
       </form>
     </div>

@@ -1,13 +1,7 @@
-import Link from 'next/link';
-import { isDatabaseConfigured } from '@/db';
 import { requireUser } from '@/lib/auth/require';
 import { canEditContent } from '@/lib/auth/roles';
-import { authorOptions } from '@/lib/blog/authors';
-import { categoryOptions } from '@/lib/blog/categories';
-import { getDb } from '@/db';
-import { faqItems } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { postMessage } from '../messages';
+import { apiServer } from '@/lib/api/server';
+import type { AuthorOption, FaqOption } from '@/lib/api/posts';
 import PostForm from '../PostForm';
 import AdminTopbar from '../../../AdminTopbar';
 import styles from '../../../../admin.module.css';
@@ -40,44 +34,14 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function NewPostPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
-  const [user, sp] = await Promise.all([requireUser(), searchParams]);
-  const message = postMessage(sp.ok, sp.error);
+export default async function NewPostPage() {
+  const user = await requireUser();
   const mayWrite = canEditContent(user.role);
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <AdminTopbar title="New post" subtitle="Drafts, publishing and the live blog" />
-        <div className={styles.view}>
-          <div className={styles.memberTopRow}>
-            <Link className={styles.memberBackBtn} href="/admin/content/posts">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M19 12H5" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
-              All posts
-            </Link>
-          </div>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there is nothing to
-            edit.
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const db = getDb();
   const [authors, categories, faqOptions] = await Promise.all([
-    authorOptions(),
-    categoryOptions(),
-    db.select({ id: faqItems.id, question: faqItems.question }).from(faqItems).where(eq(faqItems.published, true)),
+    apiServer<AuthorOption[]>('/admin/posts/authors'),
+    apiServer<string[]>('/admin/posts/categories'),
+    apiServer<FaqOption[]>('/admin/posts/faq-options'),
   ]);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -89,15 +53,6 @@ export default async function NewPostPage({
       />
 
       <div className={styles.view}>
-        {message && (
-          <p
-            className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
-            role="status"
-          >
-            {message.text}
-          </p>
-        )}
-
         <PostForm
           mode="new"
           canEdit={mayWrite}

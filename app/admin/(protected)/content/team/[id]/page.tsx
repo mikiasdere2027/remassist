@@ -1,23 +1,24 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { asc, eq } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { teamMembers } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canEditContent } from '@/lib/auth/roles';
-import { saveTeamMember, setTeamMemberPosition, setTeamMemberPublished } from '../actions';
-import { teamMessage } from '../messages';
+import { apiServer } from '@/lib/api/server';
+import type { AdminTeamMember } from '@/lib/api/team';
 import MemberForm from '../MemberForm';
+import MemberPlacement from './MemberPlacement';
 import AdminTopbar from '../../../AdminTopbar';
 import styles from '../../../../admin.module.css';
 
 /**
- * Edit one team member — redesigned to match the inspiration mockup.
+ * Edit one team member.
  *
  * Everything on this screen writes to one row: the details form, the publish
- * toggle and the reorder controls, mirroring the FAQ edit page's shape. There
- * is no delete — a member the site no longer lists has been unpublished, and
- * their card (and who the company once introduced) is kept.
+ * toggle and the reorder control. There is no delete — a member the site no
+ * longer lists has been unpublished, and their card (and who the company once
+ * introduced) is kept.
+ *
+ * Reads the whole list rather than GET /admin/team/:id: the order control
+ * sends back every id (PUT /admin/team/order), so it needs them all anyway.
  */
 export const dynamic = 'force-dynamic';
 
@@ -28,33 +29,16 @@ export const metadata = {
 
 export default async function EditTeamMemberPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
-  const [user, { id }, sp] = await Promise.all([requireUser(), params, searchParams]);
-  const message = teamMessage(sp.ok, sp.error);
+  const [user, { id }] = await Promise.all([requireUser(), params]);
   const mayEdit = canEditContent(user.role);
 
-  if (!isDatabaseConfigured()) notFound();
-
-  const db = getDb();
-  const [row] = await db
-    .select()
-    .from(teamMembers)
-    .where(eq(teamMembers.id, id))
-    .limit(1);
-
-  if (!row) notFound();
-
-  /* Needed to know whether this is the first or last card, so the move controls
-     can be disabled at the ends rather than failing silently. */
-  const siblings = await db
-    .select({ id: teamMembers.id, sortOrder: teamMembers.sortOrder })
-    .from(teamMembers)
-    .orderBy(asc(teamMembers.sortOrder));
-  const at = siblings.findIndex((s) => s.id === row.id);
+  const members = await apiServer<AdminTeamMember[]>('/admin/team');
+  const at = members.findIndex((m) => m.id === id);
+  if (at === -1) notFound();
+  const row = members[at];
 
   return (
     <>
@@ -62,7 +46,7 @@ export default async function EditTeamMemberPage({
         title="Edit member"
         subtitle={
           row.published
-            ? 'Live on the homepage. Saving revalidates it immediately.'
+            ? 'Live on the homepage. Saving updates it immediately.'
             : 'Not on the homepage. Put it live when the card is ready.'
         }
       />
@@ -81,49 +65,13 @@ export default async function EditTeamMemberPage({
           </Link>
 
           {mayEdit && (
-            <div className={styles.memberTopActions}>
-              <form action={setTeamMemberPublished}>
-                <input type="hidden" name="id" value={row.id} />
-                <input type="hidden" name="published" value={row.published ? '0' : '1'} />
-                <button className={`${styles.btn} ${styles.btnGhost}`} type="submit">
-                  {row.published ? 'Take off the homepage' : 'Put it live'}
-                </button>
-              </form>
-
-              {/* Type a position or step it — a number input gives both, and
-                  either way it is one submit rather than one per place moved.
-                  The action clamps and renumbers the run between. */}
-              <form className={styles.memberOrderForm} action={setTeamMemberPosition}>
-                <input type="hidden" name="id" value={row.id} />
-                <label className={styles.memberOrderLabel} htmlFor="position">Order</label>
-                <input
-                  className={styles.memberOrderInput}
-                  id="position"
-                  name="position"
-                  type="number"
-                  min={1}
-                  max={siblings.length}
-                  step={1}
-                  defaultValue={at + 1}
-                  aria-label={`Position on the homepage, 1 to ${siblings.length}`}
-                />
-                <span className={styles.memberOrderOf}>of {siblings.length}</span>
-                <button className={`${styles.btn} ${styles.btnGhost}`} type="submit">
-                  Set
-                </button>
-              </form>
-            </div>
+            <MemberPlacement
+              id={row.id}
+              published={row.published}
+              orderIds={members.map((m) => m.id)}
+            />
           )}
         </div>
-
-        {message && (
-          <p
-            className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
-            role="status"
-          >
-            {message.text}
-          </p>
-        )}
 
         {/* Member Details Card */}
         <section className={styles.memberFormCard}>
@@ -131,7 +79,7 @@ export default async function EditTeamMemberPage({
             <div>
               <h2 className={styles.memberFormTitle}>Profile</h2>
               <p className={styles.memberFormSub}>
-                Position {at + 1} of {siblings.length} on the homepage
+                Position {at + 1} of {members.length} on the homepage
               </p>
             </div>
             <span className={`${styles.pill} ${row.published ? styles.pillLow : styles.pillMed}`}>
@@ -139,12 +87,7 @@ export default async function EditTeamMemberPage({
             </span>
           </div>
 
-          <MemberForm
-            isEdit={true}
-            action={saveTeamMember}
-            initialData={row}
-            canEdit={mayEdit}
-          />
+          <MemberForm isEdit={true} initialData={row} canEdit={mayEdit} />
         </section>
       </div>
     </>

@@ -1,7 +1,11 @@
 'use client';
 
-import { useState, useRef, ChangeEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import Image from 'next/image';
+import { ApiError, isApiError } from '@/lib/api/errors';
+import { IMAGE_ACCEPT, uploadImage } from '@/lib/api/upload';
+import { teamApi, teamErrorText, type TeamMemberFields } from '@/lib/api/team';
 import styles from '../../../admin.module.css';
 
 export interface MemberFormData {
@@ -15,17 +19,28 @@ export interface MemberFormData {
   image?: string | null;
 }
 
+/**
+ * The member profile form, for both Add and Edit. Posts to the API directly:
+ * Add creates a draft (at the position from the order field the Add screen
+ * puts beside "Back to members", tied to this form with `form=`) and returns
+ * to the list; Edit saves in place and refreshes.
+ *
+ * The headshot is uploaded the moment it is picked — browser → Cloudinary,
+ * signed by the backend (lib/api/upload.ts) — and the resulting URL is saved
+ * with the record. Seeded members hold site paths (/images/teams/*.jpg) that
+ * the API keeps but will not accept back as input, so `image` is only sent
+ * when it actually changed.
+ */
 export default function MemberForm({
-  action,
   initialData,
   isEdit = false,
   canEdit = true,
 }: {
-  action: (formData: FormData) => void | Promise<void>;
   initialData?: MemberFormData;
   isEdit?: boolean;
   canEdit?: boolean;
 }) {
+  const router = useRouter();
   const [name, setName] = useState(initialData?.name ?? '');
   const [role, setRole] = useState(initialData?.role ?? '');
   const [initials, setInitials] = useState(initialData?.initials ?? '');
@@ -33,20 +48,35 @@ export default function MemberForm({
   const [blurb, setBlurb] = useState(initialData?.blurb ?? '');
   const [linkedin, setLinkedin] = useState(initialData?.linkedin ?? '');
 
-  const [preview, setPreview] = useState<string | null>(null);
-  const [removeImage, setRemoveImage] = useState(false);
+  const initialImage = initialData?.image ?? null;
+  const [image, setImage] = useState<string | null>(initialImage);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fallback monogram initials to show in preview
   const displayInitials = (initials.trim() || name.split(' ').map((n) => n[0]).join('').slice(0, 3) || 'JZ').toUpperCase();
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (preview) URL.revokeObjectURL(preview);
-      setPreview(URL.createObjectURL(file));
-      setRemoveImage(false);
+    if (!file) return;
+    setUploading(true);
+    setMessage(null);
+    try {
+      setImage(await uploadImage(file, 'team'));
+    } catch (err) {
+      setMessage({
+        tone: 'err',
+        text: isApiError(err, 503)
+          ? 'Image uploads aren’t set up on this server yet (Cloudinary).'
+          : teamErrorText(err),
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -55,32 +85,77 @@ export default function MemberForm({
   };
 
   const handleRemoveClick = () => {
-    if (preview) URL.revokeObjectURL(preview);
-    setPreview(null);
-    setRemoveImage(true);
+    setImage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const hasPhoto = Boolean((preview || (initialData?.image && !removeImage)));
+  const hasPhoto = Boolean(image);
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const fields: TeamMemberFields = {
+      name: name.trim(),
+      role: role.trim(),
+      initials: initials.trim(),
+      tag: tag.trim(),
+      blurb: blurb.trim() || null,
+      linkedin: linkedin.trim() || null,
+    };
+    if (image !== initialImage) fields.image = image;
+
+    setSaving(true);
+    setMessage(null);
+    setErrors({});
+    try {
+      if (isEdit && initialData?.id) {
+        await teamApi.update(initialData.id, fields);
+        setMessage({ tone: 'ok', text: 'Saved.' });
+        router.refresh();
+        setSaving(false);
+      } else {
+        const raw = form.get('position');
+        const position = raw === null || raw === '' ? undefined : Number(raw);
+        await teamApi.create({
+          ...fields,
+          position: Number.isFinite(position) ? position : undefined,
+        });
+        router.push('/admin/content/team');
+        router.refresh();
+      }
+    } catch (err) {
+      if (err instanceof ApiError) setErrors(err.fieldErrors());
+      setMessage({ tone: 'err', text: teamErrorText(err) });
+      setSaving(false);
+    }
+  }
+
+  const err = (k: string) =>
+    errors[k] && <span className={styles.fieldErr}>{errors[k]}</span>;
 
   return (
     /* Named so a control outside the form can still belong to it: the Add
        screen puts the order field up beside "Back to members", where the edit
        screen has its own, and `form=` is how that field is submitted here. */
-    <form id="member-form" action={action}>
-      {initialData?.id && <input type="hidden" name="id" value={initialData.id} />}
-      {removeImage && <input type="hidden" name="removeImage" value="1" />}
+    <form id="member-form" onSubmit={submit}>
+      {message && (
+        <p
+          className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
+          role={message.tone === 'ok' ? 'status' : 'alert'}
+        >
+          {message.text}
+        </p>
+      )}
 
-      {/* Hidden file input controlled by buttons */}
+      {/* Hidden file input controlled by buttons; uploads on pick */}
       <input
         type="file"
         ref={fileInputRef}
-        name="image"
-        accept="image/jpeg,image/png,image/webp"
+        accept={IMAGE_ACCEPT}
         style={{ display: 'none' }}
-        disabled={!canEdit}
+        disabled={!canEdit || uploading}
         onChange={handleFileChange}
       />
 
@@ -94,12 +169,11 @@ export default function MemberForm({
             <div className={styles.memberHeadshotPreviewBox} aria-hidden="true">
               {hasPhoto ? (
                 <Image
-                  src={preview ?? initialData!.image!}
+                  src={image!}
                   alt=""
                   width={130}
                   height={130}
                   className={styles.memberHeadshotImg}
-                  unoptimized={Boolean(preview)}
                 />
               ) : (
                 <>
@@ -122,21 +196,21 @@ export default function MemberForm({
                 type="button"
                 className={styles.memberHeadshotBtn}
                 onClick={handleUploadClick}
-                disabled={!canEdit}
+                disabled={!canEdit || uploading}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
-                Upload photo
+                {uploading ? 'Uploading…' : 'Upload photo'}
               </button>
 
               <button
                 type="button"
                 className={styles.memberHeadshotBtn}
                 onClick={handleRemoveClick}
-                disabled={!canEdit || (!preview && !initialData?.image)}
+                disabled={!canEdit || uploading || !image}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <polyline points="3 6 5 6 21 6" />
@@ -168,6 +242,7 @@ export default function MemberForm({
                   </>
                 )}
               </span>
+              {err('image')}
             </div>
           </div>
         </div>
@@ -206,6 +281,7 @@ export default function MemberForm({
                 autoFocus={!isEdit}
                 readOnly={!canEdit}
               />
+              {err('name')}
             </div>
 
             <div className={styles.memberFieldGroup}>
@@ -226,6 +302,7 @@ export default function MemberForm({
                 required
                 readOnly={!canEdit}
               />
+              {err('initials')}
             </div>
           </div>
 
@@ -247,6 +324,7 @@ export default function MemberForm({
                 required
                 readOnly={!canEdit}
               />
+              {err('role')}
             </div>
 
             <div className={styles.memberFieldGroup}>
@@ -264,6 +342,7 @@ export default function MemberForm({
                 maxLength={40}
                 readOnly={!canEdit}
               />
+              {err('tag')}
             </div>
           </div>
         </div>
@@ -299,6 +378,7 @@ export default function MemberForm({
               </span>
             </div>
           </div>
+            {err('blurb')}
 
           {/* Col 2: LinkedIn */}
           <div className={styles.memberFieldGroup}>
@@ -316,6 +396,7 @@ export default function MemberForm({
               maxLength={300}
               readOnly={!canEdit}
             />
+              {err('linkedin')}
             <span className={styles.memberFieldHelper}>
               Add their LinkedIn profile link
             </span>
@@ -328,13 +409,13 @@ export default function MemberForm({
         <button
           type="submit"
           className={styles.memberSubmitBtn}
-          disabled={!canEdit}
+          disabled={!canEdit || saving || uploading}
         >
-          {isEdit ? 'Save changes' : 'Add member'}
+          {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add member'}
         </button>
         <span className={styles.memberSubmitNote}>
           {isEdit
-            ? 'Saving updates the member details immediately.'
+            ? 'Saving updates the homepage immediately if the member is live.'
             : 'Added as a draft, so you can check it before it goes live'}
         </span>
       </div>

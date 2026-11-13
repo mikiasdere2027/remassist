@@ -1,15 +1,9 @@
-import { Fragment } from 'react';
 import Link from 'next/link';
-import { desc } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { posts } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canDeletePost, canEditContent } from '@/lib/auth/roles';
-import { formatDate, formatRelativeTime } from '@/lib/leads/display';
-import { hasBody } from '@/lib/blog/completeness';
-import { deletePost, setPostPublished } from './actions';
-import { postMessage } from './messages';
-import RowMenu from './RowMenu';
+import { apiServer } from '@/lib/api/server';
+import { postsListPath, type AdminPostRow } from '@/lib/api/posts';
+import PostsTable from './PostsTable';
 import AdminTopbar from '../../AdminTopbar';
 import styles from '../../../admin.module.css';
 
@@ -30,21 +24,13 @@ import styles from '../../../admin.module.css';
  * /admin/content/posts/[id]; everything that creates one lives at
  * /admin/content/posts/new. Two things stay on this page because they are
  * decisions about the list rather than about the article — publishing, and
- * deleting a draft — and both are in the row's menu.
+ * deleting a draft — and both are in the row's menu (PostsTable, which calls
+ * the API).
  *
- * Two notes on what the columns say:
- *
- *  - Updated is relative, in the same words the leads table and the dashboard
- *    use, with the exact timestamp on hover. A shared vocabulary matters more
- *    here than matching a mockup's longhand: "3 d ago" means on this screen
- *    what it means on the other two.
- *  - Publish is refused, not hidden, for a post with no body. An empty article
- *    on the blog is a link to a blank page, and the menu item says so on hover
- *    rather than quietly disappearing.
- *
- * Filtering and paging are done in memory on purpose. Every post is already
- * being read for the tab counts, and a blog that outgrows one query is a
- * different problem from the one this page has.
+ * The search goes to the API (GET /v1/admin/posts?q=); the status tabs and
+ * paging are done here, in memory, because the tab counts need every
+ * matching post anyway, and a blog that outgrows one query is a different
+ * problem from the one this page has.
  */
 export const dynamic = 'force-dynamic';
 
@@ -66,48 +52,24 @@ function asStatus(v: string | undefined): Status {
 export default async function PostsListPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    ok?: string; error?: string; status?: string; q?: string; page?: string; del?: string;
-  }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
 }) {
   const [user, sp] = await Promise.all([requireUser(), searchParams]);
-  const message = postMessage(sp.ok, sp.error);
   const mayEdit = canEditContent(user.role);
   const mayDelete = canDeletePost(user.role);
   const status = asStatus(sp.status);
-  const q = (sp.q ?? '').trim();
+  const q = (sp.q ?? '').trim().slice(0, 200);
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <Topbar mayEdit={mayEdit} />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there is nothing to
-            edit.
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const db = getDb();
   /* Most recently touched first: on a list you come to in order to finish
-     something, the row you want is the one you were last in. */
-  const all = await db.select().from(posts).orderBy(desc(posts.updatedAt));
+     something, the row you want is the one you were last in.
 
-  /* The search narrows what the tabs count, the tabs do not narrow each other.
+     The search narrows what the tabs count, the tabs do not narrow each other.
      A tab whose number changes when you select it tells you nothing about what
      is on the other tabs; a tab that ignores your search tells you nothing
      about your search. */
-  const needle = q.toLowerCase();
-  const matching = needle
-    ? all.filter((p) =>
-        [p.title, p.category, p.slug, p.excerpt, p.authorName]
-          .some((f) => f.toLowerCase().includes(needle)),
-      )
-    : all;
+  const matching = await apiServer<AdminPostRow[]>(postsListPath('all', q));
+  /* "No posts yet" only when nothing narrowed the list. */
+  const anyPosts = matching.length > 0 || q !== '';
 
   const total = matching.length;
   const publishedCount = matching.filter((p) => p.published).length;
@@ -125,44 +87,26 @@ export default async function PostsListPage({
   const page = Math.min(Math.max(1, Number(sp.page) || 1), pageCount);
   const visible = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  /* Every link keeps the other controls. Losing the search you typed because
-     you clicked Draft is what makes a filter bar feel broken when each control
-     works perfectly on its own. Params equal to their default are omitted, so
-     the canonical URL of the default view is bare. */
-  const href = (next: { status?: Status; q?: string; page?: number; del?: string }) => {
+  /* Every link keeps the other controls. Params equal to their default are
+     omitted, so the canonical URL of the default view is bare. */
+  const href = (next: { status?: Status; q?: string; page?: number }) => {
     const s = next.status ?? status;
     const term = next.q ?? q;
-    /* Changing the filter always returns to page one — page 3 of the drafts is
-       not the same three posts as page 3 of everything. */
+    /* Changing the filter always returns to page one. */
     const p = next.page ?? (next.status !== undefined || next.q !== undefined ? 1 : page);
     const params = new URLSearchParams();
     if (s !== 'all') params.set('status', s);
     if (term) params.set('q', term);
     if (p > 1) params.set('page', String(p));
-    if (next.del) params.set('del', next.del);
     const qs = params.toString();
     return `/admin/content/posts${qs ? `?${qs}` : ''}`;
   };
-
-  /* Only honoured if it names a row on the page you are looking at, so a stale
-     ?del= left in the URL after a filter change cannot arm a confirm step
-     under a row you did not open it on. */
-  const confirming = mayDelete && sp.del && visible.some((p) => p.id === sp.del) ? sp.del : null;
 
   return (
     <>
       <Topbar mayEdit={mayEdit} />
 
       <div className={styles.view}>
-        {message && (
-          <p
-            className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
-            role="status"
-          >
-            {message.text}
-          </p>
-        )}
-
         <div className={styles.filterbar}>
           <div className={styles.filterPills} role="group" aria-label="Filter posts by status">
             <Tab href={href({ status: 'all' })} on={status === 'all'} label="All" count={total} />
@@ -181,8 +125,8 @@ export default async function PostsListPage({
           </div>
 
           {/* A GET form, so a search is a URL you can keep, share or reload.
-              The status rides along in a hidden field for the same reason the
-              tabs carry the search: neither control resets the other. */}
+              The status rides along in a hidden field: neither control resets
+              the other. */}
           <form className={styles.filterSearch} method="get" role="search">
             {status !== 'all' && <input type="hidden" name="status" value={status} />}
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -205,153 +149,28 @@ export default async function PostsListPage({
           )}
         </div>
 
-        <section className={styles.panel}>
-          {visible.length === 0 ? (
-            <p className={styles.empty}>
-              <strong>{all.length === 0 ? 'No posts yet' : 'No posts match'}</strong>
-              {all.length === 0
-                ? 'Use “New post” above to write the first one.'
-                : 'Try another search, or a different tab.'}
-            </p>
-          ) : (
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th scope="col">Title</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Updated</th>
-                    <th scope="col" className={styles.nowrap} style={{ textAlign: 'right' }}>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((p) => {
-                    const publishable = hasBody(p.body);
-                    return (
-                      <Fragment key={p.id}>
-                        <tr>
-                          <td>
-                            {/* The dominant cell: the article in weight, the
-                                category under it in small grey, the title itself
-                                the link to the editor — the row's main action is
-                                the thing you came to read. */}
-                            <Link className={styles.rowLink} href={`/admin/content/posts/${p.id}`}>
-                              {p.title}
-                            </Link>
-                            <span className={styles.cellSecondary}>{p.category}</span>
-                          </td>
-                          <td>
-                            <span
-                              className={`${styles.pill} ${p.published ? styles.pillLow : styles.pillMed}`}
-                            >
-                              {p.published ? 'Published' : 'Draft'}
-                            </span>
-                          </td>
-                          <td className={styles.nowrap}>
-                            <span
-                              className={styles.relativeTime}
-                              title={formatDate(p.updatedAt)}
-                            >
-                              {formatRelativeTime(p.updatedAt)}
-                            </span>
-                          </td>
-                          <td>
-                            <div className={styles.actions}>
-                              {mayEdit ? (
-                                <RowMenu
-                                  publish={setPostPublished}
-                                  id={p.id}
-                                  title={p.title}
-                                  published={p.published}
-                                  publishable={publishable}
-                                  editHref={`/admin/content/posts/${p.id}`}
-                                  deleteHref={href({ del: p.id })}
-                                  mayDelete={mayDelete}
-                                />
-                              ) : (
-                                <Link
-                                  className={styles.rowLink}
-                                  href={`/admin/content/posts/${p.id}`}
-                                >
-                                  Open
-                                </Link>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                        {confirming === p.id && (
-                          <ConfirmDelete post={p} backHref={href({})} />
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {pageCount > 1 && (
-            <div className={styles.panelFoot}>
-              <span>
-                {rows.length} {rows.length === 1 ? 'post' : 'posts'} · page {page} of {pageCount}
-              </span>
-              <Pager page={page} pageCount={pageCount} href={href} />
-            </div>
-          )}
-        </section>
+        <PostsTable
+          rows={visible}
+          mayEdit={mayEdit}
+          mayDelete={mayDelete}
+          empty={
+            anyPosts
+              ? { title: 'No posts match', text: 'Try another search, or a different tab.' }
+              : { title: 'No posts yet', text: 'Use “New post” above to write the first one.' }
+          }
+          footer={
+            pageCount > 1 ? (
+              <div className={styles.panelFoot}>
+                <span>
+                  {rows.length} {rows.length === 1 ? 'post' : 'posts'} · page {page} of {pageCount}
+                </span>
+                <Pager page={page} pageCount={pageCount} href={href} />
+              </div>
+            ) : undefined
+          }
+        />
       </div>
     </>
-  );
-}
-
-/**
- * Deleting asks first, in the row's own place.
- *
- * A server-rendered confirm step rather than a browser dialog, matching the
- * rate tables: this admin ships no client-side JS for its tables, and a
- * `confirm()` that a page can be built without is a control that is not really
- * there. The checkbox is `required` in the browser and re-checked in
- * deletePost, because a required attribute is a courtesy and not a control.
- */
-function ConfirmDelete({
-  post,
-  backHref,
-}: {
-  post: { id: string; title: string; slug: string };
-  backHref: string;
-}) {
-  return (
-    <tr>
-      <td className={styles.editCell} colSpan={4}>
-        <form className={styles.editForm} action={deletePost}>
-          <input type="hidden" name="id" value={post.id} />
-          <p style={{ margin: 0, flex: '1 1 22rem' }}>
-            <strong>Delete “{post.title}”?</strong>
-            <span className={styles.cellSecondary}>
-              The draft and everything written in it go for good. Nothing else on this screen
-              destroys anything — unpublishing keeps the article and only takes it off the blog.
-            </span>
-          </p>
-          <label className={styles.confirmCheck} htmlFor={`del-${post.id}`}>
-            <input type="checkbox" id={`del-${post.id}`} name="confirm" value="1" required />
-            <span>
-              I understand this cannot be undone, and that <code>/blog/{post.slug}</code> is
-              given up along with it.
-            </span>
-          </label>
-          <div className={styles.rowActions} style={{ padding: 0 }}>
-            <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit" autoFocus>
-              Delete this draft
-            </button>
-            <Link className={styles.rowLink} href={backHref}>
-              Keep it
-            </Link>
-          </div>
-        </form>
-      </td>
-    </tr>
   );
 }
 

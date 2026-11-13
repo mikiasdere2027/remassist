@@ -18,13 +18,13 @@ slice, not F1.
 
 | # | Gap | Evidence | Fix |
 |---|---|---|---|
-| A1 | Public pages stop updating after the split | Admin actions call `revalidatePath` in-process (~28 calls in 9 `actions.ts`). Once NestJS does the writes, nothing invalidates `/`, `/pricing`, blog, FAQ or reviews. `/pricing` has no `revalidate` fallback | `fetch` with `next: { tags }` plus a signed `app/api/revalidate` route that the backend calls after each write |
-| A2 | Rich-text sanitising could get lost | `lib/content/sanitize.ts` runs at read time before `dangerouslySetInnerHTML` (`ArticleView.tsx:156,161`, `FaqTabs.tsx:169`, `FaqAccordion.tsx:45`) | Sanitise on write in NestJS **and** keep sanitising in Next until that's verified |
+| ✅ A1 | Public pages stop updating after the split | Admin actions call `revalidatePath` in-process (~28 calls in 9 `actions.ts`). Once NestJS does the writes, nothing invalidates `/`, `/pricing`, blog, FAQ or reviews. `/pricing` has no `revalidate` fallback | `fetch` with `next: { tags }` plus a signed `app/api/revalidate` route that the backend calls after each write |
+| ✅ A2 | Rich-text sanitising could get lost | `lib/content/sanitize.ts` runs at read time before `dangerouslySetInnerHTML` (`ArticleView.tsx:156,161`, `FaqTabs.tsx:169`, `FaqAccordion.tsx:45`) | Sanitise on write in NestJS **and** keep sanitising in Next until that's verified |
 | A3 ✅ | Silent fallbacks can publish wrong prices (pricing now logs loudly; the team loader never swallowed errors — they now reach error.tsx) | `lib/rates/getPublishedTiers.ts` catches failures and returns seed prices; `getTeamMembers` falls back to the seed too | Log/alert when a fallback is used; fail the production build instead of shipping seed data |
-| A4 | Rate limiting is per process | `lib/rate-limit.ts:26` uses an in-memory `Map` | Move it to NestJS (public routes) |
-| A5 | Uploads go to local disk | `lib/uploads/images.ts:85`, 6 MB server-action body limit in `next.config.ts` | Signed Cloudinary uploads; add `res.cloudinary.com` to `images.remotePatterns` |
-| A6 | Admin protection lives only in the layout | No `middleware.ts`; checks are in `(protected)/layout.tsx` plus per-action guards | Add middleware that checks the API session cookie; the backend enforces it anyway |
-| A7 | Other server-side routes to port | `admin/(protected)/leads/export/route.ts` (CSV), `content/posts/preview-body/route.ts`, `admin/signin/code/verify/route.ts`, `app/uploads/[kind]/[file]/route.ts` | Port each one alongside its module |
+| ✅ A4 | Rate limiting is per process | `lib/rate-limit.ts:26` uses an in-memory `Map` | Move it to NestJS (public routes) |
+| ✅ A5 | Uploads go to local disk | `lib/uploads/images.ts:85`, 6 MB server-action body limit in `next.config.ts` | Signed Cloudinary uploads; add `res.cloudinary.com` to `images.remotePatterns` |
+| ✅ A6 | Admin protection lives only in the layout | No `middleware.ts`; checks are in `(protected)/layout.tsx` plus per-action guards | Add middleware that checks the API session cookie; the backend enforces it anyway |
+| ✅ A7 | Other server-side routes to port | `admin/(protected)/leads/export/route.ts` (CSV), `content/posts/preview-body/route.ts`, `admin/signin/code/verify/route.ts`, `app/uploads/[kind]/[file]/route.ts` | Port each one alongside its module |
 
 Full list of files that touch the database: see `docs/ARCHITECTURE.md` §3.
 
@@ -100,3 +100,9 @@ JSON-LD coverage, `poweredByHeader: false`, no secrets committed.
   (nothing played until all 29 MB downloaded) — now streams. The home hero uses
   its own 360×360 cut with audio (`/uploads/hero/`, 2.2 MB vs 9.2 MB). Moving
   video to Cloudinary (adaptive streaming) is still worth doing later.
+- **2026-11-13, backend connection:** A1 (tag revalidation via
+  `/api/revalidate`), A2 (backend sanitises on write; seed fallback cleaned too),
+  A4 (rate limits in the backend, per visitor through the proxy), A5
+  (Cloudinary uploads), A6 (`middleware.ts`), A7 (all routes ported or deleted)
+  done. Admin pages at 390px fixed (nav, dashboard grid, filter pills, team
+  toolbar, file inputs).

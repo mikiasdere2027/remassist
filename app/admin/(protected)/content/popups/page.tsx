@@ -1,29 +1,23 @@
 import Link from 'next/link';
-import { desc } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { popups } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canEditContent } from '@/lib/auth/roles';
-import { POPUP_PLACEMENT_LABEL, isPopupPlacement } from '@/lib/popups/placement';
-import { POPUP_TEMPLATE_LABEL, isPopupTemplate } from '@/lib/popups/templates';
-import { formatDate, formatRelativeTime } from '@/lib/leads/display';
-import { setPopupPublished } from './actions';
-import { popupMessage } from './messages';
-import PopupRowMenu from './RowMenu';
+import type { AdminPopup, PopupState } from '@/lib/api/popups';
+import { apiServer } from '@/lib/api/server';
+import PopupsTable from './PopupsTable';
 import AdminTopbar from '../../AdminTopbar';
 import styles from '../../../admin.module.css';
 
 /**
  * The popups list — the hub of the popup ads feature.
  *
- * Phase 1: manage the ads. Every popup is a set of decisions that are made
- * once and read many times — what it says, where it may appear, when it runs,
- * how long it lingers, and how the run is tracked — so the screen is a list of
- * those decisions with editing behind a link, exactly like the posts list.
- * Rendering the popup on the public pages is the next phase; until then the
- * list's job is to get the content right and to publish/suspend it.
+ * Every popup is a set of decisions that are made once and read many times —
+ * what it says, where it may appear, when it runs, how long it lingers, and
+ * how the run is tracked — so the screen is a list of those decisions with
+ * editing behind a link, exactly like the posts list. Data comes from
+ * GET /v1/admin/popups; the state (live / scheduled / ended / draft) is the
+ * backend's, computed from published + schedule.
  *
- * The tabs slice one list by status, not two lists. Placements and schedules
+ * The tabs slice one list by state, not several lists. Placements and schedules
  * are columns you read; published/unpublished is the one decision a row's
  * menu can flip without opening the editor.
  *
@@ -39,79 +33,45 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-const STATUSES = ['all', 'live', 'draft'] as const;
+const STATUSES = ['all', 'live', 'scheduled', 'ended', 'draft'] as const;
 type Status = (typeof STATUSES)[number];
+
+const TAB_LABEL: Record<Status, string> = {
+  all: 'All',
+  live: 'Live',
+  scheduled: 'Scheduled',
+  ended: 'Ended',
+  draft: 'Draft',
+};
 
 function asStatus(v: string | undefined): Status {
   return STATUSES.includes(v as Status) ? (v as Status) : 'all';
 }
 
-/** How a schedule reads in one line. */
-function scheduleText(startsAt: Date | null, endsAt: Date | null): string {
-  const short = (d: Date) =>
-    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-  if (startsAt && endsAt) return `${short(startsAt)} → ${short(endsAt)}`;
-  if (endsAt) return `Until ${short(endsAt)}`;
-  if (startsAt) return `From ${short(startsAt)}`;
-  return 'Anytime';
-}
-
-function placementLabel(value: string): string {
-  return isPopupPlacement(value) ? POPUP_PLACEMENT_LABEL[value] : value;
-}
-
-/** Which shape the popup takes, read under its placement in the same column. */
-function templateLabel(value: string): string {
-  return isPopupTemplate(value) ? POPUP_TEMPLATE_LABEL[value] : value;
-}
-
 export default async function PopupsListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string; status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   const [user, sp] = await Promise.all([requireUser(), searchParams]);
-  const message = popupMessage(sp.ok, sp.error);
   const mayEdit = canEditContent(user.role);
   const status = asStatus(sp.status);
   const q = (sp.q ?? '').trim();
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <Topbar mayEdit={mayEdit} />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there is nothing to
-            manage.
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const db = getDb();
-  const all = await db.select().from(popups).orderBy(desc(popups.updatedAt));
-
-  /* The search narrows what the tabs count, the tabs do not narrow each other. */
-  const needle = q.toLowerCase();
-  const matching = needle
-    ? all.filter((p) =>
-        [p.name, p.campaign, p.title, p.trackingKey]
-          .some((f) => f.toLowerCase().includes(needle)),
-      )
-    : all;
-
-  const total = matching.length;
-  const liveCount = matching.filter((p) => p.published).length;
-  const draftCount = total - liveCount;
-
-  const rows = matching.filter((p) => {
-    if (status === 'live') return p.published;
-    if (status === 'draft') return !p.published;
-    return true;
-  });
+  /* One fetch, narrowed by the search only: the tabs are counted from it and
+     do not narrow each other. */
+  const matching = await apiServer<AdminPopup[]>(
+    `/admin/popups${q ? `?q=${encodeURIComponent(q)}` : ''}`,
+  );
+  const count = (st: PopupState) => matching.filter((p) => p.state === st).length;
+  const counts: Record<Status, number> = {
+    all: matching.length,
+    live: count('live'),
+    scheduled: count('scheduled'),
+    ended: count('ended'),
+    draft: count('draft'),
+  };
+  const rows = status === 'all' ? matching : matching.filter((p) => p.state === status);
 
   const href = (next: { status?: Status; q?: string }) => {
     const s = next.status ?? status;
@@ -128,24 +88,22 @@ export default async function PopupsListPage({
       <Topbar mayEdit={mayEdit} />
 
       <div className={styles.view}>
-        {message && (
-          <p
-            className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
-            role="status"
-          >
-            {message.text}
-          </p>
-        )}
-
         <div className={styles.filterbar}>
           <div className={styles.filterPills} role="group" aria-label="Filter popups by status">
-            <Tab href={href({ status: 'all' })} on={status === 'all'} label="All" count={total} />
-            <Tab href={href({ status: 'live' })} on={status === 'live'} label="Live" count={liveCount} />
-            <Tab href={href({ status: 'draft' })} on={status === 'draft'} label="Draft" count={draftCount} />
+            {STATUSES.map((st) => (
+              <Tab
+                key={st}
+                href={href({ status: st })}
+                on={status === st}
+                label={TAB_LABEL[st]}
+                count={counts[st]}
+              />
+            ))}
           </div>
 
           {/* A GET form, so a search is a URL you can keep, share or bookmark. */}
           <form className={styles.filterForm} role="search">
+            {status !== 'all' && <input type="hidden" name="status" value={status} />}
             <input
               className={styles.filterSearch}
               type="search"
@@ -163,86 +121,7 @@ export default async function PopupsListPage({
           )}
         </div>
 
-        <section className={styles.panel}>
-          {rows.length === 0 ? (
-            <p className={styles.empty}>
-              <strong>{all.length === 0 ? 'No popups yet' : 'No popups match'}</strong>
-              {all.length === 0
-                ? 'Use “New popup” above to create the first one.'
-                : 'Try another search, or a different tab.'}
-            </p>
-          ) : (
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th scope="col">Popup</th>
-                    <th scope="col">Placement</th>
-                    <th scope="col">Schedule</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Updated</th>
-                    <th scope="col" className={styles.nowrap} style={{ textAlign: 'right' }}>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((p) => (
-                    <tr key={p.id}>
-                      <td>
-                        <Link className={styles.rowLink} href={`/admin/content/popups/${p.id}`}>
-                          {p.name}
-                        </Link>
-                        <span className={styles.cellSecondary}>{p.campaign}</span>
-                      </td>
-                      <td>
-                        <span className={styles.cellSecondary}>
-                          {placementLabel(p.placement)}
-                        </span>
-                        <span className={styles.cellSecondary}>
-                          {templateLabel(p.template)}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={styles.cellSecondary}>
-                          {scheduleText(p.startsAt, p.endsAt)}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`${styles.pill} ${p.published ? styles.pillLow : styles.pillMed}`}
-                        >
-                          {p.published ? 'Live' : 'Draft'}
-                        </span>
-                      </td>
-                      <td className={styles.nowrap}>
-                        <span className={styles.relativeTime} title={formatDate(p.updatedAt)}>
-                          {formatRelativeTime(p.updatedAt)}
-                        </span>
-                      </td>
-                      <td>
-                        <div className={styles.actions}>
-                          {mayEdit ? (
-                            <PopupRowMenu
-                              publish={setPopupPublished}
-                              id={p.id}
-                              name={p.name}
-                              published={p.published}
-                            />
-                          ) : (
-                            <Link className={styles.rowLink} href={`/admin/content/popups/${p.id}`}>
-                              Open
-                            </Link>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+        <PopupsTable rows={rows} mayEdit={mayEdit} nothingYet={!q && matching.length === 0} />
       </div>
     </>
   );

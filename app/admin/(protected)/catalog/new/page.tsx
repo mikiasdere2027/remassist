@@ -1,10 +1,9 @@
 import Link from 'next/link';
-import { getDb, isDatabaseConfigured } from '@/db';
 import { requireUser } from '@/lib/auth/require';
 import { canEditRates } from '@/lib/auth/roles';
-import { addAgentTier, addCoverageOption } from '../actions';
 import AdminTopbar from '../../AdminTopbar';
 import RateKindSelect from './KindSelect';
+import NewRateForm from './NewRateForm';
 import styles from '../../../admin.module.css';
 
 /**
@@ -19,8 +18,8 @@ import styles from '../../../admin.module.css';
  * screens in the same admin that look like different products is a cost paid
  * by whoever uses both.
  *
- * The actions (addCoverageOption / addAgentTier) re-check the admin gate and
- * log the add, exactly as the inline forms on the list do.
+ * NewRateForm posts to the backend (POST /v1/admin/catalog/coverage-options
+ * or /tiers), which re-checks the admin role and logs the add.
  */
 export const dynamic = 'force-dynamic';
 
@@ -39,22 +38,6 @@ export default async function NewRatePage({
   const kind: 'coverage' | 'tier' = sp.kind === 'tier' ? 'tier' : 'coverage';
   const title = kind === 'tier' ? 'Add agent tier' : 'Add coverage option';
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <AdminTopbar title={title} subtitle={SUBTITLE} />
-        <div className={styles.view}>
-          <BackRow />
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so the price list
-            cannot be read.
-          </div>
-        </div>
-      </>
-    );
-  }
-
   if (!mayEdit) {
     return (
       <>
@@ -70,9 +53,6 @@ export default async function NewRatePage({
       </>
     );
   }
-
-  // The DB is only touched to prove it is reachable; the page needs no rows.
-  await getDb();
 
   return (
     <>
@@ -101,128 +81,7 @@ export default async function NewRatePage({
             </p>
           </div>
 
-          {kind === 'coverage' ? (
-            <form action={addCoverageOption}>
-              <div className={styles.formGrid2}>
-                <Field
-                  id="k"
-                  name="key"
-                  label="Key"
-                  placeholder="e.g. team-shift"
-                  pattern="[a-z0-9][a-z0-9\-]*"
-                  title="Lowercase letters, digits and hyphens — the quote calculator matches on it"
-                  maxLength={32}
-                  hint="Permanent — the quote calculator matches on it"
-                  required
-                  autoFocus
-                />
-                <Field
-                  id="l"
-                  name="label"
-                  label="Label"
-                  placeholder="Part-time"
-                  maxLength={80}
-                  required
-                />
-              </div>
-
-              <Field
-                id="ll"
-                name="longLabel"
-                label="Long label"
-                placeholder="How this reads inside a quote sentence"
-                maxLength={160}
-                hint="Used mid-sentence in a quote, so it reads lowercase"
-              />
-
-              <div className={styles.formGrid2}>
-                <Field
-                  id="st"
-                  name="seats"
-                  label="Seats"
-                  type="number"
-                  min={1}
-                  max={99}
-                  defaultValue={1}
-                  required
-                />
-                <Field
-                  id="mh"
-                  name="monthlyHours"
-                  label="Monthly hours"
-                  type="number"
-                  min={1}
-                  max={9999}
-                  defaultValue={160}
-                  required
-                />
-              </div>
-
-              <div className={styles.memberSubmitRow}>
-                <button className={styles.memberSubmitBtn} type="submit">
-                  Add coverage option
-                </button>
-                <span className={styles.memberSubmitNote}>
-                  Quoted immediately, and logged with your name.
-                </span>
-              </div>
-            </form>
-          ) : (
-            <form action={addAgentTier}>
-              <div className={styles.formGrid2}>
-                <Field
-                  id="tk"
-                  name="key"
-                  label="Key"
-                  placeholder="e.g. senior"
-                  pattern="[a-z0-9][a-z0-9\-]*"
-                  title="Lowercase letters, digits and hyphens — the quote calculator matches on it"
-                  maxLength={32}
-                  hint="Permanent — the quote calculator matches on it"
-                  required
-                  autoFocus
-                />
-                <Field
-                  id="tl"
-                  name="label"
-                  label="Tier"
-                  placeholder="Senior"
-                  maxLength={80}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGrid2}>
-                <Field
-                  id="tr"
-                  name="hourlyRateUsd"
-                  label="Hourly rate (USD)"
-                  type="number"
-                  min={0.01}
-                  max={9999}
-                  step={0.01}
-                  hint="What one hour at this tier costs"
-                  required
-                />
-                <Field
-                  id="tn"
-                  name="note"
-                  label="Note (optional)"
-                  placeholder="What this tier buys, in a salesperson's words"
-                  maxLength={160}
-                />
-              </div>
-
-              <div className={styles.memberSubmitRow}>
-                <button className={styles.memberSubmitBtn} type="submit">
-                  Add agent tier
-                </button>
-                <span className={styles.memberSubmitNote}>
-                  Live in the quote calculator immediately, and logged with your name.
-                </span>
-              </div>
-            </form>
-          )}
+          <NewRateForm key={kind} kind={kind} />
         </section>
       </div>
     </>
@@ -249,26 +108,6 @@ function BackRow({ children }: { children?: React.ReactNode }) {
         Back to rates
       </Link>
       {children && <div className={styles.memberTopActions}>{children}</div>}
-    </div>
-  );
-}
-
-/** A labelled field in the card, with the hint it needs and nothing more. */
-function Field({
-  id,
-  label,
-  hint,
-  ...rest
-}: {
-  id: string;
-  label: string;
-  hint?: string;
-} & React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <div className={styles.memberFieldGroup}>
-      <label className={styles.memberFieldLabel} htmlFor={id}>{label}</label>
-      <input className={styles.memberFieldInput} id={id} {...rest} />
-      {hint && <span className={styles.memberFieldHelper}>{hint}</span>}
     </div>
   );
 }

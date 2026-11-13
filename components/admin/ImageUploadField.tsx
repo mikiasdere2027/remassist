@@ -71,12 +71,13 @@ export default function ImageUploadField({
         </div>
       )}
       {canEdit && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', minWidth: 0, maxWidth: '100%' }}>
           <input
             ref={input}
             id={`${id}-file`}
             type="file"
             accept={IMAGE_ACCEPT}
+            style={{ maxWidth: '100%', minWidth: 0 }}
             disabled={busy}
             onChange={(e) => onPick(e.target.files?.[0])}
           />

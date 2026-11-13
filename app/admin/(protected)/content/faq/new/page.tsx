@@ -1,9 +1,8 @@
 import Link from 'next/link';
-import { asc } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { faqGroups } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
-import { canEditContent } from '@/lib/auth/roles';
+import { canDeleteFaqItem, canEditContent } from '@/lib/auth/roles';
+import { apiServer } from '@/lib/api/server';
+import type { FaqAdminGroup } from '@/lib/api/faq';
 import AdminTopbar from '../../../AdminTopbar';
 import NewFaqForm from './NewFaqForm';
 import styles from '../../../../admin.module.css';
@@ -24,30 +23,7 @@ export default async function NewFaqQuestionPage() {
   const user = await requireUser();
   const mayWrite = canEditContent(user.role);
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <AdminTopbar
-          title="Add question"
-          subtitle="The questions that sell the process"
-          action={
-            <Link className={`${styles.btn} ${styles.btnGhost}`} href="/admin/content/faq">
-              ← All questions
-            </Link>
-          }
-        />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there is nothing to
-            edit.
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const groups = await getDb().select().from(faqGroups).orderBy(asc(faqGroups.sortOrder));
+  const groups = await apiServer<FaqAdminGroup[]>('/admin/faq/groups');
 
   return (
     <>
@@ -71,13 +47,17 @@ export default async function NewFaqQuestionPage() {
             </div>
             <p className={styles.empty}>
               <strong>No sections yet</strong>
-              Add a section on the FAQ list first — a question has to live in one.
+              Add a section from the Sections view of the FAQ list first — a question has to live in one.
             </p>
           </section>
         ) : (
-          <NewFaqForm groups={groups} mayWrite={mayWrite} />
+          <NewFaqForm
+            groups={groups.map((g) => ({ id: g.id, title: g.title }))}
+            mayWrite={mayWrite}
+            mayDelete={canDeleteFaqItem(user.role)}
+          />
         )}
       </div>
     </>
   );
-}
+}

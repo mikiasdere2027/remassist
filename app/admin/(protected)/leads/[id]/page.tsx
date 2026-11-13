@@ -1,9 +1,9 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { desc, eq } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { leads, quizSubmissions } from '@/db/schema';
+import { isApiError } from '@/lib/api/errors';
+import type { LeadDetail as Lead } from '@/lib/api/leads';
+import { apiServer } from '@/lib/api/server';
 import {
   SOURCE_LABELS, answerFor, formatDate, formatUtm, orderedAnswers, questionFor, unknownRawKeys,
 } from '@/lib/leads/display';
@@ -26,21 +26,18 @@ export const dynamic = 'force-dynamic';
 
 export default async function LeadDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!isDatabaseConfigured()) notFound();
 
-  /* A malformed id would make Postgres throw on the uuid cast, which surfaces
-     as a 500. A bad URL is a 404. */
+  /* A malformed id is a 400 from the backend; to a visitor it is a bad URL. */
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
-  const db = getDb();
-  const [lead] = await db.select().from(leads).where(eq(leads.id, id)).limit(1);
-  if (!lead) notFound();
-
-  const quizzes = await db
-    .select()
-    .from(quizSubmissions)
-    .where(eq(quizSubmissions.leadId, id))
-    .orderBy(desc(quizSubmissions.createdAt));
+  let lead: Lead;
+  try {
+    lead = await apiServer<Lead>(`/admin/leads/${id}`);
+  } catch (err) {
+    if (isApiError(err, 404) || isApiError(err, 400)) notFound();
+    throw err;
+  }
+  const quizzes = lead.quizSubmissions;
 
   const raw = lead.rawFields ?? null;
   const extraKeys = unknownRawKeys(raw);
@@ -173,7 +170,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
                 <>
                   <div className={styles.panelHead} style={{ borderTop: '1px solid #edf0f6' }}>
                     <h2 className={styles.panelTitle}>The quote they were shown</h2>
-                    <span className={styles.panelNote}>Snapshot as shown, not recalculated</span>
+                    <span className={styles.panelNote}>Priced when submitted, not recalculated</span>
                   </div>
                   <div className={styles.quote}>
                     <Quote label="Service" value={q.result.service} />

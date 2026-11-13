@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { createFaqItemAction, removeFaqItemAction } from '../actions';
+import { ApiError } from '@/lib/api/errors';
+import { faqApi } from '@/lib/api/faq';
 import RichEditor from '../../posts/RichEditor';
 import styles from '../../../../admin.module.css';
 
@@ -37,9 +38,11 @@ function hasAnswer(html: string): boolean {
 export default function NewFaqForm({
   groups,
   mayWrite,
+  mayDelete,
 }: {
   groups: FaqGroup[];
   mayWrite: boolean;
+  mayDelete: boolean;
 }) {
   const [addedList, setAddedList] = useState<AddedQuestion[]>([]);
   const [openAccordion, setOpenAccordion] = useState<number>(0);
@@ -64,9 +67,10 @@ export default function NewFaqForm({
   const handleRemove = (id: string) => {
     setError(null);
     startTransition(async () => {
-      const res = await removeFaqItemAction(id);
-      if (!res.ok) {
-        setError(res.error || 'Failed to remove question');
+      try {
+        await faqApi.deleteItem(id);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to remove question');
         return;
       }
       setConfirmingId(null);
@@ -93,25 +97,26 @@ export default function NewFaqForm({
     }
 
     startTransition(async () => {
-      const res = await createFaqItemAction({
-        groupId,
-        question: trimmedQ,
-        answer: trimmedA,
-      });
-
-      if (!res.ok) {
-        setError(res.error || 'Failed to save question');
+      let saved;
+      try {
+        saved = await faqApi.createItem({ groupId, question: trimmedQ, answer: trimmedA });
+      } catch (err) {
+        const fields = err instanceof ApiError ? Object.values(err.fieldErrors()) : [];
+        setError(
+          fields.length ? fields.join(' ') : err instanceof Error ? err.message : 'Failed to save question',
+        );
         return;
       }
 
       const groupObj = groups.find((g) => g.id === groupId);
       const newItem: AddedQuestion = {
-        id: res.id ?? `draft-${Date.now()}`,
+        id: saved.id,
         groupId,
         groupTitle: groupObj?.title ?? 'Section',
-        question: trimmedQ,
-        /* The server's copy, not the browser's — see createFaqItemAction. */
-        answer: res.answer ?? '',
+        question: saved.question,
+        /* The backend's cleaned copy, not the browser's: this list renders
+           it as HTML, so it must be markup that passed the allowlist. */
+        answer: saved.answer,
       };
 
       // Add to list
@@ -123,12 +128,7 @@ export default function NewFaqForm({
       setAnswer('');
       setEditorKey((k) => k + 1);
 
-      // If reached maximum 10, close form
-      if (addedList.length + 1 >= MAX_FAQ_PER_PAGE) {
-        setIsFormOpen(false);
-      } else {
-        setIsFormOpen(false);
-      }
+      setIsFormOpen(false);
     });
   };
 
@@ -195,7 +195,7 @@ export default function NewFaqForm({
                           >
                             Edit question details ↗
                           </Link>
-                          {mayWrite && (confirmingId === item.id ? (
+                          {mayDelete && (confirmingId === item.id ? (
                             <>
                               <button
                                 type="button"

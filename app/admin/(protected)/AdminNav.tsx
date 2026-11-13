@@ -33,6 +33,10 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
     return {
       className: `${styles.navLink} ${active ? styles.active : ''}`,
       'aria-current': active ? ('page' as const) : undefined,
+      /* No background prefetch: admin pages are per-user and always fetched
+         fresh, so prefetching every sidebar link on each page view only
+         multiplied backend calls (and tripped its rate limit). */
+      prefetch: false,
     };
   };
 
@@ -50,6 +54,12 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
             <rect x="3" y="14" width="7" height="7" rx="1.5" />
           </svg>
           <span>Dashboard</span>
+        </Link>
+        <Link {...link('/admin/activity')} href="/admin/activity">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+          <span>Activity</span>
         </Link>
       </div>
 

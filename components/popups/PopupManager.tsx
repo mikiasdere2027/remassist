@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { api } from '@/lib/api/client';
+import type { LivePopup } from '@/lib/api/popups';
 import { track } from '@/lib/analytics/events';
 import { popupAppliesTo } from '@/lib/popups/placement';
 import styles from './PopupManager.module.css';
@@ -11,11 +13,11 @@ import styles from './PopupManager.module.css';
  * The public popup ad renderer.
  *
  * Mounted once in the root layout, this fetches the currently-live popups
- * (published and inside their schedule — the /api/popups route does the
- * filtering that can only happen against the database) and shows the first one
+ * (published and inside their schedule — GET /api/v1/public/popups, the
+ * backend, does the schedule filtering) and shows the first one
  * that applies to the page the visitor is actually on. "Applies" means the
  * popup's placement matches the pathname, or it is placed "everywhere". The
- * route is fetched rather than the popup rendered into the page so the
+ * list is fetched rather than the popup rendered into the page so the
  * marketing pages stay prerendered — an ad slot does not make a static page
  * dynamic, and whichever URL the visitor landed on decides the placement, not
  * the page we happened to bake it into.
@@ -50,25 +52,8 @@ import styles from './PopupManager.module.css';
  * presses it wants the thing gone, modal or not.
  */
 
-interface ActivePopup {
-  id: string;
-  title: string;
-  message: string;
-  image: string | null;
-  ctaLabel: string;
-  ctaHref: string;
-  campaign: string;
-  trackingKey: string;
-  placement: string;
-  template: string;
-  delaySeconds: number;
-  displaySeconds: number | null;
-}
-
-/** The key the API answers with; kept in sync with app/api/popups/route.ts. */
-interface PopupsPayload {
-  popups: ActivePopup[];
-}
+/** One live popup, as GET /v1/public/popups returns it. */
+type ActivePopup = LivePopup;
 
 const SEEN = 'remassist:popup-seen:';
 
@@ -125,11 +110,11 @@ export default function PopupManager() {
   }, [current, cancelTimers]);
 
   /* Fetch the live list once, when the component first mounts. The schedule
-     filter runs in the route; the placement filter runs here per path. */
+     filter runs in the backend; the placement filter runs here per path. */
   useEffect(() => {
     let alive = true;
-    fetch('/api/popups')
-      .then((r) => (r.ok ? r.json() : { popups: [] }) as Promise<PopupsPayload>)
+    api
+      .get<{ popups: LivePopup[] }>('/public/popups')
       .then((data) => {
         if (alive) setLoaded(data.popups ?? []);
       })

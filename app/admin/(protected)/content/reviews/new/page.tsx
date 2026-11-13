@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import { asc } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { reviewSources } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
+import { apiServer } from '@/lib/api/server';
+import type { AdminReviewSource } from '@/lib/api/reviews';
 import { canEditContent } from '@/lib/auth/roles';
 import AdminTopbar from '../../../AdminTopbar';
 import NewReviewForm from './NewReviewForm';
@@ -16,9 +15,9 @@ import styles from '../../../../admin.module.css';
  * dropdown chooses Trustpilot or Google; the headline the different sources
  * print is handled by the picker's headline field.
  *
- * The form itself is a client component (NewReviewForm). It is a
- * `useActionState` form so a refused save returns the error to the fields as
- * typed rather than reloading the page and losing the quote.
+ * The form itself is a client component (NewReviewForm) that posts to the API,
+ * so a refused save shows the error beside the fields as typed rather than
+ * reloading the page and losing the quote.
  *
  * Laid out as the team member editor and the rates add page are: back button
  * on its own row above the card, one white form card under a heading. Three
@@ -27,7 +26,7 @@ import styles from '../../../../admin.module.css';
  *
  * Whatever the source, the review is saved hidden — publishing from the list
  * happens only after the transcription has been checked against the original,
- * and addReview enforces that (published: false).
+ * and the API enforces that (POST /admin/reviews always creates it hidden).
  */
 export const dynamic = 'force-dynamic';
 
@@ -46,24 +45,7 @@ export default async function NewReviewPage({
   const [user, sp] = await Promise.all([requireUser(), searchParams]);
   const mayWrite = canEditContent(user.role);
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <AdminTopbar title="Add review" subtitle={SUBTITLE} />
-        <div className={styles.view}>
-          <BackRow />
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there is nothing to
-            edit.
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const db = getDb();
-  const sources = await db.select().from(reviewSources).orderBy(asc(reviewSources.sortOrder));
+  const sources = await apiServer<AdminReviewSource[]>('/admin/reviews/sources');
 
   /* A source from the query string is only honoured if it names one that
      exists; the dropdown itself switches selection, so this is just the

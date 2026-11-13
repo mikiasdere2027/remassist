@@ -1,4 +1,3 @@
-import { listFields } from '@/lib/blog/completeness';
 import { templateNeedsImage, templateShowsCopy } from './templates';
 
 /**
@@ -62,7 +61,8 @@ export function missingForPopupPublish(popup: PopupForPublish): string[] {
     .map((f) => f.label);
 }
 
-/** Sentence-ready: "Title, Message and CTA link". Reuses the blog's joiner. */
+/** Sentence-ready: "Title, Message and CTA link". */
 export function listMissing(labels: string[]): string {
-  return listFields(labels);
+  if (labels.length <= 1) return labels.join('');
+  return `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`;
 }

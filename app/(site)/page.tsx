@@ -28,8 +28,8 @@ export const metadata: Metadata = {
  * finder has to land after the reader has seen tiers and pricing context.
  */
 export default async function Home() {
-  /* The team rail needs DB-backed members; without a database the loader falls
-     back to the content seed, so this value is never empty on a real build. */
+  /* Published members from the backend; if it can't be reached the loader
+     falls back to the content seed, so this value is never empty on a build. */
   const teamMembers = await getTeamMembers();
 
   return (

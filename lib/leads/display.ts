@@ -9,9 +9,6 @@ import { QUIZ } from '@/lib/quiz/quiz';
  * form starts sending.
  */
 
-export const LEAD_STATUSES = ['new', 'contacted', 'qualified', 'won', 'lost', 'spam'] as const;
-export type LeadStatus = (typeof LEAD_STATUSES)[number];
-
 export const SOURCE_LABELS: Record<string, string> = {
   qualify_quiz: 'Fit finder',
   contact_form: 'Contact form',
@@ -139,20 +136,4 @@ export function formatRelativeTime(d: Date | string | null | undefined, now = ne
 
   const diffYears = Math.floor(diffDays / 365);
   return `${diffYears} y ago`;
-}
-
-/**
- * RFC 4180 CSV escaping.
- *
- * Not optional here: lead messages routinely contain commas, quotes and hard
- * newlines, and an unescaped one silently shifts every later column in the row.
- */
-export function csvCell(v: unknown): string {
-  if (v === null || v === undefined) return '';
-  const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
-  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
-export function csvRow(cells: unknown[]): string {
-  return cells.map(csvCell).join(',');
 }

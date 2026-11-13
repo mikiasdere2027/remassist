@@ -7,9 +7,9 @@ import styles from '../../../../admin.module.css';
  * The source dropdown on the Add review page.
  *
  * Client for one reason: which source is selected decides whether the headline
- * field (Trustpilot only) is shown. The selection still rides the form as a
- * normal `name="source"` control, so no routing is involved — only which
- * fields are on screen changes.
+ * field (Trustpilot only) is shown. No routing is involved — only which
+ * fields are on screen changes. The headline value is owned by the form, which
+ * only sends it for Trustpilot.
  *
  * Dressed as .selectField rather than a bare .control select, the same as the
  * dropdowns on the FAQ, catalog and leads screens: same box, but the native
@@ -19,10 +19,16 @@ export default function ReviewSourcePicker({
   sources,
   value,
   onChange,
+  headline,
+  onHeadlineChange,
+  headlineError,
 }: {
   sources: Array<{ source: string }>;
   value: string;
   onChange?: (source: string) => void;
+  headline: string;
+  onHeadlineChange: (headline: string) => void;
+  headlineError?: string;
 }) {
   return (
     <div className={styles.formGrid2}>
@@ -52,10 +58,18 @@ export default function ReviewSourcePicker({
             <label className={styles.memberFieldLabel} htmlFor="nhd">
               Headline (optional)
             </label>
-            <input className={styles.memberFieldInput} id="nhd" name="headline" maxLength={200} />
+            <input
+              className={styles.memberFieldInput}
+              id="nhd"
+              name="headline"
+              maxLength={200}
+              value={headline}
+              onChange={(e) => onHeadlineChange(e.target.value)}
+            />
             <span className={styles.memberFieldHelper}>
               The bold line Trustpilot prints above the review
             </span>
+            {headlineError && <span className={styles.fieldErr}>{headlineError}</span>}
           </>
         ) : (
           <>

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import styles from './ContactRail.module.css';
 import { attributionForSubmit } from '@/lib/analytics/attribution';
+import { submitLead } from '@/lib/api/leads';
 import { track } from '@/lib/analytics/events';
 import { BOOK_URL } from '@/lib/nav';
 
@@ -92,35 +93,31 @@ export default function ContactRailForm() {
     ].filter(Boolean).join('\n');
 
     try {
-      const res = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          email: b.email,
-          firstName: b.first || undefined,
-          lastName: b.last || undefined,
-          phone: b.phone || undefined,
-          company: b.company || undefined,
-          country: b.country || undefined,
-          service: b.service || undefined,
-          /* Still sent alongside the discrete fields: the Slack notification
-             and the mailto fallback both render this as the human summary. */
-          message: message || undefined,
-          consent: fd.get('consent') === 'yes',
-          /* Everything the visitor actually submitted, so a field added to this
-             form later is readable in admin without a migration first. */
-          rawFields: Object.fromEntries(
-            [...fd.entries()]
-              .filter(([k]) => k !== 'company_website')
-              .map(([k, v]) => [k, String(v)]),
-          ),
-          honey: get('company_website') || undefined,
-          source: 'contact_form',
-          page: window.location.href,
-          attribution: attributionForSubmit(),
-        }),
+      /* Any failure (validation, rate limit, API down) falls back to email. */
+      await submitLead({
+        email: b.email,
+        firstName: b.first || undefined,
+        lastName: b.last || undefined,
+        phone: b.phone || undefined,
+        company: b.company || undefined,
+        country: b.country || undefined,
+        service: b.service || undefined,
+        /* Still sent alongside the discrete fields: the Slack notification
+           and the mailto fallback both render this as the human summary. */
+        message: message || undefined,
+        consent: fd.get('consent') === 'yes',
+        /* Everything the visitor actually submitted, so a field added to this
+           form later is readable in admin without a migration first. */
+        rawFields: Object.fromEntries(
+          [...fd.entries()]
+            .filter(([k]) => k !== 'company_website')
+            .map(([k, v]) => [k, String(v)]),
+        ),
+        honey: get('company_website') || undefined,
+        source: 'contact_form',
+        page: window.location.href,
+        attribution: attributionForSubmit(),
       });
-      if (!res.ok) throw new Error(String(res.status));
       track('generate_lead', { lead_source: 'contact_form', has_quiz: false });
       setStatus('sent');
     } catch {

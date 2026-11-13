@@ -10,9 +10,9 @@ _Last updated: 2026-11-12_
 
 ## 1. Where we are vs. where we're going
 
-**Today** this app is full-stack: it renders pages *and* talks to Postgres
-directly (Drizzle), runs admin auth (Auth.js), handles uploads to disk, and
-receives leads through its own `app/api` routes and server actions.
+**Before 2026-11-13** this app was full-stack: it talked to Postgres directly
+(Drizzle), ran admin auth (Auth.js), stored uploads on disk and received leads
+through its own `app/api` routes. All of that now lives in the backend.
 
 **Target:** this app becomes a **client of the NestJS API**
 (`remassist-backend`, Drizzle + PostgreSQL in Docker, Cloudinary for uploads). It keeps:
@@ -81,14 +81,19 @@ Everything that touches the database or the server-side auth today:
   calls a revalidation route when content changes.
 - `API_URL` must be set at build time (rewrites are compiled) and at run time.
 
-### Slice status
+### Slice status — all wired (2026-11-13)
 
 | Slice | Status |
 |---|---|
-| Auth + users (sign-in, sign-out, forgot/reset password, invitations, users & roles, change password) | ✅ wired 2026-11-13 — Auth.js, emailed codes, email verification and the allowlist deleted; tested end to end |
-| Leads + quiz + dashboard | next |
-| FAQ, posts, reviews, team, popups, catalog | after |
-| Activity log screen | with leads/dashboard |
+| Auth + users | ✅ |
+| Leads, quiz, dashboard, activity log (new page) | ✅ — public forms post through `/api/v1`; quiz quotes come from the server |
+| FAQ, posts, reviews, team, popups, catalog/rates | ✅ — public pages read via `apiPublic` (cache tags + seed fallback) and refresh on edit |
+| Old data layer | ✅ deleted: `db/`, `drizzle.config.ts`, `app/api/{leads,quiz,popups,auth}`, `app/uploads`, `lib/uploads`, server actions, Auth.js |
+
+Verified in a real browser with both apps running: every admin page (1280px
+and 390px), sign-in/invite/reset flows, a published FAQ answer and a changed
+rate appearing on the public site without a rebuild, a lead reaching the admin
+and the activity log, per-visitor rate limits through the proxy.
 
 ## 4. Hardcoded content that should come from the CMS
 

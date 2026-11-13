@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { formatPostDate } from '@/lib/blog/display';
 import type { ArticleLayout } from '@/lib/blog/article-layout';
-import type { FaqEntry } from '@/lib/faq/content';
 import { answerHtml } from '@/lib/content/sanitize';
 import styles from './page.module.css';
 
@@ -55,7 +54,8 @@ export default function ArticleView({
   /** Sanitized HTML. The caller owns that — see the note in page.tsx. */
   bodyHtml: string;
   layout?: ArticleLayout;
-  existingFaq?: FaqEntry[];
+  /** Central FAQ entries the article embeds; answers are sanitised HTML. */
+  existingFaq?: Array<{ question: string; answer: string }>;
   preview?: boolean;
 }) {
   const headings = headingsFrom(bodyHtml);

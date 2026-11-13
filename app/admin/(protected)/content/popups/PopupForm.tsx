@@ -1,8 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useMemo, useState } from 'react';
-import { missingForPopupPublish } from '@/lib/popups/completeness';
+import { useRouter } from 'next/navigation';
+import { useMemo, useState, type FormEvent } from 'react';
+import ImageUploadField from '@/components/admin/ImageUploadField';
+import { api } from '@/lib/api/client';
+import { ApiError } from '@/lib/api/errors';
+import {
+  isoToLocal,
+  localToIso,
+  missingFromError,
+  type AdminPopup,
+  type PopupInput,
+} from '@/lib/api/popups';
+import { listMissing, missingForPopupPublish } from '@/lib/popups/completeness';
 import { POPUP_PLACEMENT_LABEL, POPUP_PLACEMENT_VALUES } from '@/lib/popups/placement';
 import {
   POPUP_TEMPLATE_BLURB,
@@ -12,9 +23,6 @@ import {
   templateShowsCopy,
   type PopupTemplate,
 } from '@/lib/popups/templates';
-import { addPopup, savePopup } from './actions';
-import { POPUP_ERR } from './messages';
-import ImageField from '../posts/ImageField';
 import Req from '../../RequiredMark';
 import styles from '../../../admin.module.css';
 
@@ -27,15 +35,19 @@ import styles from '../../../admin.module.css';
  * posts editor. Each panel stays mounted, hidden with `display` rather than
  * unmounted, so a half-typed field survives a tab switch.
  *
- * A client component for the same reason PostForm is: the publish gate needs
- * the values while they are being typed, and the image upload has to stage a
- * file locally before the server ever sees it. The form still posts to the
- * same server actions — `action={addPopup | savePopup}` on a plain <form> —
- * so validation, the unique tracking key and the disk write are unchanged and
- * unmoved.
+ * A client component: the publish gate needs the values while they are being
+ * typed. Saving goes to the backend (POST/PATCH /v1/admin/popups), which
+ * enforces the same rules — completeness for the template, the unique tracking
+ * key, the http(s) CTA link, end-after-start — and answers with the field that
+ * failed, shown beside it. The image uploads straight to Cloudinary
+ * (ImageUploadField) and the form saves the resulting URL.
  *
- * Publish is gated on lib/popups/completeness.ts, the same list the action
- * enforces, so the note and the server's answer cannot disagree — and each
+ * Schedule times are typed in the editor's own zone (datetime-local) and sent
+ * as ISO instants (toISOString), which is what the backend requires.
+ *
+ * Publish is gated on lib/popups/completeness.ts, a mirror of the backend's
+ * list (src/modules/popups/completeness.ts), so the note and the server's
+ * answer agree — and each
  * tab's pill carries its own missing count, so the field you still need is
  * findable without reading the note.
  *
@@ -46,27 +58,8 @@ import styles from '../../../admin.module.css';
  * asking for them would be asking for copy nobody will ever read; it wants the
  * artwork instead, and the headline stays because it becomes the image's alt
  * text. Hiding a field also stops it being counted as missing, which is the
- * same rule the action applies, from the same list.
+ * same rule the backend applies.
  */
-
-export type PopupFormValues = {
-  id: string;
-  name: string;
-  title: string;
-  message: string;
-  image: string;
-  ctaLabel: string;
-  ctaHref: string;
-  campaign: string;
-  trackingKey: string;
-  placement: string;
-  template: string;
-  startsAt: string;
-  endsAt: string;
-  delaySeconds: number;
-  displaySeconds: number | null;
-  published: boolean;
-};
 
 const MAX = {
   name: 120,
@@ -78,55 +71,41 @@ const MAX = {
   trackingKey: 120,
 } as const;
 
-/** One staged upload: the object URL for the preview, and the file's name. */
-type Staged = { url: string; name: string } | null;
-
 export default function PopupForm({
-  mode,
+  popup,
   canEdit,
-  values,
 }: {
-  mode: 'new' | 'edit';
+  /** null for New popup. */
+  popup: AdminPopup | null;
   canEdit: boolean;
-  values: PopupFormValues;
 }) {
-  const [name, setName] = useState(values.name);
-  const [title, setTitle] = useState(values.title);
-  const [message, setMessage] = useState(values.message);
-  /* The stored image only feeds the preview's fallback. It has no setter:
-     the value that reaches the action is either the kept path or a staged
-     upload's new file, so typing never changes it. */
-  const image = values.image;
-  const [ctaLabel, setCtaLabel] = useState(values.ctaLabel);
-  const [ctaHref, setCtaHref] = useState(values.ctaHref);
-  const [campaign, setCampaign] = useState(values.campaign);
-  const [trackingKey, setTrackingKey] = useState(values.trackingKey);
-  const [placement, setPlacement] = useState(values.placement);
-  const [template, setTemplate] = useState(values.template);
-  const [startsAt, setStartsAt] = useState(values.startsAt);
-  const [endsAt, setEndsAt] = useState(values.endsAt);
-  const [delaySeconds, setDelaySeconds] = useState(String(values.delaySeconds));
+  const router = useRouter();
+  const mode = popup ? 'edit' : 'new';
+  const [name, setName] = useState(popup?.name ?? '');
+  const [title, setTitle] = useState(popup?.title ?? '');
+  const [message, setMessage] = useState(popup?.message ?? '');
+  const [image, setImage] = useState<string | null>(popup?.image ?? null);
+  const [ctaLabel, setCtaLabel] = useState(popup?.ctaLabel ?? '');
+  const [ctaHref, setCtaHref] = useState(popup?.ctaHref ?? '');
+  const [campaign, setCampaign] = useState(popup?.campaign ?? '');
+  const [trackingKey, setTrackingKey] = useState(popup?.trackingKey ?? '');
+  const [placement, setPlacement] = useState(popup?.placement ?? 'everywhere');
+  const [template, setTemplate] = useState(popup?.template ?? 'corner');
+  const [startsAt, setStartsAt] = useState(isoToLocal(popup?.startsAt));
+  const [endsAt, setEndsAt] = useState(isoToLocal(popup?.endsAt));
+  const [delaySeconds, setDelaySeconds] = useState(String(popup?.delaySeconds ?? 1));
   const [displaySeconds, setDisplaySeconds] = useState(
-    values.displaySeconds === null ? '' : String(values.displaySeconds),
+    popup?.displaySeconds == null ? '' : String(popup.displaySeconds),
   );
 
-  const [staged, setStaged] = useState<Staged>(null);
-  const [cover, setCover] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
+  const [errs, setErrs] = useState<Record<string, string>>({});
 
-  /** Stage a picked file so the preview can show it before it is uploaded. */
-  const stage = (file: File | null) => {
-    if (cover === file) return;
-    if (staged?.url) URL.revokeObjectURL(staged.url);
-    setCover(file);
-    setStaged(file ? { url: URL.createObjectURL(file), name: file.name } : null);
-  };
+  const hasImage = Boolean(image);
 
-  /* Whether there is artwork at all: a file picked in this session counts
-     before it is uploaded, which is what the action decides on too. */
-  const hasImage = Boolean(staged || image);
-
-  /** The same list the publish action enforces, so the note and the server
-      cannot disagree. Which fields it contains follows the template. */
+  /** The same list the backend enforces, so the note and the server agree.
+      Which fields it contains follows the template. */
   const missing = useMemo(
     () =>
       missingForPopupPublish({
@@ -143,7 +122,7 @@ export default function PopupForm({
     [name, title, message, hasImage, ctaLabel, ctaHref, campaign, trackingKey, template],
   );
   const ready = missing.length === 0;
-  const gateText = ready ? null : `Not ready to publish. Still needed: ${missing.join(', ')}.`;
+  const gateText = ready ? null : `Still needed: ${listMissing(missing)}.`;
 
   /* Which required fields live on which tab, so each tab's pill can carry its
      own missing count. Mirrors lib/popups/completeness.ts — if a field moves,
@@ -168,17 +147,80 @@ export default function PopupForm({
   const showsCopy = templateShowsCopy(template);
   const needsImage = templateNeedsImage(template);
 
-  /* The action talks to the form while it is still mounted: a refused save
-     returns { error } into this state, so the complaint shows up beside the
-     fields exactly as they were typed. See the note on PopupActionState. */
-  const [actionState, formAction, isPending] = useActionState(
-    mode === 'new' ? addPopup : savePopup,
-    { error: undefined },
-  );
-  const submitError =
-    actionState.error && actionState.error in POPUP_ERR
-      ? POPUP_ERR[actionState.error as keyof typeof POPUP_ERR]
-      : null;
+  /** What the backend receives: datetime-local → ISO, '' → null. */
+  function body(): PopupInput {
+    const delay = Number(delaySeconds);
+    return {
+      name,
+      title,
+      message,
+      image,
+      ctaLabel,
+      ctaHref,
+      campaign,
+      trackingKey,
+      placement,
+      template,
+      startsAt: localToIso(startsAt),
+      endsAt: localToIso(endsAt),
+      delaySeconds: Number.isFinite(delay) ? delay : 1,
+      displaySeconds: displaySeconds.trim() === '' ? null : Number(displaySeconds),
+    };
+  }
+
+  /** One call to the backend; a refusal stays on screen with the fields intact. */
+  async function run(call: () => Promise<string | void>) {
+    setBusy(true);
+    setNotice(null);
+    setErrs({});
+    try {
+      const ok = await call();
+      if (ok) setNotice({ tone: 'ok', text: ok });
+    } catch (err) {
+      const stillNeeded = missingFromError(err);
+      if (err instanceof ApiError) setErrs(err.fieldErrors());
+      setNotice({
+        tone: 'err',
+        text: stillNeeded.length
+          ? `Not saved — still needed: ${listMissing(stillNeeded)}.`
+          : err instanceof ApiError && err.issues.length
+            ? err.issues.map((i) => i.message).join(' ')
+            : err instanceof Error
+              ? err.message
+              : 'Something went wrong.',
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function save(e?: FormEvent<HTMLFormElement>) {
+    e?.preventDefault();
+    return run(async () => {
+      if (!popup) {
+        const created = await api.post<AdminPopup>('/admin/popups', body());
+        router.push(`/admin/content/popups/${created.id}?created=1`);
+        return;
+      }
+      await api.patch<AdminPopup>(`/admin/popups/${popup.id}`, body());
+      router.refresh();
+      return 'Saved.';
+    });
+  }
+
+  /** Publish saves what is on screen too; suspend changes nothing else. */
+  const setPublished = (next: boolean) =>
+    run(async () => {
+      if (!popup) return;
+      await api.patch<AdminPopup>(
+        `/admin/popups/${popup.id}`,
+        next ? { ...body(), published: true } : { published: false },
+      );
+      router.refresh();
+      return next
+        ? 'Saved and published — it can now appear on its placement (inside its schedule).'
+        : 'Suspended. Nothing was deleted — the draft is kept.';
+    });
 
   return (
     <>
@@ -233,32 +275,53 @@ export default function PopupForm({
               className={`${styles.btn} ${styles.btnGhost}`}
               type="submit"
               form="popup-form"
-              disabled={isPending}
+              disabled={busy}
             >
               {mode === 'new' ? 'Create draft' : 'Save changes'}
             </button>
+            {popup && (
+              <button
+                className={`${styles.btn} ${popup.published ? styles.btnGhost : styles.btnPrimary}`}
+                type="button"
+                onClick={() => setPublished(!popup.published)}
+                disabled={busy || (!popup.published && !ready)}
+                title={!popup.published && !ready ? gateText ?? undefined : undefined}
+              >
+                {popup.published ? 'Suspend' : 'Save & publish'}
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {gateText && canEdit && !values.published && (
+      {gateText && canEdit && !popup?.published && (
         <p className={styles.publishGate} role="status">
           <strong>Not ready to publish.</strong> {gateText}
         </p>
       )}
 
-      {!canEdit && <p className={styles.panelNote}>Only an editor may create or change a popup.</p>}
-
-      {/* A refused save shows here, typed fields intact — the action returns an
-          error to the mounted form rather than redirecting and wiping it. */}
-      {submitError && (
-        <p className={`${styles.signinMsg} ${styles.msgErr}`} role="status">
-          {submitError}
+      {popup && popup.published && popup.state !== 'live' && (
+        <p className={styles.publishGate} role="status">
+          <strong>{popup.state === 'scheduled' ? 'Scheduled.' : 'Ended.'}</strong>{' '}
+          {popup.state === 'scheduled'
+            ? 'Published, but its start time is still ahead — it shows nowhere until then.'
+            : 'Published, but its end time has passed — it shows nowhere. Change the schedule or suspend it.'}
         </p>
       )}
 
-      <form id="popup-form" action={formAction}>
-        {values.id && <input type="hidden" name="id" value={values.id} />}
+      {!canEdit && <p className={styles.panelNote}>Only an editor may create or change a popup.</p>}
+
+      {/* A refused save shows here, typed fields intact. */}
+      {notice && (
+        <p
+          className={`${styles.signinMsg} ${notice.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
+          role={notice.tone === 'ok' ? 'status' : 'alert'}
+        >
+          {notice.text}
+        </p>
+      )}
+
+      <form id="popup-form" onSubmit={save}>
 
         <section
           className={styles.panel}
@@ -292,6 +355,7 @@ export default function PopupForm({
               <span className={styles.memberFieldHelper}>
                 Your label for the list — visitors never see it.
               </span>
+              <Err msg={errs.name} />
             </div>
 
             <div className={styles.memberFieldGroup}>
@@ -313,6 +377,7 @@ export default function PopupForm({
               <span className={styles.memberFieldHelper}>
                 The grouping label shared by every popup in one push.
               </span>
+              <Err msg={errs.campaign} />
             </div>
 
             <div className={styles.memberFieldGroup}>
@@ -335,6 +400,7 @@ export default function PopupForm({
                 Lowercase letters, numbers and hyphens. This is what analytics
                 reports will call the popup — it has to be unique.
               </span>
+              <Err msg={errs.trackingKey} />
             </div>
 
             <div className={styles.memberFieldGroup}>
@@ -451,17 +517,18 @@ export default function PopupForm({
                 {message.length} / {MAX.message}
               </span>
             </div>
+            <Err msg={errs.message} />
           </div>
 
-          <ImageField
-            name="image"
+          <ImageUploadField
             label={needsImage ? 'Image' : 'Image (optional)'}
+            kind="popups"
             value={image}
-            preview={staged?.url ?? null}
-            fileName={staged?.name ?? null}
-            onFileChange={stage}
+            onChange={setImage}
             canEdit={canEdit}
+            required={needsImage}
           />
+          <Err msg={errs.image} />
           {needsImage && (
             <p className={styles.memberFieldHelper}>
               The whole popup. It is shown at its own proportions, centred over
@@ -491,6 +558,7 @@ export default function PopupForm({
               <span className={styles.memberFieldHelper}>
                 The button text — one or two words.
               </span>
+              <Err msg={errs.ctaLabel} />
             </div>
 
             <div className={styles.memberFieldGroup}>
@@ -514,6 +582,7 @@ export default function PopupForm({
                   ? 'Where the button goes: a page on the site or an external URL.'
                   : 'Where the image goes when it is clicked: a page on the site or an external URL.'}
               </span>
+              <Err msg={errs.ctaHref} />
             </div>
           </div>
           </div>
@@ -549,6 +618,7 @@ export default function PopupForm({
               <span className={styles.memberFieldHelper}>
                 When it may begin showing. Empty = as soon as it is published.
               </span>
+              <Err msg={errs.startsAt} />
             </div>
 
             <div className={styles.memberFieldGroup}>
@@ -567,6 +637,7 @@ export default function PopupForm({
               <span className={styles.memberFieldHelper}>
                 When it stops showing. Empty = until you suspend it.
               </span>
+              <Err msg={errs.endsAt} />
             </div>
 
             <div className={styles.memberFieldGroup}>
@@ -591,6 +662,7 @@ export default function PopupForm({
               <span className={styles.memberFieldHelper}>
                 How long after the page loads before it appears.
               </span>
+              <Err msg={errs.delaySeconds} />
             </div>
 
             <div className={styles.memberFieldGroup}>
@@ -615,6 +687,7 @@ export default function PopupForm({
               <span className={styles.memberFieldHelper}>
                 Leave empty to stay until the visitor closes it.
               </span>
+              <Err msg={errs.displaySeconds} />
             </div>
           </div>
           </div>
@@ -666,4 +739,9 @@ function Count({ n, max }: { n: number; max: number }) {
       {n} / {max}
     </span>
   );
+}
+
+/** The backend's complaint about one field, under that field. */
+function Err({ msg }: { msg?: string }) {
+  return msg ? <p className={styles.fieldErr} role="alert">{msg}</p> : null;
 }

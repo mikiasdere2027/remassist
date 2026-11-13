@@ -1,9 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { postBySlug, publishedPosts } from '@/lib/blog/content';
-import { cleanHtml } from '@/lib/content/sanitize';
-import { parseArticleLayout } from '@/lib/blog/article-layout';
-import { getFaqByIds } from '@/lib/faq/content';
 import { pageOg } from '@/lib/site';
 import { BlogPostingJsonLd } from '@/components/layout/JsonLd';
 import ArticleChrome from './ArticleChrome';
@@ -22,7 +19,7 @@ export async function generateStaticParams() {
 }
 
 /**
- * True, now that posts come from the database.
+ * True, now that posts come from the API.
  *
  * It was false while the post list was a compile-time constant, and that was
  * right then: every slug was known at build time and anything else was a typo.
@@ -70,9 +67,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { slug } = await params;
   const found = await postBySlug(slug);
   if (!found) notFound();
-  const { post, body, articleLayout } = found;
-  const layout = parseArticleLayout(articleLayout);
-  const existingFaq = await getFaqByIds(layout.existingFaqIds ?? []);
+  /* The API returns the body sanitised, the layout parsed and the embedded
+     central FAQ entries resolved (published only, answers as HTML). */
+  const { post, body, articleLayout, existingFaq } = found;
 
   return (
     <>
@@ -82,10 +79,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           behind it, so every post written in the admin published as unstyled
           text under no headline. ArticleView is that page built from the row.
 
-          The stored markup was sanitized when it was saved; cleanHtml here is a
-          second pass, so a row that predates the editor still cannot inject
-          anything. It stays on this side of the component because ArticleView
-          also renders inside the admin, and sanitize-html is server-only. */}
+          The stored markup was sanitized when it was saved, and the backend
+          cleans it again on the way out, so a row that predates the editor
+          still cannot inject anything. */}
       <ArticleView
           post={{
             title: post.title,
@@ -97,8 +93,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             authorName: post.author.name,
             authorAvatar: post.author.avatar,
           }}
-          bodyHtml={cleanHtml(body ?? '')}
-          layout={layout}
+          bodyHtml={body ?? ''}
+          layout={articleLayout}
           existingFaq={existingFaq}
         />
       {/* progress bar, mobile contents drawer, share buttons */}

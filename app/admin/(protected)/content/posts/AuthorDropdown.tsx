@@ -9,7 +9,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import type { AuthorOption } from '@/lib/blog/authors';
+import type { AuthorOption } from '@/lib/api/posts';
 import styles from './AuthorDropdown.module.css';
 
 interface Props {

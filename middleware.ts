@@ -39,10 +39,23 @@ export async function middleware(req: NextRequest) {
   const cookie = req.headers.get('cookie');
   if (!cookie || !cookie.includes('ra_session=')) return toSignIn();
 
+  // Router prefetches: the cookie check is enough. The real navigation (and
+  // the layout's requireUser) still verify the session with the backend.
+  if (req.headers.get('next-router-prefetch') || req.headers.get('purpose') === 'prefetch') {
+    return NextResponse.next();
+  }
+
   let res: Response;
   try {
     res = await fetch(`${API_URL}/v1/admin/auth/me`, {
-      headers: { cookie, accept: 'application/json' },
+      headers: {
+        cookie,
+        accept: 'application/json',
+        // The visitor's address, so per-IP limits apply per visitor.
+        ...(req.headers.get('x-forwarded-for')
+          ? { 'x-forwarded-for': req.headers.get('x-forwarded-for') as string }
+          : {}),
+      },
       cache: 'no-store',
     });
   } catch {

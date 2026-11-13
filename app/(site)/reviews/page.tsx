@@ -299,9 +299,9 @@ function ReviewBand({ source }: { source: Source }) {
 }
 
 /**
- * Prerendered with an hourly backstop. The editor calls revalidatePath on every
- * write, so an edit is visible straight away; this window only covers a change
- * made directly in the database.
+ * Prerendered with an hourly backstop. The backend revalidates the `reviews`
+ * tag on every edit, so an edit is visible straight away; this window only
+ * covers a missed revalidation call.
  */
 export const revalidate = 3600;
 

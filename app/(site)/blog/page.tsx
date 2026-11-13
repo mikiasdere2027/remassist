@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * The index, from the database.
+ * The index, from the backend API (lib/blog/content.ts).
  *
  * It only lists PUBLISHED posts. It used to carry three hand-written cards for
  * articles that were never written, each wearing a "Coming soon" badge — which

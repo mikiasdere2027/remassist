@@ -1,14 +1,15 @@
 import Link from 'next/link';
-import { asc, desc } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { agentTiers, coverageOptions, rateChanges, serviceCategories } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canEditRates } from '@/lib/auth/roles';
+import type {
+  AgentTier,
+  CoverageOption,
+  RateChange,
+  ServiceCategory,
+} from '@/lib/api/catalog';
+import { apiServer } from '@/lib/api/server';
 import { formatDate } from '@/lib/leads/display';
-import {
-  saveAgentTier, saveCoverageOption, setCoverageActive, setTierActive,
-} from './actions';
-import { rateMessage } from './messages';
+import { ConfirmOffRow, EditCoverageRow, EditTierRow } from './RateForms';
 import RowMenu from './RowMenu';
 import AdminTopbar from '../AdminTopbar';
 import InfoTooltip from '../InfoTooltip';
@@ -17,16 +18,13 @@ import styles from '../../admin.module.css';
 /**
  * Rates — the published price list of record.
  *
- * These tables are the single source of truth for the prices shown on the
- * public site. `components/services/SeatTiers.tsx`, `app/services/page.tsx`,
- * and `app/pricing/page.tsx` all read from `agent_tiers` via
- * `lib/rates/getPublishedTiers()` at render time — an edit here is live on
- * the next page load.
+ * Read from the backend's catalog module (/v1/admin/catalog/*). The agent
+ * tiers are the source of truth for the rates on the public site:
+ * `lib/rates/getPublishedTiers()` reads GET /v1/public/pricing (cache tag
+ * `pricing`, revalidated by the backend on every change), and /pricing,
+ * SeatTiers and the home page's TiersSection render from it.
  *
- * `lib/quiz/quiz.ts` still carries its own inline rates, guarded by a 432-case
- * parity test. Point it at these tables only with that test green on both sides.
- *
- * Editing is admin-only, and the reasoning is in canEditRates: canEditContent
+ * Editing is admin-only (enforced by the backend too), and the reasoning is in canEditRates: canEditContent
  * is deliberately generous because a wrong word is visible and reversible, and
  * a wrong price is neither. A manager sees this screen with no controls on it,
  * which is the useful half — knowing what a row currently says.
@@ -34,7 +32,7 @@ import styles from '../../admin.module.css';
  * Nothing is deleted. The trash icon deactivates, keeping the figure and taking
  * it out of new quotes, because a rate that has been quoted is part of the
  * record of what this business charged. Every write is logged to rate_changes
- * with the editor's name, and the last panel on this page shows that log — a
+ * with the editor's name (by the backend), and a panel on this page shows that log — a
  * promise of an audit trail that cannot be read is not one.
  *
  * The forms live in the row's own place in the table rather than on a page of
@@ -60,9 +58,16 @@ const money = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 });
 
+/** What the screen says after a write — fixed codes from RateForms/RowMenu. */
+const OK = {
+  saved: 'Saved. The public site picks up the new figure straight away.',
+  added: 'Added. It is live in the price list straight away.',
+  deactivated: 'Deactivated. It stops appearing in new quotes; nothing was deleted.',
+  reactivated: 'Back in use. New quotes can reach it again.',
+} as const;
+
 type Search = {
   ok?: string;
-  error?: string;
   /** `coverage:<key>` or `tier:<key>` — the row whose edit form is open. */
   edit?: string;
   /** `coverage:<key>` or `tier:<key>` — the row asking to be deactivated. */
@@ -91,35 +96,19 @@ export default async function RatesPage({
   searchParams: Promise<Search>;
 }) {
   const [user, sp] = await Promise.all([requireUser(), searchParams]);
-  const message = rateMessage(sp.ok, sp.error);
+  const okText = sp.ok && sp.ok in OK ? OK[sp.ok as keyof typeof OK] : null;
   const mayEdit = canEditRates(user.role);
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <Topbar mayEdit={mayEdit} />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so the price list
-            cannot be read.
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const db = getDb();
   const [coverage, tiers, categories, changes] = await Promise.all([
-    db.select().from(coverageOptions).orderBy(asc(coverageOptions.sortOrder)),
-    db.select().from(agentTiers).orderBy(asc(agentTiers.sortOrder)),
-    db.select().from(serviceCategories).orderBy(asc(serviceCategories.sortOrder)),
-    db.select().from(rateChanges).orderBy(desc(rateChanges.changedAt)).limit(LOG_ROWS),
+    apiServer<CoverageOption[]>('/admin/catalog/coverage-options'),
+    apiServer<AgentTier[]>('/admin/catalog/tiers'),
+    apiServer<ServiceCategory[]>('/admin/catalog/service-categories'),
+    apiServer<RateChange[]>(`/admin/catalog/changes?limit=${LOG_ROWS}`),
   ]);
 
   /* A form only opens for somebody who may submit it — otherwise the query
-     string alone would render a manager a set of controls that every action
-     behind them refuses. */
+     string alone would render a manager a set of controls that the backend
+     refuses. */
   const editCoverage = mayEdit ? target(sp.edit, 'coverage') : null;
   const editTier = mayEdit ? target(sp.edit, 'tier') : null;
   const offCoverage = mayEdit ? target(sp.off, 'coverage') : null;
@@ -145,35 +134,17 @@ export default async function RatesPage({
       <Topbar mayEdit={mayEdit} />
 
       <div className={styles.view}>
-        {message && (
-          <p
-            className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
-            role="status"
-          >
-            {message.text}
+        {okText && (
+          <p className={`${styles.signinMsg} ${styles.msgOk}`} role="status">
+            {okText}
           </p>
         )}
 
         {empty && (
           <div className={`${styles.notice} ${styles.section}`}>
             <strong>The price list is empty</strong>
-            Both rate tables have no rows, so the quiz is working from the figures that live
-            inline in <code>lib/quiz/quiz.ts</code> rather than reading these. Run{' '}
-            <code>npm run db:seed</code> to populate them.
-          </div>
-        )}
-
-        {/* Said on the screen rather than only in the tooltip beside the panel
-            title: the risk this warns about is somebody editing a rate,
-            believing the site now quotes it, and repeating the new figure to a
-            prospect. That is not a thing to leave to a hover. */}
-        {!empty && (
-          <div className={`${styles.notice} ${styles.section}`}>
-            <strong>Not connected to the public site yet</strong>
-            These are the figures of record. The site quotes from its own copy of them — the
-            fit finder from <code>lib/quiz/quiz.ts</code>, the published $8 and $11 from the
-            page components — so a change here does not change what a visitor is quoted.
-            Wiring them up is MIGRATION-PLAN §6.3.
+            Both rate tables have no rows, so the public site is showing its seed rates. Run{' '}
+            <code>npm run db:seed</code> in the backend to populate them.
           </div>
         )}
 
@@ -210,8 +181,8 @@ export default async function RatesPage({
             <InfoTooltip
               text={
                 mayEdit
-                  ? 'The price list of record. The public site still carries its own copy of these figures, so an edit here does not change what the site quotes yet. Every change is confirmed once and logged with your name.'
-                  : 'The price list of record. The public site still carries its own copy of these figures, so an edit here does not change what the site quotes yet. Only the admin may change them.'
+                  ? 'The price list of record. Every change is confirmed once, logged with your name, and refreshes the public site.'
+                  : 'The price list of record. Only the admin may change it.'
               }
               position="bottom-left"
               maxWidth={280}
@@ -238,63 +209,14 @@ export default async function RatesPage({
                 <tbody>
                   {coverage.map((c) => {
                     if (editCoverage === c.key) {
-                      return (
-                        <tr key={c.key}>
-                          <td className={styles.editCell} colSpan={5}>
-                            <form className={styles.editForm} action={saveCoverageOption}>
-                              <input type="hidden" name="key" value={c.key} />
-                              <Field label="Label" name="label" formId={`c-${c.key}`} defaultValue={c.label} autoFocus />
-                              <Field
-                                formId={`c-${c.key}`}
-                                label="Long label"
-                                name="longLabel"
-                                defaultValue={c.longLabel}
-                                className={styles.editWide}
-                                hint="How this reads inside a quote sentence"
-                              />
-                              <Field
-                                formId={`c-${c.key}`}
-                                label="Seats"
-                                name="seats"
-                                defaultValue={String(c.seats)}
-                                type="number"
-                                min={1}
-                                max={99}
-                                className={styles.editNarrow}
-                              />
-                              <Field
-                                formId={`c-${c.key}`}
-                                label="Monthly hours"
-                                name="monthlyHours"
-                                defaultValue={String(c.monthlyHours)}
-                                type="number"
-                                min={1}
-                                max={9999}
-                                className={styles.editNarrow}
-                              />
-                              <Confirm id={`c-${c.key}`} />
-                              <div className={styles.rowActions} style={{ padding: 0 }}>
-                                <button
-                                  className={`${styles.btn} ${styles.btnPrimary}`}
-                                  type="submit"
-                                >
-                                  Save option
-                                </button>
-                                <Link className={styles.rowLink} href={listHref}>
-                                  Cancel
-                                </Link>
-                              </div>
-                            </form>
-                          </td>
-                        </tr>
-                      );
+                      return <EditCoverageRow key={c.key} row={c} backHref={listHref} columns={5} />;
                     }
 
                     if (offCoverage === c.key) {
                       return (
-                        <ConfirmOff
+                        <ConfirmOffRow
                           key={c.key}
-                          action={setCoverageActive}
+                          table="coverage"
                           rowKey={c.key}
                           columns={5}
                           backHref={listHref}
@@ -322,7 +244,8 @@ export default async function RatesPage({
                         {mayEdit && (
                           <td>
                             <RowMenu
-                              action={setCoverageActive}
+                              table="coverage"
+                              listHref={listHref}
                               rowKey={c.key}
                               active={c.active}
                               editHref={rowHref(`edit=coverage:${c.key}`)}
@@ -356,8 +279,8 @@ export default async function RatesPage({
             <InfoTooltip
               text={
                 mayEdit
-                  ? 'The price list of record. The public site still carries its own copy of these figures, so an edit here does not change what the site quotes yet. Every change is confirmed once and logged with your name.'
-                  : 'The price list of record. The public site still carries its own copy of these figures, so an edit here does not change what the site quotes yet. Only the admin may change them.'
+                  ? 'The price list of record. Every change is confirmed once, logged with your name, and refreshes the public site.'
+                  : 'The price list of record. Only the admin may change it.'
               }
               position="bottom-left"
               maxWidth={280}
@@ -384,61 +307,14 @@ export default async function RatesPage({
                 <tbody>
                   {tiers.map((t) => {
                     if (editTier === t.key) {
-                      return (
-                        <tr key={t.key}>
-                          <td className={styles.editCell} colSpan={5}>
-                            <form className={styles.editForm} action={saveAgentTier}>
-                              <input type="hidden" name="key" value={t.key} />
-                              <Field
-                                formId={`t-${t.key}`}
-                                label="Tier"
-                                name="label"
-                                defaultValue={t.label}
-                                className={styles.editWide}
-                                autoFocus
-                              />
-                              <Field
-                                formId={`t-${t.key}`}
-                                label="Hourly rate (USD)"
-                                name="hourlyRateUsd"
-                                defaultValue={Number(t.hourlyRateUsd).toFixed(2)}
-                                type="number"
-                                min={0.01}
-                                max={9999}
-                                step={0.01}
-                                className={styles.editNarrow}
-                              />
-                              <Field
-                                formId={`t-${t.key}`}
-                                label="Note"
-                                name="note"
-                                defaultValue={t.note ?? ''}
-                                className={styles.editWide}
-                                hint="What this tier buys, in a salesperson's words"
-                              />
-                              <Confirm id={`t-${t.key}`} />
-                              <div className={styles.rowActions} style={{ padding: 0 }}>
-                                <button
-                                  className={`${styles.btn} ${styles.btnPrimary}`}
-                                  type="submit"
-                                >
-                                  Save tier
-                                </button>
-                                <Link className={styles.rowLink} href={listHref}>
-                                  Cancel
-                                </Link>
-                              </div>
-                            </form>
-                          </td>
-                        </tr>
-                      );
+                      return <EditTierRow key={t.key} row={t} backHref={listHref} columns={5} />;
                     }
 
                     if (offTier === t.key) {
                       return (
-                        <ConfirmOff
+                        <ConfirmOffRow
                           key={t.key}
-                          action={setTierActive}
+                          table="tier"
                           rowKey={t.key}
                           columns={5}
                           backHref={listHref}
@@ -476,7 +352,8 @@ export default async function RatesPage({
                         {mayEdit && (
                           <td>
                             <RowMenu
-                              action={setTierActive}
+                              table="tier"
+                              listHref={listHref}
                               rowKey={t.key}
                               active={t.active}
                               editHref={rowHref(`edit=tier:${t.key}`)}
@@ -653,109 +530,6 @@ function rateOf(row: Record<string, unknown> | null): string | null {
 function hoursOf(row: Record<string, unknown> | null): string | null {
   const v = row?.monthlyHours;
   return typeof v === 'number' ? `${v}` : null;
-}
-
-/** A labelled control, with the hint the field needs and nothing more. */
-function Field({
-  label,
-  name,
-  formId,
-  defaultValue,
-  className = '',
-  hint,
-  ...rest
-}: {
-  label: string;
-  name: string;
-  /** Which form this field belongs to — only ever one row's, and it makes the
-      id unique without putting a value's own text into an attribute that may
-      not contain spaces. Not the HTML `form` attribute, which associates a
-      control with a form elsewhere in the document. */
-  formId: string;
-  defaultValue?: string;
-  className?: string;
-  hint?: string;
-} & React.InputHTMLAttributes<HTMLInputElement>) {
-  const id = `f-${formId}-${name}`;
-  return (
-    <div className={`${styles.field} ${className}`}>
-      <label className={styles.fieldLabel} htmlFor={id}>{label}</label>
-      <input
-        className={styles.control}
-        id={id}
-        name={name}
-        defaultValue={defaultValue}
-        {...rest}
-      />
-      {hint && <span className={styles.panelNote}>{hint}</span>}
-    </div>
-  );
-}
-
-/**
- * The confirmation the caution banner promises.
- *
- * `required` in the browser and re-checked in the action, because a required
- * attribute is a courtesy and not a control.
- */
-function Confirm({ id }: { id: string }) {
-  return (
-    <label className={styles.confirmCheck} htmlFor={`ok-${id}`}>
-      <input type="checkbox" id={`ok-${id}`} name="confirm" value="1" required />
-      <span>
-        I know this changes the price list of record, and that this edit is logged
-        with my name.
-      </span>
-    </label>
-  );
-}
-
-/**
- * Deactivation asks first, in the row's own place.
- *
- * A server-rendered confirm step rather than a browser dialog: this admin ships
- * no client-side JS for its tables, and an unconfirmed price change is the one
- * thing on this screen that should not be one click away.
- */
-function ConfirmOff({
-  action,
-  rowKey,
-  columns,
-  backHref,
-  what,
-  detail,
-  verb,
-}: {
-  action: (formData: FormData) => Promise<void>;
-  rowKey: string;
-  columns: number;
-  backHref: string;
-  what: string;
-  detail: string;
-  verb: string;
-}) {
-  return (
-    <tr>
-      <td className={styles.editCell} colSpan={columns}>
-        <form className={styles.editForm} action={action}>
-          <input type="hidden" name="key" value={rowKey} />
-          <input type="hidden" name="active" value="0" />
-          <p style={{ margin: 0, flex: '1 1 20rem' }}>
-            <strong>{what}</strong>
-            <span className={styles.cellSecondary}>{detail}</span>
-          </p>
-          <div className={styles.rowActions} style={{ padding: 0 }}>
-            <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit" autoFocus>
-              {verb}
-            </button>
-            <Link className={styles.rowLink} href={backHref}>
-              Keep it
-            </Link>
-          </div>
-        </form>
-      </td>
-    </tr>
-  );
 }
 
 /** One of the two table tabs — the same pill the FAQ, reviews and quizzes

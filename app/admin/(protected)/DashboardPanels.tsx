@@ -170,7 +170,7 @@ export function SystemAlerts({ counts }: {
     alerts.push({
       id: 'mail',
       title: 'No email provider is configured',
-      desc: 'Password sign-in only; invitations cannot be sent.',
+      desc: 'New-lead alerts, invitations and password resets are not emailed. Set RESEND_API_KEY on the API server.',
       btnLabel: 'Fix settings',
       href: '/admin/settings',
     });

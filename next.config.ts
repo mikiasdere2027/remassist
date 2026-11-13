@@ -39,13 +39,6 @@ const config: NextConfig = {
   // off would ship uncompressed HTML from the serverless function.
   compress: onVercel,
   experimental: {
-    /* The admin uploads images through server actions (team headshots, blog
-       covers), and the default action body limit is 1 MB — a 2 MB cover would
-       have been refused by the framework before any of our own validation ran,
-       with no message an editor could act on. 6 MB leaves headroom over the
-       4 MB cap in lib/uploads/images.ts, which is where the real limit lives
-       and where the refusal is worded. */
-    serverActions: { bodySizeLimit: '6mb' },
     // Force static generation through a single worker. Next 15's parallel
     // worker pool crashes the V8 heap / child-process spawn on Windows + Node
     // ≥20 (`spawn UNKNOWN`, 0xC0000409). That is a Windows-only fault, and

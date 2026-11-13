@@ -1,13 +1,11 @@
 import Link from 'next/link';
-import { asc } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { reviewSources, reviews } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canEditContent } from '@/lib/auth/roles';
-import { SOURCE_LABEL, Stars, initials } from './display';
-import { saveReviewSource, setReviewPublished } from './actions';
-import { reviewMessage } from './messages';
-import ReviewRowMenu from './RowMenu';
+import { apiServer } from '@/lib/api/server';
+import type { AdminReview, AdminReviewSource } from '@/lib/api/reviews';
+import { SOURCE_LABEL } from './display';
+import ReviewList from './ReviewList';
+import SourceForms from './SourceForms';
 import InfoTooltip from '../../InfoTooltip';
 import AdminTopbar from '../../AdminTopbar';
 import styles from '../../../admin.module.css';
@@ -59,8 +57,9 @@ import styles from '../../../admin.module.css';
  *    has been taken down is still the record of what the site once quoted
  *    somebody as saying.
  *
- * Both roles may edit content; the gate is re-checked inside every action,
- * because a server action renders outside this page.
+ * Both roles may edit content; the backend enforces the same rule on every
+ * call. Reads come from the API fresh (no-store); the Show/Hide and source
+ * forms are client components that call the API and refresh this page.
  */
 export const dynamic = 'force-dynamic';
 
@@ -75,34 +74,17 @@ const SOURCES_TAB = 'sources';
 export default async function ReviewsListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string; tab?: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const [user, sp] = await Promise.all([requireUser(), searchParams]);
-  const message = reviewMessage(sp.ok, sp.error);
   const mayEdit = canEditContent(user.role);
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <Topbar sub="Database not configured" mayEdit={mayEdit} />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there is nothing to
-            edit.
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const db = getDb();
   const [sources, rows] = await Promise.all([
-    db.select().from(reviewSources).orderBy(asc(reviewSources.sortOrder)),
-    /* sortOrder is per source — the index is (source, sort_order) and moveReview
-       only ever swaps siblings — so this order is only meaningful once the rows
-       have been narrowed to one source, which the tab does. */
-    db.select().from(reviews).orderBy(asc(reviews.sortOrder)),
+    apiServer<AdminReviewSource[]>('/admin/reviews/sources'),
+    /* Grouped by source and in sortOrder within each; sortOrder is per source,
+       so this order only means something once narrowed to one, which the tab
+       does. */
+    apiServer<AdminReview[]>('/admin/reviews'),
   ]);
 
   /* A tab from the query string is only honoured if it names a source that
@@ -127,15 +109,6 @@ export default async function ReviewsListPage({
       />
 
       <div className={styles.view}>
-        {message && (
-          <p
-            className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
-            role="status"
-          >
-            {message.text}
-          </p>
-        )}
-
         <div className={styles.filterbar}>
           <div className={styles.filterPills} role="group" aria-label="Choose a review source">
             {sources.map((s) => (
@@ -154,7 +127,7 @@ export default async function ReviewsListPage({
         </div>
 
         {onSources ? (
-          <SourcesTab sources={sources} mayEdit={mayEdit} />
+          <SourceForms sources={sources} mayEdit={mayEdit} />
         ) : (
           <div className={styles.panel}>
             <div className={styles.panelHead}>
@@ -191,43 +164,7 @@ export default async function ReviewsListPage({
                 Use the &ldquo;Add review&rdquo; button above to transcribe the first one.
               </p>
             ) : (
-              items.map((r) => (
-                <div className={styles.review} key={r.id}>
-                  <span
-                    className={`${styles.avatar} ${r.source === 'google' ? styles.avatarAlt : ''}`}
-                    aria-hidden="true"
-                  >
-                    {initials(r.author)}
-                  </span>
-
-                  <div className={styles.reviewMain}>
-                    <Stars rating={r.rating} />
-                    {r.headline && <p className={styles.reviewHead}>{r.headline}</p>}
-                    <p className={styles.reviewText}>&ldquo;{r.body}&rdquo;</p>
-                    <div className={styles.reviewMeta}>
-                      <b>{r.author}</b>
-                      {r.meta && <span>{r.meta}</span>}
-                      <span aria-hidden="true">·</span>
-                      <span>{r.dateText}</span>
-                      <span
-                        className={`${styles.pill} ${r.published ? styles.pillLow : styles.pillMed}`}
-                      >
-                        {r.published ? 'Published' : 'Hidden'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {mayEdit && (
-                    <ReviewRowMenu
-                      id={r.id}
-                      author={r.author}
-                      published={r.published}
-                      show={setReviewPublished}
-                      hide={setReviewPublished}
-                    />
-                  )}
-                </div>
-              ))
+              <ReviewList key={tab} items={items} mayEdit={mayEdit} />
             )}
 
             <div className={styles.panelFoot}>
@@ -241,134 +178,6 @@ export default async function ReviewsListPage({
         )}
       </div>
     </>
-  );
-}
-
-/**
- * The Sources tab: the figures the review cards are printed under.
- *
- * Read-only for a viewer rather than hidden from them. The star score and the
- * footnote explain what is on the public page, so somebody who cannot change
- * them still needs to be able to read them.
- */
-function SourcesTab({
-  sources,
-  mayEdit,
-}: {
-  sources: Array<{
-    source: string;
-    url: string;
-    stars: number;
-    ratingLabel: string;
-    footnote: string | null;
-  }>;
-  mayEdit: boolean;
-}) {
-  return (
-    <div className={styles.sourcesGrid}>
-      {sources.map((s) => {
-        const label = SOURCE_LABEL[s.source] ?? s.source;
-        return (
-          <section className={`${styles.panel} ${styles.section}`} key={s.source}>
-            <div className={styles.panelHead}>
-              <div>
-                <h2 className={styles.panelTitle}>{label}</h2>
-                <p className={styles.panelSub}>
-                  What the reviews page prints above the {label} cards
-                </p>
-              </div>
-              {/* Grouped with the link so the head keeps two items: title on
-                  the left, what-and-where on the right. */}
-              <span className={styles.panelHeadNote}>
-                <a
-                  className={styles.rowLink}
-                  href={s.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  Open the profile ↗
-                </a>
-                <InfoTooltip
-                  text="These are the figures the source publishes, not our summary of the cards — the score worded as it words it, and the footnote every card is read against. The profile link has to resolve: a testimonial citing a source nobody can follow is just a claim."
-                  position="bottom-left"
-                  maxWidth={300}
-                />
-              </span>
-            </div>
-
-            <form className={styles.stackWide} action={saveReviewSource}>
-              <input type="hidden" name="source" value={s.source} />
-              <div className={styles.field}>
-                <label className={styles.fieldLabel} htmlFor={`u-${s.source}`}>
-                  {/* Required and validated as a real URL in saveReviewSource:
-                      a testimonial section citing a source nobody can follow is
-                      just a claim. */}
-                  Link to the source profile
-                </label>
-                <input
-                  className={styles.control}
-                  id={`u-${s.source}`}
-                  name="url"
-                  type="url"
-                  defaultValue={s.url}
-                  required
-                  readOnly={!mayEdit}
-                />
-              </div>
-              <div className={styles.inviteRow} style={{ padding: 0 }}>
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel} htmlFor={`rl-${s.source}`}>
-                    Rating label, as {label} words it
-                  </label>
-                  <input
-                    className={styles.control}
-                    id={`rl-${s.source}`}
-                    name="ratingLabel"
-                    defaultValue={s.ratingLabel}
-                    required
-                    readOnly={!mayEdit}
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel} htmlFor={`st-${s.source}`}>Stars</label>
-                  <input
-                    className={styles.control}
-                    id={`st-${s.source}`}
-                    name="stars"
-                    type="number"
-                    min={1}
-                    max={5}
-                    defaultValue={s.stars}
-                    required
-                    readOnly={!mayEdit}
-                  />
-                </div>
-              </div>
-              <div className={styles.field}>
-                <label className={styles.fieldLabel} htmlFor={`fn-${s.source}`}>
-                  Footnote — anything the reader needs in order to read the cards correctly
-                </label>
-                <textarea
-                  className={styles.textarea}
-                  id={`fn-${s.source}`}
-                  name="footnote"
-                  rows={3}
-                  defaultValue={s.footnote ?? ''}
-                  readOnly={!mayEdit}
-                />
-              </div>
-              {mayEdit && (
-                <div className={styles.rowActions} style={{ padding: 0 }}>
-                  <button className={`${styles.btn} ${styles.btnPrimary}`} type="submit">
-                    Save {label} details
-                  </button>
-                </div>
-              )}
-            </form>
-          </section>
-        );
-      })}
-    </div>
   );
 }
 

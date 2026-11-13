@@ -1,10 +1,8 @@
 import Link from 'next/link';
-import { asc } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { teamMembers } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canEditContent } from '@/lib/auth/roles';
-import { teamMessage } from './messages';
+import { apiServer } from '@/lib/api/server';
+import type { AdminTeamMember } from '@/lib/api/team';
 import AdminTopbar from '../../AdminTopbar';
 import TeamMemberDirectory from './TeamMemberDirectory';
 import styles from '../../../admin.module.css';
@@ -26,47 +24,16 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function TeamListPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
-  const [user, sp] = await Promise.all([requireUser(), searchParams]);
-  const message = teamMessage(sp.ok, sp.error);
+export default async function TeamListPage() {
+  const user = await requireUser();
   const mayEdit = canEditContent(user.role);
-
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <Topbar />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there is nothing to
-            edit.
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const db = getDb();
-  const rows = await db.select().from(teamMembers).orderBy(asc(teamMembers.sortOrder));
+  const rows = await apiServer<AdminTeamMember[]>('/admin/team');
 
   return (
     <>
       <Topbar />
 
       <div className={styles.view}>
-        {message && (
-          <p
-            className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
-            role="status"
-          >
-            {message.text}
-          </p>
-        )}
-
         <TeamMemberDirectory members={rows} mayEdit={mayEdit} />
       </div>
     </>

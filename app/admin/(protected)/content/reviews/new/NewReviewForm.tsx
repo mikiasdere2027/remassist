@@ -1,8 +1,9 @@
 'use client';
 
-import { useActionState, useState } from 'react';
-import { addReview } from '../actions';
-import { REVIEW_ERR } from '../messages';
+import { useRouter } from 'next/navigation';
+import { useState, type FormEvent } from 'react';
+import { ApiError } from '@/lib/api/errors';
+import { reviewErrorText, reviewsApi, type ReviewSourceKey } from '@/lib/api/reviews';
 import { SOURCE_LABEL } from '../display';
 import ReviewSourcePicker from './SourcePicker';
 import styles from '../../../../admin.module.css';
@@ -10,12 +11,10 @@ import styles from '../../../../admin.module.css';
 /**
  * The Add review form.
  *
- * A client component and, more importantly, a `useActionState` form: the
- * action returns the error to this mounted form instead of redirecting back
- * to a freshly-rendered page. Redirecting on a failed save is how a typed
- * quote gets thrown away — the fix the popup editor learned first. The error
- * shows above the fields, everything the editor typed stays put, and fixing
- * the one bad field is the only thing left to do.
+ * A client component that posts to the API: a refused save shows its error
+ * above the fields (and beside the one at fault), everything the editor typed
+ * stays put, and fixing the one bad field is the only thing left to do. A
+ * successful add goes back to the list, on the tab of the new review's source.
  *
  * The source is owned here (not just inside ReviewSourcePicker) so the
  * helper text beside each field follows whichever source is selected. The
@@ -38,19 +37,47 @@ export default function NewReviewForm({
   const [dateText, setDateText] = useState('');
   const [rating, setRating] = useState('5');
   const [body, setBody] = useState('');
+  const [headline, setHeadline] = useState('');
 
-  const [actionState, formAction, isPending] = useActionState(addReview, { error: undefined });
-  const submitError =
-    actionState.error && actionState.error in REVIEW_ERR
-      ? REVIEW_ERR[actionState.error as keyof typeof REVIEW_ERR]
-      : null;
+  const router = useRouter();
+  const [isPending, setPending] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    setSubmitError(null);
+    setErrors({});
+    try {
+      await reviewsApi.create({
+        source: source as ReviewSourceKey,
+        author: author.trim(),
+        meta: meta.trim(),
+        dateText: dateText.trim(),
+        // Trustpilot only: Google prints none, so nothing is sent for it.
+        headline: source === 'trustpilot' ? headline.trim() || null : null,
+        body: body.trim(),
+        rating: Number(rating),
+      });
+      router.push(`/admin/content/reviews?tab=${source}`);
+      router.refresh();
+    } catch (err) {
+      if (err instanceof ApiError) setErrors(err.fieldErrors());
+      setSubmitError(reviewErrorText(err));
+      setPending(false);
+    }
+  }
+
+  const err = (k: string) =>
+    errors[k] && <span className={styles.fieldErr}>{errors[k]}</span>;
 
   const label = SOURCE_LABEL[source] ?? source;
 
   return (
-    <form action={formAction}>
+    <form onSubmit={submit}>
       {submitError && (
-        <p className={`${styles.signinMsg} ${styles.msgErr}`} role="status">
+        <p className={`${styles.signinMsg} ${styles.msgErr}`} role="alert">
           {submitError}
         </p>
       )}
@@ -59,6 +86,9 @@ export default function NewReviewForm({
         sources={sources}
         value={source}
         onChange={(next) => setSource(next)}
+        headline={headline}
+        onHeadlineChange={setHeadline}
+        headlineError={errors.headline}
       />
 
       <div className={styles.formGrid2}>
@@ -77,6 +107,7 @@ export default function NewReviewForm({
           <span className={styles.memberFieldHelper}>
             Exactly as {label} prints the name
           </span>
+          {err('author')}
         </div>
         <div className={styles.memberFieldGroup}>
           <label className={styles.memberFieldLabel} htmlFor="nme">Meta (optional)</label>
@@ -92,6 +123,7 @@ export default function NewReviewForm({
           <span className={styles.memberFieldHelper}>
             Whatever it prints under the name
           </span>
+          {err('meta')}
         </div>
       </div>
 
@@ -113,6 +145,7 @@ export default function NewReviewForm({
           <span className={styles.memberFieldHelper}>
             Exactly as {label} prints it
           </span>
+          {err('dateText')}
         </div>
         <div className={styles.memberFieldGroup}>
           <label className={styles.memberFieldLabel} htmlFor="nra">Rating</label>
@@ -129,6 +162,7 @@ export default function NewReviewForm({
             readOnly={!canEdit}
           />
           <span className={styles.memberFieldHelper}>Stars out of five</span>
+          {err('rating')}
         </div>
       </div>
 
@@ -148,12 +182,13 @@ export default function NewReviewForm({
         <span className={styles.memberFieldHelper}>
           Copied verbatim from {label} — including the typos
         </span>
+          {err('body')}
       </div>
 
       {canEdit ? (
         <div className={styles.memberSubmitRow}>
           <button className={styles.memberSubmitBtn} type="submit" disabled={isPending}>
-            Add review
+            {isPending ? 'Adding…' : 'Add review'}
           </button>
           <span className={styles.memberSubmitNote}>
             Added hidden — publish from the list once you have checked it.

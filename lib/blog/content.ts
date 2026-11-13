@@ -1,28 +1,23 @@
-import { and, desc, eq } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { posts } from '@/db/schema';
+import { apiPublic, TAGS } from '@/lib/api/public';
+import type { PublicPostDetail } from '@/lib/api/posts';
 import seed from '@/lib/content/seed/content.json';
+import { cleanHtml } from '@/lib/content/sanitize';
+import { parseArticleLayout } from './article-layout';
 import type { Post } from './posts';
 
 /**
- * Blog posts, read from the database.
+ * Blog posts for the public site, from the backend API
+ * (GET /v1/public/posts and /v1/public/posts/:slug), cached under the `posts`
+ * tag — the backend revalidates it when an editor saves or publishes.
  *
- * Same fallback rule as the FAQ and reviews: seed when DATABASE_URL is absent,
- * because CI builds without one and these routes are prerendered; a loud
- * failure when it is present and the query fails, because silently serving the
- * seed would undo an editor's work.
- *
- * Returns the same `Post` shape lib/blog/posts.ts exported, so the route, the
- * JSON-LD component and the metadata all keep working unchanged. That was the
- * plan recorded in app/blog/[slug]/page.tsx from the start: "swap
- * postBySlug/publishedPosts".
+ * If the API can't be reached (e.g. a build without the backend running) the
+ * bundled seed (lib/content/seed/content.json) is served instead — loudly, see
+ * lib/api/public.ts.
  */
 
-function toPost(r: {
-  slug: string; title: string; excerpt: string; date: string; readTime: string;
-  category: string; image: string; authorName: string; authorAvatar: string;
-  published: boolean;
-}): Post {
+type SeedPost = (typeof seed.posts)[number] & { articleLayout?: string | null };
+
+function seedToPost(r: SeedPost): Post {
   return {
     slug: r.slug,
     title: r.title,
@@ -36,58 +31,51 @@ function toPost(r: {
   };
 }
 
+/** Published seed posts, newest first — the fallback for publishedPosts(). */
+export function seedPublishedPosts(): Post[] {
+  return (seed.posts as SeedPost[])
+    .filter((p) => p.published)
+    .map(seedToPost)
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/** One published seed post as the detail endpoint would answer, or null. */
+export function seedPostBySlug(slug: string): PublicPostDetail | null {
+  const p = (seed.posts as SeedPost[]).find((x) => x.slug === slug && x.published);
+  if (!p) return null;
+  return {
+    post: seedToPost(p),
+    /* Cleaned like the API's answer, so the page can render either as-is. */
+    body: p.body ? cleanHtml(p.body) : null,
+    articleLayout: parseArticleLayout(p.articleLayout ?? null),
+    /* The seed's FAQ ids are not the database's, and the fallback is a
+       build-time stopgap: no embedded central FAQ entries. */
+    existingFaq: [],
+  };
+}
+
 /** Newest first, matching how the index reads. */
-export async function publishedPosts(): Promise<Post[]> {
-  if (!isDatabaseConfigured()) {
-    return seed.posts.filter((p) => p.published).map(toPost);
-  }
-  const rows = await getDb()
-    .select()
-    .from(posts)
-    .where(eq(posts.published, true))
-    .orderBy(desc(posts.date));
-  return rows.map(toPost);
+export function publishedPosts(): Promise<Post[]> {
+  return apiPublic<Post[]>('/public/posts', {
+    tags: [TAGS.posts],
+    fallback: seedPublishedPosts,
+  });
 }
 
 /**
- * A published post and its stored body, or null.
+ * A published post with its sanitised body, parsed layout and the central FAQ
+ * entries it embeds — or null.
  *
- * The body comes back separately from the Post because Post is the shape the
- * index cards and the JSON-LD want, and neither has any use for the article
- * text.
+ * Checked against the published list first: apiPublic falls back to the seed
+ * on any error, a 404 included, so asking for an unpublished slug directly
+ * would serve the seed's copy of it. The list is cached under the same tag, so
+ * the check is free after the first request.
  */
-export async function postBySlug(
-  slug: string,
-): Promise<{ post: Post; body: string | null; articleLayout: string | null } | null> {
-  if (!isDatabaseConfigured()) {
-    const p = seed.posts.find((x) => x.slug === slug && x.published);
-    return p ? { post: toPost(p), body: p.body ?? null, articleLayout: (p as { articleLayout?: string }).articleLayout ?? null } : null;
-  }
-  const [row] = await getDb()
-    .select()
-    .from(posts)
-    /* Published only. An unpublished post must 404 rather than being readable
-       by anyone who guesses the slug — a draft is not a soft-launch. */
-    .where(and(eq(posts.slug, slug), eq(posts.published, true)))
-    .limit(1);
-  return row ? { post: toPost(row), body: row.body, articleLayout: row.articleLayout } : null;
-}
-
-/**
- * Split stored body text into blocks for rendering.
- *
- * Plain text in, structure out: a blank line starts a new paragraph, a leading
- * "## " makes a heading. Deliberately not a Markdown parser and deliberately
- * not HTML — see the note in the posts editor's actions on why staff-written
- * HTML is not accepted here. Everything is rendered as text by the route, so
- * there is no escaping to get wrong.
- */
-export function bodyBlocks(body: string): Array<{ type: 'h2' | 'p'; text: string }> {
-  return body
-    .split(/\n\s*\n/)
-    .map((block) => block.trim())
-    .filter(Boolean)
-    .map((block) => (block.startsWith('## ')
-      ? { type: 'h2' as const, text: block.slice(3).trim() }
-      : { type: 'p' as const, text: block }));
+export async function postBySlug(slug: string): Promise<PublicPostDetail | null> {
+  const posts = await publishedPosts();
+  if (!posts.some((p) => p.slug === slug)) return null;
+  return apiPublic<PublicPostDetail | null>(`/public/posts/${encodeURIComponent(slug)}`, {
+    tags: [TAGS.posts],
+    fallback: () => seedPostBySlug(slug),
+  });
 }

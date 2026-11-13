@@ -177,27 +177,3 @@ export function attributionForSubmit(): Attribution | undefined {
 }
 
 /* ----------------------------------------------------------------- server -- */
-
-/**
- * Flatten what the client reported into the single `utm` jsonb column.
- *
- * The effective campaign — last touch, falling back to whatever was on the
- * submitting page — keeps the bare `utm_*` keys, so anything already reading
- * `lead.utm.utm_source` keeps working unchanged. First touch is added
- * alongside under a `first_` prefix.
- */
-export function mergeAttribution(
-  pageUtm: Record<string, string> | undefined,
-  attribution: Attribution | undefined,
-): Record<string, string> | undefined {
-  const out: Record<string, string> = {};
-
-  /* Page params first so a real last touch overrides them: the cookie was set
-     on arrival at a campaign URL, which is better evidence than a query string
-     that may simply have been carried along. */
-  for (const [k, v] of Object.entries(pageUtm ?? {})) out[k] = v;
-  for (const [k, v] of Object.entries(attribution?.last ?? {})) out[k] = v;
-  for (const [k, v] of Object.entries(attribution?.first ?? {})) out[`first_${k}`] = v;
-
-  return Object.keys(out).length ? out : undefined;
-}

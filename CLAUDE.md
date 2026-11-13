@@ -21,8 +21,8 @@ Next.js app: the public Rem Assist site and the admin UI. The API lives in
    `api.*` (lib/api/client.ts) in client components — see docs/ARCHITECTURE.md
    §3 "How the frontend calls the API". Existing DB code is migrated slice by
    slice and deleted once its page is rewired.
-2. **Port one admin area at a time**, together with its backend module. Expect
-   bugs on both sides; fix them in that slice and note anything deferred.
+2. **All data goes through the backend** (the migration finished 2026-11-13).
+   New admin features: backend module + endpoint first, then the page.
 3. **Don't hardcode business data.** Rates, contact details, the booking link,
    service lists — read them from the API (or one shared module until the API
    has them). Never add another copy.

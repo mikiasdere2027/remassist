@@ -13,6 +13,7 @@ import {
   type QuizResult,
 } from '@/lib/quiz/quiz';
 import { attributionForSubmit } from '@/lib/analytics/attribution';
+import { submitLead, submitQuiz } from '@/lib/api/leads';
 import { track } from '@/lib/analytics/events';
 import { BOOK_URL } from '@/lib/nav';
 
@@ -46,6 +47,13 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
   /* One POST per completion. A ref, not state: firing it must not re-render,
      and a restored-from-hash result should not be counted as a new run. */
   const reported = useRef(false);
+  /* The server prices the quiz (POST /api/v1/public/quiz). Its quote is the
+     one shown once it arrives and the one stored; local score() is only for
+     instant display. The row id is sent back with the lead so the server
+     links that row instead of storing a second one. */
+  const [serverResult, setServerResult] = useState<QuizResult | null>(null);
+  const submissionId = useRef<string | undefined>(undefined);
+  const quizRequest = useRef<Promise<unknown> | null>(null);
   /* quiz_start / quiz_complete, once each per run, for the same reason
      `reported` is a ref: emitting must not re-render, and restart() has to
      be able to hand a fresh run its own pair of events. */
@@ -95,20 +103,20 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
     };
   }, [popupOpen]);
 
-  /* Anonymous funnel capture (§6.2): answers and the quote shown, no personal
-     data. Fire-and-forget — the result screen never waits on it and never
-     shows an error if it fails. */
+  /* Anonymous funnel capture (§6.2): answers only, no personal data. The
+     result screen never waits on it and never shows an error if it fails. */
   useEffect(() => {
     if (!done || reported.current) return;
     const a = answers as Answers;
     if (!a.gap || !a.hours || !a.process || !a.judgment || !a.timing) return;
     reported.current = true;
-    void fetch('/api/quiz', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ answers: a, result: score(a), completed: true }),
-      keepalive: true,
-    }).catch(() => {});
+    quizRequest.current = submitQuiz({ ...a })
+      .then((r) => {
+        if (r.id) submissionId.current = r.id;
+        setServerResult(r.result);
+      })
+      /* The local estimate stays on screen; the lead is priced server-side anyway. */
+      .catch(() => {});
   }, [done, answers]);
 
   // Live estimate once both cost drivers are known.
@@ -164,6 +172,9 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
     setStep(0);
     setPopupOpen(false);
     setCapture('idle');
+    setServerResult(null);
+    submissionId.current = undefined;
+    quizRequest.current = null;
     reported.current = false;
     started.current = false;
     completed.current = false;
@@ -174,6 +185,10 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
     const next = { ...answers };
     delete next[id];
     setAnswers(next);
+    /* The server's quote was for the old answers. The local one shows until
+       the lead is sent, which re-prices the edited answers on the server and
+       updates the same stored row (submissionId). */
+    setServerResult(null);
     setStep(idx);
   }
 
@@ -200,22 +215,23 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
     if (!result || sending) return;
     setSending(true);
     try {
-      const res = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          name: name || undefined,
-          honey: honey || undefined,
-          source: 'qualify_quiz',
-          page: window.location.href,
-          /* The campaign that brought them in, which is usually not on this
-             URL — they landed somewhere else and navigated here. */
-          attribution: attributionForSubmit(),
-          quiz: { answers, result, completed: true },
-        }),
+      /* Let the anonymous capture land first, so its row is linked, not duplicated. */
+      await quizRequest.current?.catch(() => {});
+      await submitLead({
+        email,
+        name: name || undefined,
+        honey: honey || undefined,
+        source: 'qualify_quiz',
+        page: window.location.href,
+        /* The campaign that brought them in, which is usually not on this
+           URL — they landed somewhere else and navigated here. */
+        attribution: attributionForSubmit(),
+        quiz: {
+          answers: { ...(answers as Answers) },
+          completed: true,
+          submissionId: submissionId.current,
+        },
       });
-      if (!res.ok) throw new Error(String(res.status));
       /* Only after the row is written. Firing on submit would count leads the
          server rejected or never stored, and this is the number the ad spend
          gets judged on. No email or name goes with it — see lib/analytics. */
@@ -240,7 +256,7 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
     window.setTimeout(() => setCopied(false), 1800);
   }
 
-  const result = done ? score(answers as Answers) : null;
+  const result = done ? (serverResult ?? score(answers as Answers)) : null;
   const progress = done ? 100 : Math.round((step / QUIZ.length) * 100);
 
   return (

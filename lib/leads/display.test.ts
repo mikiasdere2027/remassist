@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  answerFor, csvCell, csvRow, formatDate, formatUtm, orderedAnswers, questionFor, unknownRawKeys,
+  answerFor, formatDate, formatUtm, orderedAnswers, questionFor, unknownRawKeys,
 } from './display';
 
 describe('unknownRawKeys', () => {
@@ -72,38 +72,6 @@ describe('formatDate', () => {
     expect(formatDate(null)).toBe('');
     expect(formatDate(undefined)).toBe('');
     expect(formatDate('not a date')).toBe('');
-  });
-});
-
-describe('csv escaping', () => {
-  it('leaves an ordinary value alone', () => {
-    expect(csvCell('Ada')).toBe('Ada');
-  });
-
-  it('quotes a value containing a comma, so later columns do not shift', () => {
-    expect(csvCell('Bookkeeping, AP / AR')).toBe('"Bookkeeping, AP / AR"');
-  });
-
-  it('doubles embedded quotes', () => {
-    expect(csvCell('a "quote" here')).toBe('"a ""quote"" here"');
-  });
-
-  it('quotes hard newlines, which lead messages contain routinely', () => {
-    expect(csvCell('line one\nline two')).toBe('"line one\nline two"');
-    expect(csvCell('crlf\r\nhere')).toBe('"crlf\r\nhere"');
-  });
-
-  it('renders absent values as empty rather than the string "null"', () => {
-    expect(csvCell(null)).toBe('');
-    expect(csvCell(undefined)).toBe('');
-  });
-
-  it('serialises jsonb columns instead of emitting [object Object]', () => {
-    expect(csvCell({ utm_source: 'li' })).toBe('"{""utm_source"":""li""}"');
-  });
-
-  it('round-trips a whole row', () => {
-    expect(csvRow(['Ada', 'a, b', null, 'say "hi"'])).toBe('Ada,"a, b",,"say ""hi"""');
   });
 });
 

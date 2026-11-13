@@ -1,28 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import seed from '@/lib/content/seed/content.json';
-import { MAX_FEATURED, selectFeatured } from './content';
+import { MAX_FEATURED } from '@/lib/api/faq';
+import { seedFaq, seedFeaturedFaq, selectFeatured } from './seed';
 
 /**
- * The build-time fallback's data.
+ * The fallback's data.
  *
- * .github/workflows runs `npm run build` with no DATABASE_URL, and /faq is
- * prerendered, so getFaq falls back to lib/content/seed/content.json. If that file is
- * ever wrong or short, CI ships an empty FAQ page and nobody notices until the
- * site is live.
+ * lib/faq/content.ts reads the FAQ from the backend and, when it can't be
+ * reached (a `next build` with no backend running), serves the bundled seed
+ * via lib/faq/seed.ts. If that file is ever wrong or short, the fallback ships
+ * an empty FAQ page and nobody notices until the site is live.
  *
- * Asserted against the JSON directly rather than by calling getFaq with the
- * environment temporarily broken. An earlier version of this file deleted
- * process.env.DATABASE_URL around each test and passed in isolation while
- * failing in the full suite: vitest runs test files concurrently and they share
- * process.env, so this file, lib/auth/require.test.ts and lib/auth/mailer.test.ts
- * were overwriting each other's variables. A test that has to mutate global
- * state to run is a test that will eventually fail for reasons unrelated to the
- * code it covers.
- *
- * What that costs: the one-line `if (!isDatabaseConfigured()) return fromSeed()`
- * branch is not executed here. It is covered by inspection, on the same
- * reasoning as the note at the foot of lib/auth/session.test.ts — the value was
- * always in the data being complete, not in the branch being taken.
+ * Tested through seed.ts rather than content.ts: content.ts is server-only
+ * and fetches, while the seed builders are pure.
  */
 describe('the FAQ seed that CI builds from', () => {
   it('has every group and question', () => {
@@ -87,6 +77,26 @@ describe('the FAQ seed that CI builds from', () => {
  * unstarring the last question is an ordinary action, and it must not empty the
  * homepage's FAQ card.
  */
+describe('the seed fallback loaders', () => {
+  it('builds every section, in order, with sanitised answers', () => {
+    const groups = seedFaq();
+    expect(groups.map((g) => g.slug)).toEqual([
+      'pricing', 'starting', 'people', 'tools-data', 'scope', 'oversight',
+    ]);
+    const items = groups.flatMap((g) => g.items);
+    expect(items.length).toBe(seed.faqItems.filter((i) => i.published).length);
+    for (const i of items) expect(i.answer.startsWith('<')).toBe(true);
+  });
+
+  it('stocks the fallback homepage card with the starred questions in order', () => {
+    const starred = seed.faqItems
+      .filter((i) => i.featured && i.published)
+      .sort((a, b) => a.featuredOrder - b.featuredOrder)
+      .map((i) => i.question);
+    expect(seedFeaturedFaq().map((i) => i.question)).toEqual(starred);
+  });
+});
+
 describe('selectFeatured', () => {
   const q = (id: string, featured: boolean, featuredOrder = 0) => ({ id, featured, featuredOrder });
 

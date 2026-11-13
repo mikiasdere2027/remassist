@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { listFields } from '@/lib/blog/completeness';
 import MenuButton from '../../MenuButton';
 import styles from '../../../admin.module.css';
 
@@ -11,39 +12,39 @@ import styles from '../../../admin.module.css';
  * Three items, and the middle one changes with the row: Edit, then Publish or
  * Unpublish, then Delete.
  *
- * Publish is a submit because it is one state flip that another click undoes.
- * Delete is a link to `?del=`, which opens a confirm step in the row's own
- * place rather than destroying a draft one click away from the menu that
- * offered it — the same shape as Deactivate on the rate tables, for a stronger
- * reason. Nothing here deletes without the server seeing a ticked box.
+ * Publish acts at once because it is one state flip that another click undoes.
+ * Delete opens a confirm step in the row's own place rather than destroying a
+ * draft one click away from the menu that offered it.
  *
  * Both of the last two are offered and refused rather than omitted when they
  * do not apply: Publish on a post with nothing to read, Delete on a post that
  * is live. A menu that grows and shrinks by row is a menu you have to read
  * every time, and a missing item explains nothing — the greyed item's tooltip
  * says which post and why, and in Delete's case it names the step that unlocks
- * it. Both refusals are enforced in the action too; this is the explanation,
- * not the control.
+ * it. Both refusals are enforced by the API too; this is the explanation, not
+ * the control.
  */
 export default function RowMenu({
-  publish,
-  id,
+  onTogglePublished,
+  onDelete,
   title,
   published,
-  publishable,
+  missing,
   editHref,
-  deleteHref,
   mayDelete,
+  busy,
 }: {
-  publish: (formData: FormData) => Promise<void>;
-  id: string;
+  onTogglePublished: () => void;
+  onDelete: () => void;
   title: string;
   published: boolean;
-  publishable: boolean;
+  /** What still blocks publishing; empty means ready. */
+  missing: string[];
   editHref: string;
-  deleteHref: string;
   mayDelete: boolean;
+  busy: boolean;
 }) {
+  const publishable = missing.length === 0;
   return (
     <MenuButton label={`Options for post: ${title}`}>
       <Link href={editHref} className={styles.memberDropdownItem}>
@@ -54,16 +55,14 @@ export default function RowMenu({
         Edit
       </Link>
 
-      <form action={publish} style={{ margin: 0 }}>
-        <input type="hidden" name="id" value={id} />
-        <input type="hidden" name="published" value={published ? '0' : '1'} />
         <button
-          type="submit"
+          type="button"
           className={styles.memberDropdownItem}
-          disabled={!published && !publishable}
+          onClick={onTogglePublished}
+          disabled={busy || (!published && !publishable)}
           title={
             !published && !publishable
-              ? 'This post has no article body yet, so it cannot go on the blog'
+              ? `Not finished, so it cannot go on the blog. Still needed: ${listFields(missing)}`
               : undefined
           }
         >
@@ -81,7 +80,6 @@ export default function RowMenu({
           )}
           {published ? 'Unpublish' : 'Publish'}
         </button>
-      </form>
 
       {mayDelete &&
         (published ? (
@@ -99,15 +97,17 @@ export default function RowMenu({
             Delete
           </button>
         ) : (
-          /* A link, not a submit. The confirm step is server-rendered in the
-             row below, so this menu never destroys anything on its own. */
-          <Link
-            href={deleteHref}
+          /* Opens the confirm step in the row below; this menu never destroys
+             anything on its own. */
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={busy}
             className={`${styles.memberDropdownItem} ${styles.memberDropdownItemDanger}`}
           >
             <TrashIcon />
             Delete
-          </Link>
+          </button>
         ))}
     </MenuButton>
   );

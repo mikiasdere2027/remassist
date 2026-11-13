@@ -1,15 +1,11 @@
-import { asc, eq } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { teamMembers } from '@/db/schema';
+import { apiPublic, TAGS } from '@/lib/api/public';
 import seed from '@/lib/content/seed/content.json';
 
 /**
- * The public team, read from the database.
- *
- * Same shape as lib/faq/content.ts: with DATABASE_URL absent (CI, a local
- * `npm run build`) the seed is served so the homepage still builds and shows
- * the team; with it present the query runs and any error propagates — an
- * editor's change must never be silently undone by a stale fallback.
+ * The public team (published members, homepage order), from the backend
+ * (GET /v1/public/team). Cached under the `team` tag, which the backend
+ * revalidates on every edit. If the backend can't be reached the bundled seed
+ * is served instead (see lib/api/public.ts).
  */
 
 export interface PublicTeamMember {
@@ -36,22 +32,8 @@ function fromSeed(): PublicTeamMember[] {
 }
 
 export async function getTeamMembers(): Promise<PublicTeamMember[]> {
-  if (!isDatabaseConfigured()) return fromSeed();
-
-  const db = getDb();
-  const rows = await db
-    .select()
-    .from(teamMembers)
-    /* Drafts exist so an editor can prepare a card without it shipping. */
-    .where(eq(teamMembers.published, true))
-    .orderBy(asc(teamMembers.sortOrder));
-
-  return rows.map((m) => ({
-    name: m.name,
-    role: m.role,
-    initials: m.initials,
-    blurb: m.blurb,
-    linkedin: m.linkedin,
-    image: m.image,
-  }));
+  return apiPublic<PublicTeamMember[]>('/public/team', {
+    tags: [TAGS.team],
+    fallback: fromSeed,
+  });
 }

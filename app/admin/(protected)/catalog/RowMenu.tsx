@@ -1,6 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { api } from '@/lib/api/client';
+import { CATALOG_PATH, type CatalogTable } from '@/lib/api/catalog';
 import MenuButton from '../MenuButton';
 import styles from '../../admin.module.css';
 
@@ -9,33 +13,48 @@ import styles from '../../admin.module.css';
  * each card in the team directory, and it shares that control's classes and
  * its popup so the two stay one thing rather than two that look alike.
  *
- * It changes the trigger, not the flow. Edit and Deactivate are still links to
- * `?edit=` and `?off=`, so the server keeps rendering the edit form and the
- * confirm step in the row's own place; putting a row back is still the same
- * one-click form, because it is additive and one click undoes it again. What
- * used to be two naked icons in an Actions column is now one button, which is
- * what a table of four rows needs.
- *
- * Everything behind it is the server's, and every action re-checks the admin
- * gate — see the note at the top of actions.ts.
+ * Edit and Deactivate are links to `?edit=` and `?off=`, which open the edit
+ * form and the confirm step in the row's own place (RateForms.tsx). Putting a
+ * row back is one click (POST …/:key/reactivate), because it is additive and
+ * one click undoes it again. The backend re-checks the admin role on every
+ * write.
  */
 export default function RowMenu({
-  action,
+  table,
   rowKey,
   active,
+  listHref,
   editHref,
   offHref,
   noun,
   label,
 }: {
-  action: (formData: FormData) => Promise<void>;
+  table: CatalogTable;
   rowKey: string;
+  /** Where to land after putting a row back (keeps the tab). */
+  listHref: string;
   active: boolean;
   editHref: string;
   offHref: string;
   noun: string;
   label: string;
 }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+
+  async function reactivate() {
+    setBusy(true);
+    try {
+      await api.post(`${CATALOG_PATH[table]}/${encodeURIComponent(rowKey)}/reactivate`);
+      router.push(`${listHref}${listHref.includes('?') ? '&' : '?'}ok=reactivated`);
+      router.refresh();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <MenuButton label={`Options for ${noun}: ${label}`}>
       <Link href={editHref} className={styles.memberDropdownItem}>
@@ -61,17 +80,13 @@ export default function RowMenu({
           Deactivate {noun}
         </Link>
       ) : (
-        <form action={action} style={{ margin: 0 }}>
-          <input type="hidden" name="key" value={rowKey} />
-          <input type="hidden" name="active" value="1" />
-          <button type="submit" className={styles.memberDropdownItem}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M20 11a8 8 0 1 0-1.5 5.2" />
-              <path d="M20 4v7h-7" />
-            </svg>
-            Put back in use
-          </button>
-        </form>
+        <button type="button" className={styles.memberDropdownItem} onClick={reactivate} disabled={busy}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M20 11a8 8 0 1 0-1.5 5.2" />
+            <path d="M20 4v7h-7" />
+          </svg>
+          Put back in use
+        </button>
       )}
     </MenuButton>
   );

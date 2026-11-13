@@ -1,14 +1,11 @@
 import Link from 'next/link';
-import { asc } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { faqGroups, faqItems } from '@/db/schema';
 import { requireUser } from '@/lib/auth/require';
 import { canDeleteFaqItem, canEditContent } from '@/lib/auth/roles';
-import { MAX_FEATURED } from '@/lib/faq/content';
+import { apiServer } from '@/lib/api/server';
+import { MAX_FEATURED, type FaqAdminGroup, type FaqAdminItem } from '@/lib/api/faq';
 import CategoryFilter from './CategoryFilter';
-import { saveFaqGroup } from './actions';
 import FaqAccordion, { type FaqAccordionSection } from './FaqAccordion';
-import { faqMessage } from './messages';
+import SectionsEditor from './SectionsEditor';
 import AdminTopbar from '../../AdminTopbar';
 import styles from '../../../admin.module.css';
 
@@ -41,8 +38,9 @@ import styles from '../../../admin.module.css';
  *    canUnpublishContent in lib/auth/roles.ts. A trash icon over an action
  *    that unpublishes would be worse than either choice made honestly.
  *
- * Both roles may edit content; the gate is re-checked inside every action,
- * because a server action renders outside this page.
+ * Data comes from the backend (GET /v1/admin/faq/groups and /items); the
+ * row menu and the sections editor call the API from the browser and refresh.
+ * Both roles may edit content; the backend enforces the same rule.
  */
 export const dynamic = 'force-dynamic';
 
@@ -86,14 +84,9 @@ function asView(v: string | undefined): View {
 export default async function FaqListPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    ok?: string; error?: string; status?: string; cat?: string; view?: string;
-    /** The question whose "remove" confirm step is open, by id. */
-    del?: string;
-  }>;
+  searchParams: Promise<{ status?: string; cat?: string; view?: string }>;
 }) {
   const [user, sp] = await Promise.all([requireUser(), searchParams]);
-  const message = faqMessage(sp.ok, sp.error);
   const mayEdit = canEditContent(user.role);
   const mayDelete = canDeleteFaqItem(user.role);
   const status = asStatus(sp.status);
@@ -102,40 +95,13 @@ export default async function FaqListPage({
      action behind would refuse. */
   const view = mayEdit ? asView(sp.view) : 'questions';
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <Topbar />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there is nothing to
-            edit.
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const db = getDb();
-  const [groups, items] = await Promise.all([
-    db.select().from(faqGroups).orderBy(asc(faqGroups.sortOrder)),
-    db.select().from(faqItems).orderBy(asc(faqItems.sortOrder)),
+  /* Already in public page order (section, then position) — the backend
+     sorts it, so the rows under one heading really are contiguous. */
+  const [groups, ordered] = await Promise.all([
+    apiServer<FaqAdminGroup[]>('/admin/faq/groups'),
+    apiServer<FaqAdminItem[]>('/admin/faq/items'),
   ]);
-
   const groupById = new Map(groups.map((g) => [g.id, g]));
-  const groupRank = new Map(groups.map((g, i) => [g.id, i]));
-
-  /* sortOrder is per section — the index is (group_id, sort_order) and
-     moveFaqItem only ever swaps siblings — so a flat list has to sort by the
-     section first or the six sections interleave. This is the order the public
-     page renders in, which is the whole point of showing it as one list, and it
-     is what makes a heading per section correct rather than decorative: the
-     rows under one heading really are contiguous. */
-  const ordered = [...items].sort((a, b) => {
-    const byGroup = (groupRank.get(a.groupId) ?? 0) - (groupRank.get(b.groupId) ?? 0);
-    return byGroup !== 0 ? byGroup : a.sortOrder - b.sortOrder;
-  });
 
   /* Counted before filtering: a tab whose count changes when you select it
      tells you nothing about what is on the other tabs. */
@@ -161,7 +127,7 @@ export default async function FaqListPage({
      because you clicked Draft is the sort of thing that makes a filter bar feel
      broken when each control works perfectly on its own. Params equal to their
      default are omitted, so the canonical URL of the default view is bare. */
-  const href = (next: { status?: Status; cat?: string; view?: View; del?: string }) => {
+  const href = (next: { status?: Status; cat?: string; view?: View }) => {
     const s = next.status ?? status;
     const c = next.cat ?? cat;
     const v = next.view ?? view;
@@ -169,18 +135,9 @@ export default async function FaqListPage({
     if (s !== 'all') params.set('status', s);
     if (c !== 'all') params.set('cat', c);
     if (v !== 'questions') params.set('view', v);
-    if (next.del) params.set('del', next.del);
     const qs = params.toString();
     return `/admin/content/faq${qs ? `?${qs}` : ''}`;
   };
-
-  /* Only honoured if it names a row still visible under the current filters,
-     so a stale ?del= left in the URL after a filter change cannot arm a confirm
-     step under a row you did not open it on. A published row never arms one:
-     deleteFaqItem refuses those, and a confirm step for an action that always
-     fails is worse than no control. */
-  const confirming =
-    mayDelete && sp.del && rows.some((r) => r.id === sp.del && !r.published) ? sp.del : null;
 
   /* One accordion section per group, in the public page's order. Only groups
      that still have rows after filtering appear; the accordion opens the first
@@ -197,11 +154,6 @@ export default async function FaqListPage({
           question: r.question,
           published: r.published,
           featured: r.featured,
-          /* Built here rather than in the accordion: href() closes over the
-             current filters, and a function is not a prop a client component
-             can receive. A published row gets none — deleteFaqItem refuses
-             those, so it has no confirm step to open. */
-          removeHref: mayDelete && !r.published ? href({ del: r.id }) : null,
         })),
       };
     })
@@ -212,15 +164,6 @@ export default async function FaqListPage({
       <Topbar />
 
       <div className={styles.view}>
-        {message && (
-          <p
-            className={`${styles.signinMsg} ${message.tone === 'ok' ? styles.msgOk : styles.msgErr}`}
-            role="status"
-          >
-            {message.text}
-          </p>
-        )}
-
         <div className={styles.filterbar}>
           {/* The status tabs stay put in the sections view with none of them
               lit, and clicking any of them is the way back. That beats hiding
@@ -290,63 +233,7 @@ export default async function FaqListPage({
         )}
 
         {view === 'sections' ? (
-          <div className={styles.panel}>
-            <div className={styles.panelHead}>
-              <div>
-                <h2 className={styles.panelTitle}>Section titles and anchors</h2>
-                <p className={styles.panelSub}>
-                  {groups.length} sections, in the order the public page renders them. An anchor
-                  is part of a URL — changing one breaks any link pointing at it.
-                </p>
-              </div>
-            </div>
-            {/* The form IS the grid cell — two sections abreast rather than six
-                full-width rows of two short fields each. */}
-            <div className={styles.sectionGrid}>
-              {groups.map((g) => (
-                <form className={styles.sectionCell} action={saveFaqGroup} key={g.id}>
-                  <input type="hidden" name="id" value={g.id} />
-                  <div className={`${styles.field} ${styles.sectionField}`}>
-                    <label className={styles.fieldLabel} htmlFor={`t-${g.id}`}>Title</label>
-                    <input
-                      className={styles.control}
-                      id={`t-${g.id}`}
-                      name="title"
-                      defaultValue={g.title}
-                      required
-                    />
-                  </div>
-                  <div className={`${styles.field} ${styles.sectionField}`}>
-                    <label className={styles.fieldLabel} htmlFor={`s-${g.id}`}>Anchor</label>
-                    <input
-                      className={styles.control}
-                      id={`s-${g.id}`}
-                      name="slug"
-                      defaultValue={g.slug}
-                      pattern="[a-z][a-z\-]*[a-z]"
-                      title="Lowercase letters and hyphens only — it is part of a URL"
-                      required
-                    />
-                  </div>
-                  {/* Named for a screen reader: six buttons all reading "Save"
-                      is six identical announcements. */}
-                  <button
-                    className={`${styles.btn} ${styles.btnPrimary}`}
-                    type="submit"
-                    aria-label={`Save section: ${g.title}`}
-                  >
-                    Save
-                  </button>
-                </form>
-              ))}
-            </div>
-            <div className={styles.panelFoot}>
-              <span>A section holding no live questions renders nothing on the public page.</span>
-              <Link className={styles.rowLink} href={href({ view: 'questions' })}>
-                Back to the questions
-              </Link>
-            </div>
-          </div>
+          <SectionsEditor groups={groups} backHref={href({ view: 'questions' })} />
         ) : (
           /* The empty state is still one panel — there is nothing to separate.
              The list is not: each section is its own card on the page, so the
@@ -367,8 +254,8 @@ export default async function FaqListPage({
               <FaqAccordion
                 sections={sections}
                 mayEdit={mayEdit}
-                confirming={confirming}
-                backHref={href({})}
+                mayDelete={mayDelete}
+                featuredCount={featuredCount}
               />
               <p className={styles.faqListFoot}>
                 {status === 'homepage' ? (
@@ -380,7 +267,7 @@ export default async function FaqListPage({
                 ) : (
                   <span>
                     Reorder from a question&rsquo;s edit page &mdash; the public FAQ follows
-                    immediately after save.
+                    shortly after each change.
                   </span>
                 )}
                 <Link className={styles.rowLink} href={status === 'homepage' ? '/' : '/faq'}>
