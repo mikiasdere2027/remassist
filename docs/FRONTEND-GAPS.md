@@ -32,8 +32,8 @@ Full list of files that touch the database: see `docs/ARCHITECTURE.md` §3.
 
 | Priority | Gap | Evidence | Fix |
 |---|---|---|---|
-| **High** | Interview videos served raw | `public/uploads/Interviews` (Git LFS): ~70.7 / 29.5 / 22.7 / 15.5 / 9.6 MB _(sizes from the LFS pointers, unverified)_. `InterviewRail.tsx:74-79` mounts `<video autoPlay>` on the raw file | Move to Cloudinary video with adaptive streaming and small renditions; poster first |
-| **High** | Hero video | 9.1 MB, 108 s, 640×360 for a 420 px circle (MIGRATION-PLAN §0) | Re-encode plus a poster frame (Cloudinary covers this) |
+| ✅ **High** | Interview videos served raw | `public/uploads/Interviews` (Git LFS): ~70.7 / 29.5 / 22.7 / 15.5 / 9.6 MB _(sizes from the LFS pointers, unverified)_. `InterviewRail.tsx:74-79` mounts `<video autoPlay>` on the raw file | Move to Cloudinary video with adaptive streaming and small renditions; poster first |
+| ✅ **High** | Hero video | 9.1 MB, 108 s, 640×360 for a 420 px circle (MIGRATION-PLAN §0) | Re-encode plus a poster frame (Cloudinary covers this) |
 | ✅ Medium | Admin shares the public root layout | Six Sora weights load in `app/layout.tsx:24`; public chrome is hidden at runtime by `usePathname` in `SiteChrome.tsx:33` | Split into `app/(site)` and `app/admin` route groups with their own layouts; load fewer font weights |
 | ✅ Medium | Build depends on Google Fonts at build time | `next/font/google` network failure breaks the build | Self-host the font with `next/font/local` |
 | ✅ Medium | Oversized source images | Team headshots 0.4–0.85 MB each; `Agents/Pro.jpg` and `Expert.jpg` ~0.7 MB | Re-export at 2× display size or serve from Cloudinary |
@@ -94,3 +94,9 @@ JSON-LD coverage, `poweredByHeader: false`, no secrets committed.
   test fails if a new copy appears. Service-directory data and how-it-works
   phases moved from `components/` to `lib/content/`. (`useRail` stays in
   `components/services/` — only the two services rails use it.)
+- **2026-11-13, batch 5 (video):** the five interview clips re-encoded
+  (H.264 CRF 27, ≤720p, AAC 96k, faststart): 144 MB → 30 MB, same durations
+  and audio, no visible difference. `natty-negash.mp4` had its index at the end
+  (nothing played until all 29 MB downloaded) — now streams. The home hero uses
+  its own 360×360 cut with audio (`/uploads/hero/`, 2.2 MB vs 9.2 MB). Moving
+  video to Cloudinary (adaptive streaming) is still worth doing later.

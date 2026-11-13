@@ -57,6 +57,13 @@ export const INTERVIEWS: Interviewee[] = [
  */
 export const interviewVideo = (slug: string) => `/uploads/Interviews/${slug}.mp4`;
 export const interviewPoster = (slug: string) => `/images/interviews/${slug}.jpg`;
+/**
+ * The home hero's own cut of a clip: square-cropped to 360px (the disc only
+ * ever shows the middle) and lightly encoded — 2.2 MB instead of the 3.6 MB
+ * card version. It keeps its audio because the hero has a sound toggle.
+ * Lives outside /Interviews so that folder stays one file per interviewee.
+ */
+export const interviewHeroVideo = (slug: string) => `/uploads/hero/${slug}.mp4`;
 
 /** The clip the home hero opens on. Must be one of INTERVIEWS' slugs. */
 export const HERO_INTERVIEW = 'kalkidan';

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import HomeTrustBar from './HomeTrustBar';
 import { track } from '@/lib/analytics/events';
-import { HERO_INTERVIEW, interviewPoster, interviewVideo } from '@/lib/interviews';
+import { HERO_INTERVIEW, interviewHeroVideo, interviewPoster } from '@/lib/interviews';
 import styles from './HomeHero.module.css';
 import { BOOK_URL } from '@/lib/nav';
 
@@ -25,15 +25,16 @@ import { BOOK_URL } from '@/lib/nav';
  *
  * PLAYBACK IS DEFERRED, AND NOT BY `autoPlay`. The <video> ships with
  * `preload="none"` and no autoplay attribute, so the critical path carries the
- * 6.7 KB poster and not the 9 MB clip; the IntersectionObserver below calls
+ * 6.7 KB poster and not the 2.2 MB clip (`/uploads/hero/`, a square, lighter
+ * cut of the interview — see interviewHeroVideo); the IntersectionObserver below calls
  * play(), and play() is what starts the download. The disc is above the fold,
  * so that lands a frame or two after first paint — it still reads as autoplay,
  * it just no longer races the LCP element for bandwidth. Putting `autoPlay
- * preload="auto"` back is a 9 MB regression on every home page load.
+ * preload="auto"` back is a 2 MB regression on every home page load.
  */
 
 const BOOK = BOOK_URL;
-const VIDEO = interviewVideo(HERO_INTERVIEW);
+const VIDEO = interviewHeroVideo(HERO_INTERVIEW);
 const POSTER = interviewPoster(HERO_INTERVIEW);
 
 /* Offsets and delays are the artboard's, relative to the 500x500 orbit box.

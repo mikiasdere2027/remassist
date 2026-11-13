@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { INTERVIEWS, interviewsFor } from './interviews';
+import { HERO_INTERVIEW, INTERVIEWS, interviewHeroVideo, interviewsFor } from './interviews';
 
 /**
  * The interview list against the filesystem.
@@ -97,5 +97,11 @@ describe('the list is shaped the way interviewsFor assumes', () => {
 
   it('returns nothing for a service with no seats defined', () => {
     expect(interviewsFor('not-a-service')).toEqual([]);
+  });
+});
+
+describe('hero clip', () => {
+  it('exists on disk for the hero interview', () => {
+    expect(existsSync(path.join(ROOT, 'public', interviewHeroVideo(HERO_INTERVIEW)))).toBe(true);
   });
 });
