@@ -1,7 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { teamMembers } from '@/db/schema';
-import seed from '@/db/content-seed.json';
+import seed from '@/lib/content/seed/content.json';
 
 /**
  * The public team, read from the database.

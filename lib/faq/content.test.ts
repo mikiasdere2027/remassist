@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import seed from '@/db/content-seed.json';
+import seed from '@/lib/content/seed/content.json';
 import { MAX_FEATURED, selectFeatured } from './content';
 
 /**
  * The build-time fallback's data.
  *
  * .github/workflows runs `npm run build` with no DATABASE_URL, and /faq is
- * prerendered, so getFaq falls back to db/content-seed.json. If that file is
+ * prerendered, so getFaq falls back to lib/content/seed/content.json. If that file is
  * ever wrong or short, CI ships an empty FAQ page and nobody notices until the
  * site is live.
  *

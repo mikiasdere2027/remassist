@@ -2,12 +2,12 @@ import { asc, eq } from 'drizzle-orm';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { faqGroups, faqItems } from '@/db/schema';
 import { answerHtml } from '@/lib/content/sanitize';
-import seed from '@/db/content-seed.json';
+import seed from '@/lib/content/seed/content.json';
 
 /**
  * The FAQ, read from the database.
  *
- * With a fallback to db/content-seed.json — the same file the import was made
+ * With a fallback to lib/content/seed/content.json — the same file the import was made
  * from — and the condition on that fallback is the whole design:
  *
  *   DATABASE_URL absent  -> use the seed

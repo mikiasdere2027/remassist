@@ -1,7 +1,7 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { getDb, isDatabaseConfigured } from '@/db';
 import { posts } from '@/db/schema';
-import seed from '@/db/content-seed.json';
+import seed from '@/lib/content/seed/content.json';
 import type { Post } from './posts';
 
 /**
