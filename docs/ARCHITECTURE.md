@@ -32,10 +32,15 @@ not as the current plan.
 
 ```
 app/
-  (public routes)       /, /pricing, /how-it-works, /qualify, /faq, /reviews,
+  layout.tsx            <html>, font (app/fonts), globals.css, metadata — nothing else
+  (site)/               the public site: its layout.tsx adds header, footer, chat,
+                        booking, analytics, consent, popups, JSON-LD.
+                        /, /pricing, /how-it-works, /qualify, /faq, /reviews,
                         /blog, /blog/[slug], /case-studies, /services/*, legal
-  admin/                signin, verify, invite, (protected)/… admin pages
+  admin/                signin, verify, invite, (protected)/… — outside (site),
+                        so it ships none of the marketing chrome
   api/                  leads, quiz, popups, auth   ← moves to the backend
+  not-found.tsx, global-error.tsx, sitemap, robots, icons, OG image
 components/             home, how-it-works, services, layout, quiz, widgets,
                         popups, loader, analytics
 lib/                    content loaders, quiz logic, nav, site config, analytics

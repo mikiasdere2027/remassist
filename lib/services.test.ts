@@ -16,7 +16,7 @@ const PATHS = new Set(SERVICES.map((s) => s.path));
 
 /** The `description:` string from a page's own metadata export. */
 function pageDescription(path: string): string {
-  const src = readFileSync(join(process.cwd(), 'app', `${path}/page.tsx`), 'utf8');
+  const src = readFileSync(join(process.cwd(), 'app', '(site)', `${path}/page.tsx`), 'utf8');
   const block = src.slice(src.indexOf('export const metadata'));
   const m = /description:\s*'([^']*)'/.exec(block.replace(/\n\s*/g, ' '));
   if (!m) throw new Error(`no metadata.description in ${path}`);
@@ -48,7 +48,7 @@ describe('service catalogue', () => {
      test that catches a page dropping it. */
   it('gives every service page its Service and breadcrumb JSON-LD', () => {
     for (const s of SERVICES) {
-      const src = readFileSync(join(process.cwd(), 'app', `${s.path}/page.tsx`), 'utf8');
+      const src = readFileSync(join(process.cwd(), 'app', '(site)', `${s.path}/page.tsx`), 'utf8');
       expect(src, `${s.path} has no ServiceJsonLd`).toContain(`<ServiceJsonLd path='${s.path}' />`);
     }
   });

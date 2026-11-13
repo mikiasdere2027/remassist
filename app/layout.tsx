@@ -1,30 +1,22 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { Sora } from 'next/font/google';
-import Header from '@/components/layout/Header';
-import SiteChrome from '@/components/layout/SiteChrome';
-import Footer from '@/components/layout/Footer';
-import AskRemAssist from '@/components/widgets/AskRemAssist';
-import BookingModal from '@/components/widgets/BookingModal';
-import JsonLd from '@/components/layout/JsonLd';
-import AttributionCapture from '@/components/analytics/AttributionCapture';
-import GoogleTagManager from '@/components/analytics/GoogleTagManager';
-import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
-import ConsentBanner from '@/components/analytics/ConsentBanner';
-import PopupManager from '@/components/popups/PopupManager';
+import localFont from 'next/font/local';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 import '@/styles/globals.css';
 
 /**
- * Sora is self-hosted + preloaded via next/font (no render-blocking Google
- * Fonts <link>). The variable aligns with the --font-sora name referenced by
- * the @theme font families in styles/globals.css.
+ * Sora, self-hosted from app/fonts (OFL — see Sora-OFL.txt). One variable
+ * file covers every weight the site uses (300–800), and the build no longer
+ * downloads fonts from Google (it failed offline). The variable aligns with the --font-sora name
+ * referenced by the @theme font families in styles/globals.css.
  */
-const sora = Sora({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
+const sora = localFont({
+  src: './fonts/Sora-latin-variable.woff2',
+  weight: '100 800',
+  style: 'normal',
   variable: '--font-sora',
   display: 'swap',
+  fallback: ['system-ui', 'Segoe UI', 'Arial', 'sans-serif'],
 });
 
 /**
@@ -78,60 +70,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
        imperatively, so there is nothing here for React to patch.
        See components/loader/RemLoader.tsx. */
     <html lang="en" className={sora.variable} suppressHydrationWarning>
-      <head>
-        {/*
-          Three origins this site always ends up talking to, none of them
-          discoverable from the HTML until something has already run:
-
-          - googletagmanager.com serves both tags — gtm.js for a container and
-            gtag.js for GA4 direct — and either way it is injected by a script
-            that only runs after hydration;
-          - youtube-nocookie.com is the hero clip's player, armed on consent or
-            a press;
-          - calendly.com is the booking iframe, which loads inside a dialog and
-            so is discovered at click time, when the visitor is waiting on it.
-
-          preconnect (not dns-prefetch) because all three are HTTPS and the
-          round trip being saved is TLS, not DNS. They are cheap: a preconnect
-          the page never uses costs one idle socket the browser closes on its
-          own after ~10s. Deliberately NOT preconnecting before consent is
-          impossible to arrange from static HTML — but a preconnect opens a
-          socket and sends no cookies and no request, so it discloses nothing
-          about the visitor beyond the fact that this page was opened.
-        */}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://www.youtube-nocookie.com" />
-        <link rel="preconnect" href="https://assets.calendly.com" />
-        <link rel="dns-prefetch" href="https://calendly.com" />
-      </head>
       <body>
-        {/* Everything inside SiteChrome is marketing furniture, and /admin
-            renders none of it — see components/layout/SiteChrome.tsx. */}
-        <SiteChrome>
-          <a className="skip-link" href="#main-content">Skip to content</a>
-          <Header />
-        </SiteChrome>
-        {/* Skip-link target. tabIndex -1 so focus can land here without
-            adding the wrapper to the tab order. */}
-        <div id="main-content" tabIndex={-1}>
-          {children}
-        </div>
-        <SiteChrome>
-          <Footer />
-          <AskRemAssist />
-          <BookingModal />
-          <JsonLd />
-          <AttributionCapture />
-          {/* Two loaders, at most one of which renders: GoogleAnalytics is
-              null whenever a container id is set. See its header. */}
-          <GoogleTagManager />
-          <GoogleAnalytics />
-          <ConsentBanner />
-          {/* Inside SiteChrome, so /admin and the sign-in screens never load it.
-              Renders nothing until there is a live, published popup for the
-              page — see components/popups/PopupManager.tsx. */}
-          <PopupManager />
-        </SiteChrome>
+        {/* The public site's chrome (header, footer, chat, booking, analytics,
+            consent, popups) lives in app/(site)/layout.tsx. The admin is
+            outside that group, so it neither renders nor downloads any of it. */}
+        {children}
       </body>
     </html>
   );

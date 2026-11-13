@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Footer from '@/components/layout/Footer';
+import Header from '@/components/layout/Header';
 import styles from './not-found.module.css';
 
 /**
@@ -28,8 +30,13 @@ const LINKS = [
 ];
 
 export default function NotFound() {
+  /* Unmatched URLs render outside the (site) route group, so the 404 brings
+     its own header and footer — a visitor from a dead link should still be
+     able to navigate the site. */
   return (
-    <main className={styles.page}>
+    <>
+    <Header />
+    <main id="main-content" className={styles.page}>
       <div className={styles.wrap}>
         <span className={styles.code}>404</span>
         <h1 className={styles.h1}>That page has moved.</h1>
@@ -50,5 +57,7 @@ export default function NotFound() {
         </ul>
       </div>
     </main>
+    <Footer />
+    </>
   );
 }

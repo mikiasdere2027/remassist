@@ -34,9 +34,9 @@ Full list of files that touch the database: see `docs/ARCHITECTURE.md` §3.
 |---|---|---|---|
 | **High** | Interview videos served raw | `public/uploads/Interviews` (Git LFS): ~70.7 / 29.5 / 22.7 / 15.5 / 9.6 MB _(sizes from the LFS pointers, unverified)_. `InterviewRail.tsx:74-79` mounts `<video autoPlay>` on the raw file | Move to Cloudinary video with adaptive streaming and small renditions; poster first |
 | **High** | Hero video | 9.1 MB, 108 s, 640×360 for a 420 px circle (MIGRATION-PLAN §0) | Re-encode plus a poster frame (Cloudinary covers this) |
-| Medium | Admin shares the public root layout | Six Sora weights load in `app/layout.tsx:24`; public chrome is hidden at runtime by `usePathname` in `SiteChrome.tsx:33` | Split into `app/(site)` and `app/admin` route groups with their own layouts; load fewer font weights |
-| Medium | Build depends on Google Fonts at build time | `next/font/google` network failure breaks the build | Self-host the font with `next/font/local` |
-| Medium | Oversized source images | Team headshots 0.4–0.85 MB each; `Agents/Pro.jpg` and `Expert.jpg` ~0.7 MB | Re-export at 2× display size or serve from Cloudinary |
+| ✅ Medium | Admin shares the public root layout | Six Sora weights load in `app/layout.tsx:24`; public chrome is hidden at runtime by `usePathname` in `SiteChrome.tsx:33` | Split into `app/(site)` and `app/admin` route groups with their own layouts; load fewer font weights |
+| ✅ Medium | Build depends on Google Fonts at build time | `next/font/google` network failure breaks the build | Self-host the font with `next/font/local` |
+| ✅ Medium | Oversized source images | Team headshots 0.4–0.85 MB each; `Agents/Pro.jpg` and `Expert.jpg` ~0.7 MB | Re-export at 2× display size or serve from Cloudinary |
 | ✅ Medium | Unused image | `public/images/Agents/Virtual-assitant.jpg` (1.2 MB) isn't referenced anywhere | Delete it |
 | Medium | Too much CSS | 662 KB across app, components and styles; `app/admin/admin.module.css` is ~5,000 lines | Split per page/section; remove dead rules |
 | Low | Client components | Sampled 28 public `'use client'` files; all need state or effects | No action. Re-check with the bundle analyzer once the build runs |
@@ -81,3 +81,11 @@ JSON-LD coverage, `poweredByHeader: false`, no secrets committed.
   admin `error.tsx` + `loading.tsx`; pricing fallback now logs; the blog search
   and newsletter inputs show a focus ring (the other 9 `outline: none` rules
   already had replacements). Error page verified in a browser at 390px.
+- **2026-11-13, batch 3 (performance):** public routes moved into the
+  `app/(site)` route group with their own layout (header, footer, chat,
+  booking, analytics, consent, popups, JSON-LD, preconnects); the admin is
+  outside it, so `SiteChrome` is gone. The 404 renders its own header/footer.
+  Sora is self-hosted from `app/fonts` (one variable woff2, OFL) — no Google
+  Fonts request at build or run time. Team headshots resized to 800px and the
+  Pro/Expert photos recompressed: 5.8 MB → 0.6 MB. Verified in a browser.
+  Still open: interview videos (need Cloudinary), CSS size, CSP.

@@ -64,7 +64,7 @@ describe('navigation data', () => {
         const src = readFileSync(file, 'utf8');
         for (const r of ROUTES) {
           // its own page linking itself does not count as reachable
-          if (file.includes(join('app', ...r.path.split('/').filter(Boolean)))) continue;
+          if (file.includes(join('app', '(site)', ...r.path.split('/').filter(Boolean)))) continue;
           if (src.includes(`"${r.path}"`) || src.includes(`'${r.path}'`)) linked.add(r.path);
         }
       }

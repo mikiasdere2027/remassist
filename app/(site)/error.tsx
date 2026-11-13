@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { BOOK_URL } from '@/lib/nav';
-import styles from './not-found.module.css';
+import styles from '../not-found.module.css';
 
 /**
  * Error boundary for every public page. Rendered inside the root layout, so

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import ArticleView, { type ArticleViewPost } from '@/app/blog/[slug]/ArticleView';
+import ArticleView, { type ArticleViewPost } from '@/app/(site)/blog/[slug]/ArticleView';
 import { parseArticleLayout } from '@/lib/blog/article-layout';
 import styles from '../../../admin.module.css';
 
