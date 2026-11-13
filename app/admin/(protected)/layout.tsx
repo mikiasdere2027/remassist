@@ -1,16 +1,15 @@
-import { cookies } from 'next/headers';
-import { signOut } from '@/auth';
 import { requireUser } from '@/lib/auth/require';
 import { canManageUsers } from '@/lib/auth/roles';
-import { REMEMBER_COOKIE } from '@/lib/auth/remember';
 import AdminNav from './AdminNav';
-import VerifyBanner from './VerifyBanner';
+import SignOutButton from './SignOutButton';
 import styles from '../admin.module.css';
 
 /**
- * The admin gate and chrome — MIGRATION-PLAN §10.
+ * The admin gate and chrome.
  *
- * A server-component check rather than middleware, per the plan.
+ * middleware.ts turns signed-out visitors away before this renders;
+ * requireUser() here is the second check and provides the user (from the
+ * backend's /v1/admin/auth/me).
  *
  * Note what this does NOT cover: route handlers render outside the layout tree,
  * so every handler under /admin re-checks the session itself. See
@@ -56,32 +55,12 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         </a>
 
         <div className={styles.sidebarFoot}>
-          <form
-            action={async () => {
-              'use server';
-              /* Clear the remember flag too. Left behind, it would silently
-                 give the next person to sign in on this browser a 30-day
-                 session they never asked for. */
-              (await cookies()).delete(REMEMBER_COOKIE);
-              await signOut({ redirectTo: '/admin/signin' });
-            }}
-          >
-            <button className={styles.signoutRow} type="submit">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <path d="m16 17 5-5-5-5M21 12H9" />
-              </svg>
-              <span>Sign out</span>
-            </button>
-          </form>
+          <SignOutButton />
         </div>
 
       </aside>
 
       <div className={styles.main}>
-        {/* Above the page's own sticky topbar, so it scrolls away rather than
-            permanently eating a strip of a screen it never blocks. */}
-        <VerifyBanner user={user} />
         {children}
       </div>
     </>

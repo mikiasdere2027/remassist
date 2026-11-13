@@ -1686,7 +1686,8 @@ select.control { padding-right: 36px; }
   border-color: var(--brand-blue);
   box-shadow: 0 0 0 3px rgba(81, 141, 224, 0.2);
 }
-.signinInput:invalid:not(:placeholder-shown):not(:focus) { border-color: #e5a6a0; }
+/* Only after the person has interacted with the field — not on page load. */
+.signinInput:user-invalid:not(:focus) { border-color: #e5a6a0; }
 .signinBtn {
   font: inherit;
   font-size: 15px;
@@ -4946,3 +4947,10 @@ a.glanceRow:hover { color: var(--blue-700); }
   border-top-color: var(--brand-blue); animation: adminSpin 0.8s linear infinite; }
 @keyframes adminSpin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
+/* ---------- auth forms: field hints and inline errors ---------- */
+.fieldHint { margin: -6px 0 6px; font-size: 12.5px; line-height: 1.5; color: var(--ink-500, #718096); }
+.fieldErr { margin: -6px 0 6px; font-size: 12.5px; line-height: 1.5; color: #8a1a12; }
+.copyRow { display: flex; gap: 8px; align-items: stretch; margin: 4px 0 0; }
+.copyRow input { flex: 1; min-width: 0; font: inherit; font-size: 13px; padding: 9px 11px;
+  border: 1px solid var(--hairline); border-radius: var(--r-sm); background: var(--ink-50, #f7f9fc); color: var(--ink-700); }

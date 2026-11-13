@@ -60,15 +60,35 @@ Everything that touches the database or the server-side auth today:
 | Admin mutations | every `actions.ts` under `app/admin/(protected)/` and `app/admin/invite` | `/v1/admin/*` |
 | Uploads | `lib/uploads`, on-disk `UPLOAD_DIR` | signed Cloudinary uploads via the backend |
 
-### How the frontend calls the API (to build in the first slice)
+### How the frontend calls the API (built 2026-11-13)
 
-- One small client in `lib/api/` (typed fetch wrapper; base URL from env).
-- **Public pages:** fetch from server components with Next cache tags
-  (`next: { tags: ['faq'] }`); the backend calls a revalidation route when
-  content changes, so pages stay static and still update.
-- **Admin pages:** forward the admin's session cookie to the API; never cache.
-- Keep the current graceful fallbacks (e.g. the lead form's `mailto:` when the
-  API is down).
+- **Browser → `/api/v1/*` → backend.** `next.config.ts` proxies `/api/v1/*` to
+  `${API_URL}/v1/*`. The browser only ever talks to this site: no CORS, the
+  session cookie (`ra_session`, httpOnly) is simply this site's cookie, and
+  the backend stays on 127.0.0.1 — no `api.` subdomain needed.
+  Client components use `lib/api/client.ts` (`api.get/post/patch/put/delete`).
+- **Server components → backend directly.** `lib/api/server.ts`
+  (`apiServer(path)`) calls `API_URL` and forwards the visitor's cookies.
+- **Errors:** both throw `ApiError` (`lib/api/errors.ts`) with `status`,
+  `message` and `fieldErrors()` from the backend's validation `issues`.
+- **Admin gate:** `middleware.ts` sends signed-out visitors to
+  `/admin/signin?next=…` and forwards the backend's refreshed session cookie
+  (sliding expiry). `lib/auth/require.ts` (`requireUser`, `requireRole`,
+  `assertUser`, …) now asks the backend (`/v1/admin/auth/me`), so pages not
+  yet rewired keep working.
+- **Response types:** `lib/api/types.ts`, by hand for now.
+- **Public pages (later slices):** fetch with Next cache tags; the backend
+  calls a revalidation route when content changes.
+- `API_URL` must be set at build time (rewrites are compiled) and at run time.
+
+### Slice status
+
+| Slice | Status |
+|---|---|
+| Auth + users (sign-in, sign-out, forgot/reset password, invitations, users & roles, change password) | ✅ wired 2026-11-13 — Auth.js, emailed codes, email verification and the allowlist deleted; tested end to end |
+| Leads + quiz + dashboard | next |
+| FAQ, posts, reviews, team, popups, catalog | after |
+| Activity log screen | with leads/dashboard |
 
 ## 4. Hardcoded content that should come from the CMS
 

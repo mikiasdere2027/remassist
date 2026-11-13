@@ -60,7 +60,11 @@ const config: NextConfig = {
        allow-listed here, and the refusal is a build-time error, not a
        broken <img>. Path is left open because the id and the resize query
        change per photograph; the host is the part worth pinning. */
-    remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com' }],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      // Uploads from the admin go to Cloudinary (via the backend's signed uploads).
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+    ],
     /* Next caches an optimised image for `max(minimumCacheTTL, upstreamMaxAge)`
        and puts that same value in the response's Cache-Control. Files served
        out of public/ leave the box as `max-age=0`, so every /_next/image
@@ -69,6 +73,20 @@ const config: NextConfig = {
        already keyed by source, width and quality, so a changed image is a
        changed URL. */
     minimumCacheTTL: 31536000,
+  },
+  /**
+   * The browser talks to the NestJS backend through this app: /api/v1/* is
+   * proxied to ${API_URL}/v1/*. Same origin for the browser — no CORS, and the
+   * session cookie is simply this site's cookie — and the backend never needs
+   * to be reachable from the internet (it listens on 127.0.0.1). Server
+   * components call API_URL directly (lib/api/server.ts).
+   *
+   * Rewrites are compiled at build time: API_URL must be set when `next build`
+   * runs (it defaults to the local backend).
+   */
+  async rewrites() {
+    const api = (process.env.API_URL || 'http://localhost:4000').replace(/\/$/, '');
+    return [{ source: '/api/v1/:path*', destination: `${api}/v1/:path*` }];
   },
   async redirects() {
     // `permanent: true` makes Next emit 308, not the 301 §11.3 specifies. Both

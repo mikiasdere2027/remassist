@@ -22,7 +22,7 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
 
   /**
    * Prefix matching, so /admin/leads/<id> keeps Leads lit (and
-   * /admin/settings/team keeps Account lit).
+   * /admin/settings/users keeps Account lit).
    *
    * Returns aria-current alongside the class because the active state is
    * carried visually by a colour and a left border, and neither reaches a
@@ -126,13 +126,13 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
         {/* Settings lives behind the identity chip in the topbar, so the only
             account item here is the one thing the chip cannot reach. */}
         {showTeam && (
-          <Link {...link('/admin/settings/team')} href="/admin/settings/team">
+          <Link {...link('/admin/settings/users')} href="/admin/settings/users">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="9" cy="8" r="3.4" />
               <path d="M3 20v-1.4A4.6 4.6 0 0 1 7.6 14h2.8a4.6 4.6 0 0 1 4.6 4.6V20" />
               <path d="M16.5 4.6a3.4 3.4 0 0 1 0 6.6M21 20v-1.4a4.6 4.6 0 0 0-3.2-4.4" />
             </svg>
-            <span>Manage team</span>
+            <span>Users</span>
           </Link>
         )}
       </div>

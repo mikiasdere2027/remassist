@@ -17,7 +17,9 @@ Next.js app: the public Rem Assist site and the admin UI. The API lives in
 
 1. **No new direct database access.** Don't add `getDb()` calls, Drizzle
    queries, `app/api` routes or DB-writing server actions. New data needs go
-   through the backend API (`lib/api/`). Existing DB code is migrated slice by
+   through the backend API: `apiServer()` (lib/api/server.ts) in server code,
+   `api.*` (lib/api/client.ts) in client components — see docs/ARCHITECTURE.md
+   §3 "How the frontend calls the API". Existing DB code is migrated slice by
    slice and deleted once its page is rewired.
 2. **Port one admin area at a time**, together with its backend module. Expect
    bugs on both sides; fix them in that slice and note anything deferred.
