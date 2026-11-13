@@ -22,6 +22,8 @@
   .bk-search input { flex: 1; border: 0; background: none; outline: none; font: 500 15px var(--font-sans);
     color: var(--ink-900); }
   .bk-search input::placeholder { color: var(--ink-500); }
+  /* The input drops its own outline, so the pill shows focus instead. */
+  .bk-search:focus-within { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(81, 141, 224, .16); }
 
   .bk-featured { display: block; border-radius: 20px; overflow: hidden; background: #fff;
     border: 1px solid var(--border-default); box-shadow: var(--shadow-sm); text-decoration: none;
@@ -104,6 +106,8 @@
     border: 1.5px solid rgba(0, 5, 67, .15); border-radius: 60px; padding: 15px 22px;
     color: var(--brand-navy); outline: none; font: 500 15px var(--font-sans); }
   .bk-news-form input::placeholder { color: var(--ink-500); }
+  .bk-news-form input:focus-visible { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(81, 141, 224, .2); }
+  .bk-news-form button:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
   .bk-news-form button { flex-shrink: 0; background: var(--brand-blue); color: #fff; font-weight: 700;
     font-size: 15px; border: 0; border-radius: 60px; padding: 0 26px; cursor: pointer; font-family: var(--font-sans); }
   .bk-news-form button:hover { background: var(--blue-700); }

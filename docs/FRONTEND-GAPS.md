@@ -20,7 +20,7 @@ slice, not F1.
 |---|---|---|---|
 | A1 | Public pages stop updating after the split | Admin actions call `revalidatePath` in-process (~28 calls in 9 `actions.ts`). Once NestJS does the writes, nothing invalidates `/`, `/pricing`, blog, FAQ or reviews. `/pricing` has no `revalidate` fallback | `fetch` with `next: { tags }` plus a signed `app/api/revalidate` route that the backend calls after each write |
 | A2 | Rich-text sanitising could get lost | `lib/content/sanitize.ts` runs at read time before `dangerouslySetInnerHTML` (`ArticleView.tsx:156,161`, `FaqTabs.tsx:169`, `FaqAccordion.tsx:45`) | Sanitise on write in NestJS **and** keep sanitising in Next until that's verified |
-| A3 | Silent fallbacks can publish wrong prices | `lib/rates/getPublishedTiers.ts` catches failures and returns seed prices; `getTeamMembers` falls back to the seed too | Log/alert when a fallback is used; fail the production build instead of shipping seed data |
+| A3 ✅ | Silent fallbacks can publish wrong prices (pricing now logs loudly; the team loader never swallowed errors — they now reach error.tsx) | `lib/rates/getPublishedTiers.ts` catches failures and returns seed prices; `getTeamMembers` falls back to the seed too | Log/alert when a fallback is used; fail the production build instead of shipping seed data |
 | A4 | Rate limiting is per process | `lib/rate-limit.ts:26` uses an in-memory `Map` | Move it to NestJS (public routes) |
 | A5 | Uploads go to local disk | `lib/uploads/images.ts:85`, 6 MB server-action body limit in `next.config.ts` | Signed Cloudinary uploads; add `res.cloudinary.com` to `images.remotePatterns` |
 | A6 | Admin protection lives only in the layout | No `middleware.ts`; checks are in `(protected)/layout.tsx` plus per-action guards | Add middleware that checks the API session cookie; the backend enforces it anyway |
@@ -57,9 +57,9 @@ Full list of files that touch the database: see `docs/ARCHITECTURE.md` §3.
 
 | Priority | Gap | Evidence | Fix |
 |---|---|---|---|
-| **High** | No error or loading boundaries | Only `not-found.tsx` exists; no `error.tsx`, `global-error.tsx` or `loading.tsx` | Add `global-error`, plus `error` and `loading` for the admin segment and the data-backed public routes. Needed once data comes over the network |
+| ✅ **High** | No error or loading boundaries | Only `not-found.tsx` exists; no `error.tsx`, `global-error.tsx` or `loading.tsx` | Add `global-error`, plus `error` and `loading` for the admin segment and the data-backed public routes. Needed once data comes over the network |
 | ✅ Medium | JSON-LD can break out of its `<script>` | `components/layout/JsonLd.tsx:49` uses raw `JSON.stringify`, and the data includes post titles from the database | Escape `<` as `<` before injecting |
-| Medium | Focus styles removed | `app/blog/page.module.css:22,105` set `outline: none`; no replacement found _(unverified)_ | Add `:focus-visible` styles |
+| ✅ Medium | Focus styles removed | `app/blog/page.module.css:22,105` set `outline: none`; no replacement found _(unverified)_ | Add `:focus-visible` styles |
 | ✅ Low | `h1` placement (verified 2026-11-13: exactly one per page) | `page.tsx` for home, how-it-works and services has no `h1`; it may be in child components _(unverified)_ | Check there is exactly one `h1` per page |
 | Low | No Content-Security-Policy | Next sets nosniff, Referrer-Policy and X-Frame-Options; no CSP. Whether Nginx adds one is unchecked | Add a CSP that allows GTM/GA, Calendly and Cloudinary |
 | Low | Sitemap after the split | `app/sitemap.ts` will need blog slugs from the API _(unverified)_ | Fetch from the API at build time or on revalidate |
@@ -76,3 +76,8 @@ JSON-LD coverage, `poweredByHeader: false`, no secrets committed.
   `$log`, `Test Admin/`, the unused agent JPG; JSON-LD is escaped via
   `lib/json-script.ts` (tested); MIGRATION-PLAN.md marked as history; verified
   one `h1` per page in a real browser at 390px and 1280px.
+- **2026-11-13, batch 2 (robustness):** `app/error.tsx` (keeps header/footer,
+  offers retry + book a call), `app/global-error.tsx` (self-contained),
+  admin `error.tsx` + `loading.tsx`; pricing fallback now logs; the blog search
+  and newsletter inputs show a focus ring (the other 9 `outline: none` rules
+  already had replacements). Error page verified in a browser at 390px.

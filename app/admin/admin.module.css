@@ -4939,3 +4939,10 @@ a.glanceRow:hover { color: var(--blue-700); }
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* ---------- error / loading states (error.tsx, loading.tsx) ---------- */
+.stateBox { max-width: 560px; margin: 0 auto; padding: 96px 24px; display: grid; gap: 16px; justify-items: start; }
+.stateNote { margin: 0; font-size: 13px; color: var(--ink-500, #718096); }
+.spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--hairline);
+  border-top-color: var(--brand-blue); animation: adminSpin 0.8s linear infinite; }
+@keyframes adminSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }

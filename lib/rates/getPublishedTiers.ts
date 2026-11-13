@@ -40,7 +40,10 @@ export async function getPublishedTiers(): Promise<PublishedTier[]> {
       .where(eq(agentTiers.active, true))
       .orderBy(asc(agentTiers.sortOrder));
 
-    if (rows.length === 0) return FALLBACK;
+    if (rows.length === 0) {
+      console.warn('[pricing] no active agent tiers in the database — showing seed prices');
+      return FALLBACK;
+    }
 
     return rows.map((r) => {
       const rate = parseFloat(r.hourlyRateUsd);
@@ -52,9 +55,10 @@ export async function getPublishedTiers(): Promise<PublishedTier[]> {
         note: r.note ?? null,
       };
     });
-  } catch {
-    // If the DB query fails for any reason (e.g. migration not yet run),
-    // fall back to the static seed values so the page still renders.
+  } catch (err) {
+    // The page still renders with the seed prices, but this must be loud: a
+    // silent fallback can publish a stale price nobody notices.
+    console.error('[pricing] reading agent tiers failed — showing seed prices', err);
     return FALLBACK;
   }
 }
