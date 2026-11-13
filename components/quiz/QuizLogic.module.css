@@ -203,3 +203,9 @@
 @media (max-width: 820px) {
   .modalGrid { grid-template-columns: 1fr; }
 }
+
+/* Privacy consent on the estimate form — recorded with the lead (consentAt). */
+.capConsent { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px;
+  font-size: 13px; line-height: 1.5; color: var(--ink-600); cursor: pointer; }
+.capConsent input { width: 18px; height: 18px; margin: 1px 0 0; flex: none; accent-color: var(--brand-blue); }
+.capConsent a { color: var(--brand-blue); font-weight: 600; }

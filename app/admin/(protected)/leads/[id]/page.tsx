@@ -97,8 +97,14 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
               </div>
             </div>
             <dl className={styles.dl}>
-              <Row label="First name" value={lead.firstName} />
-              <Row label="Last name" value={lead.lastName} />
+              {/* The quiz asks for one "name"; the contact forms ask for first
+                  and last. Show the full name always, and the parts when given. */}
+              <Row
+                label="Name"
+                value={lead.name || [lead.firstName, lead.lastName].filter(Boolean).join(' ') || null}
+              />
+              {lead.firstName && <Row label="First name" value={lead.firstName} />}
+              {lead.lastName && <Row label="Last name" value={lead.lastName} />}
               <Row label="Email" value={lead.email} mono />
               <Row label="Phone" value={lead.phone} mono />
               <Row label="Company" value={lead.company} />

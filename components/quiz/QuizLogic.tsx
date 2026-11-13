@@ -39,6 +39,7 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [consent, setConsent] = useState(false);
   const [honey, setHoney] = useState('');
   const [sending, setSending] = useState(false);
   /* idle | sent | fallback — `fallback` means the POST failed and the visitor
@@ -220,6 +221,7 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
       await submitLead({
         email,
         name: name || undefined,
+        consent,
         honey: honey || undefined,
         source: 'qualify_quiz',
         page: window.location.href,
@@ -460,10 +462,19 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
                       />
                     </label>
                   </div>
-                  <p className={styles.capFine}>
-                    We use it to send the estimate and to get in touch about it. Nothing else — see
-                    the <a href="/privacy-policy">privacy policy</a>.
-                  </p>
+                  <label className={styles.capConsent}>
+                    <input
+                      type="checkbox"
+                      name="consent"
+                      required
+                      checked={consent}
+                      onChange={(ev) => setConsent(ev.target.checked)}
+                    />
+                    <span>
+                      I agree that Rem Assist may use these details to send the estimate and
+                      contact me about it — see the <a href="/privacy-policy">privacy policy</a>.
+                    </span>
+                  </label>
                 </form>
               )}
             </div>
