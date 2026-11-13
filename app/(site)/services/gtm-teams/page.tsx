@@ -4,6 +4,7 @@ import Image from 'next/image';
 import styles from './page.module.css';
 import { ServiceJsonLd } from '@/components/layout/JsonLd';
 import ContactRail from '@/components/services/ContactRail';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   title: 'GTM Teams',
@@ -41,7 +42,7 @@ export default function Page() {
           <h1 style={{ margin: "0 0 20px", fontFamily: "var(--font-display)", fontSize: "clamp(30px, 5.2vw, 48px)", lineHeight: 1.15, fontWeight: 700, color: "#fff", textWrap: "balance" }}>A go-to-market pod, hired as one unit.</h1>
           <p style={{ margin: "0 0 32px", fontSize: "18px", lineHeight: 1.6, color: "var(--ink-200)", maxWidth: "54ch" }}>Skip six hiring cycles. We assemble outbound, marketing ops, and CRM administration into a single team that runs your motion end to end — under one contract, one report, one weekly standup.</p>
           <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <a href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener' style={{ background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 28px", borderRadius: "6px", transition: "background 150ms" }} className={styles['hv-2']}>Book a Call</a>
+            <a href={BOOK_URL} target='_blank' rel='noopener' style={{ background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 28px", borderRadius: "6px", transition: "background 150ms" }} className={styles['hv-2']}>Book a Call</a>
             <a href='/pricing' style={{ color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 20px", borderRadius: "6px", border: "1px solid var(--navy-500)" }} className={styles['hv-3']}>See pricing</a>
           </div>
         </div>

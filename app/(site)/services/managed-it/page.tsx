@@ -6,6 +6,7 @@ import ContactRail from '@/components/services/ContactRail';
 import InterviewRail from '@/components/services/InterviewRail';
 import { interviewsFor } from '@/lib/interviews';
 import BlogRail from '@/components/services/BlogRail';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   title: 'Managed IT',
@@ -42,7 +43,7 @@ export default function Page() {
           </ul>
   
           <div className={styles['it-cta-row']}>
-            <a className={`${styles['it-btn']} ${styles['hv-1']}`} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+            <a className={`${styles['it-btn']} ${styles['hv-1']}`} href={BOOK_URL} target='_blank' rel='noopener'>
               Talk to an IT Specialist
               <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
             </a>

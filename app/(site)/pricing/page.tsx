@@ -3,6 +3,7 @@ import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
 import { SeatTiers } from '@/components/services/SeatTiers';
 import { getPublishedTiers } from '@/lib/rates/getPublishedTiers';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -291,7 +292,7 @@ export default async function Page() {
         <p>Tell us the hours and the work and we will give you the exact figure for your engagement,
           plus the profiles of the people who would do it.</p>
         <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "13px", marginTop: "30px" }}>
-          <a className={styles['pr-btn']} data-book-placement="pricing" href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+          <a className={styles['pr-btn']} data-book-placement="pricing" href={BOOK_URL} target='_blank' rel='noopener'>
             Book a free consult
             <svg width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
           </a>

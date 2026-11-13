@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { DIRECTORY, categoryNumber, featuredCategories } from './directory';
+import { DIRECTORY, categoryNumber, featuredCategories } from '@/lib/content/service-directory';
 import styles from './FeaturedCarousel.module.css';
 
 /**

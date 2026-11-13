@@ -4,6 +4,7 @@ import styles from './page.module.css';
 import { ServiceJsonLd } from '@/components/layout/JsonLd';
 import ContactRail from '@/components/services/ContactRail';
 import BlogRail from '@/components/services/BlogRail';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   title: 'AI & Automation',
@@ -40,7 +41,7 @@ export default function Page() {
           </ul>
   
           <div className={styles['ai-cta-row']}>
-            <a className={`${styles['ai-btn']} ${styles['hv-1']}`} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+            <a className={`${styles['ai-btn']} ${styles['hv-1']}`} href={BOOK_URL} target='_blank' rel='noopener'>
               Map one workflow, free
               <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
             </a>
@@ -250,7 +251,7 @@ export default function Page() {
         <p className={styles['ai-band-note']}>None of the four is a feature we can turn off to hit a number. They are the
           reason this is sellable at all: automation you cannot inspect is a liability with a good quarter
           behind it.</p>
-        <a className={styles['ai-inline-cta']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>Walk through these on a call
+        <a className={styles['ai-inline-cta']} href={BOOK_URL} target='_blank' rel='noopener'>Walk through these on a call
           <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
       </div>
     </section>

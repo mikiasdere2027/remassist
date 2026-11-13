@@ -1,12 +1,13 @@
 import shared from './HomeSections.module.css';
 import styles from './RemAcronym.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 /**
  * RemAcronym — "REM — It's in the name" (index.html, Phase 02). Six letter
  * cards spelling REMOTE, followed by the blue promise bar. Static markup, so
  * this stays a server component.
  */
-const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
+const BOOK = BOOK_URL;
 
 const LETTERS = [
   {

@@ -89,3 +89,8 @@ JSON-LD coverage, `poweredByHeader: false`, no secrets committed.
   Fonts request at build or run time. Team headshots resized to 800px and the
   Pro/Expert photos recompressed: 5.8 MB → 0.6 MB. Verified in a browser.
   Still open: interview videos (need Cloudinary), CSS size, CSP.
+- **2026-11-13, batch 4 (reuse):** the booking URL now lives only in
+  `lib/nav.ts` (`BOOK_URL`) — 32 hardcoded copies in 26 files replaced, and a
+  test fails if a new copy appears. Service-directory data and how-it-works
+  phases moved from `components/` to `lib/content/`. (`useRail` stays in
+  `components/services/` — only the two services rails use it.)

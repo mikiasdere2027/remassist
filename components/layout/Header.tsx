@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import MobileNav from './MobileNav';
 import styles from './Header.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 /**
  * Site header — ported from partials/header.html.
@@ -141,7 +142,7 @@ export default function Header() {
                   Read the FAQ
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
                 </Link>
-                <a className={styles['nav-foot-cta']} data-book-placement="mega_menu_foot" href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">
+                <a className={styles['nav-foot-cta']} data-book-placement="mega_menu_foot" href={BOOK_URL} target="_blank" rel="noopener">
                   Book a free consult
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
                 </a>
@@ -152,7 +153,7 @@ export default function Header() {
           <Link className={`${styles['nav-link']} ${styles['nav-secondary']}`} href="/how-it-works" prefetch={false}>How it Works</Link>
           <Link className={styles['nav-link']} href="/pricing" prefetch={false}>Pricing</Link>
           <Link className={`${styles['nav-link']} ${styles['nav-secondary']}`} href="/qualify" prefetch={false}>Qualify</Link>
-          <a className={styles['nav-cta']} data-book-placement="header" href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">Book a Call</a>
+          <a className={styles['nav-cta']} data-book-placement="header" href={BOOK_URL} target="_blank" rel="noopener">Book a Call</a>
         </nav>
 
         {/* Below 820px the nav row above is hidden and this takes over. */}

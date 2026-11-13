@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import styles from './ContactRail.module.css';
 import { attributionForSubmit } from '@/lib/analytics/attribution';
 import { track } from '@/lib/analytics/events';
+import { BOOK_URL } from '@/lib/nav';
 
 /**
  * The contact-brief form inside ContactRail.
@@ -31,7 +32,7 @@ const SERVICES = [
 ];
 
 const CONTACT_EMAIL = 'support@remassistance.com';
-const CALENDLY = 'https://calendly.com/j-zemene-remassistance/new-meeting';
+const CALENDLY = BOOK_URL;
 
 interface Brief {
   first: string;

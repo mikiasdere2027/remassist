@@ -3,6 +3,7 @@ import { pageOg } from '@/lib/site';
 import { getFaq } from '@/lib/faq/content';
 import FaqTabs from './FaqTabs';
 import styles from './page.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions',
@@ -45,7 +46,7 @@ export default async function Page() {
           <p>Ask it on the consult. It is free, and if the answer is that we are not the right fit we
             will say so on the call rather than three weeks later.</p>
           <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "13px", marginTop: "28px" }}>
-            <a className={styles['rs-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>Book a free consult <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
+            <a className={styles['rs-btn']} href={BOOK_URL} target='_blank' rel='noopener'>Book a free consult <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
             <a className={styles['rs-ghost-dark']} href='/qualify'>Qualify in two minutes</a>
           </div>
         </div>

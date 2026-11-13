@@ -1,3 +1,4 @@
+import { BOOK_URL } from '../nav';
 /**
  * Ask RemAssist — knowledge base (single source of truth).
  *
@@ -15,7 +16,7 @@ export const CONTACT = {
   tel: 'tel:+18322302194',
   email: 'support@remassistance.com',
   mailto: 'mailto:support@remassistance.com',
-  book: 'https://calendly.com/j-zemene-remassistance/new-meeting',
+  book: BOOK_URL,
   linkedin: 'https://www.linkedin.com/company/rem-assistance/',
   instagram: 'https://www.instagram.com/remassist',
   youtube: 'https://www.youtube.com/@RemAssistant',

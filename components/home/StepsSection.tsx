@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import shared from './HomeSections.module.css';
 import styles from './StepsSection.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 /**
  * StepsSection — "From consult to coverage in four simple steps".
@@ -62,7 +63,7 @@ const STEPS = [
  */
 const THRESHOLDS = [0, 0.32, 0.62, 0.90] as const;
 
-const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
+const BOOK = BOOK_URL;
 
 export default function StepsSection() {
   const sectionRef = useRef<HTMLElement>(null);

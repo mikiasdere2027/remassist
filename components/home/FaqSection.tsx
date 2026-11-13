@@ -2,6 +2,7 @@ import { getFeaturedFaq } from '@/lib/faq/content';
 import FaqAccordion from './FaqAccordion';
 import shared from './HomeSections.module.css';
 import styles from './FaqSection.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 /**
  * FaqSection — "Certifications & FAQ", ported from index.html §faq (Phase 02).
@@ -20,7 +21,7 @@ import styles from './FaqSection.module.css';
  * for the homepage in the admin — see getFeaturedFaq and the `featured` column.
  * A question therefore exists once: correcting it here corrects /faq too.
  */
-const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
+const BOOK = BOOK_URL;
 
 /** One ISO seal. `id` namespaces the gradients and text paths so the two
  *  medallions on the page do not share defs. */

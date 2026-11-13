@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PHASES } from './phases';
+import { PHASES } from '@/lib/content/how-it-works-phases';
 import styles from './PhaseScroller.module.css';
 
 /**

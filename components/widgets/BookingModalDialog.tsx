@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import styles from './BookingModal.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 /**
  * The booking dialog itself — the branded panel and the Calendly iframe.
@@ -18,7 +19,7 @@ import styles from './BookingModal.module.css';
  * the close animation can finish before the parent unmounts us — `onClose` is
  * called at the end of the fade, not the start.
  */
-const CALENDLY_URL = 'https://calendly.com/j-zemene-remassistance/new-meeting';
+const CALENDLY_URL = BOOK_URL;
 const HOST_NAME = 'Johnathan Zemene (ASSIST)';
 const EVENT_NAME = 'Rem - Outsourced teams (review & plan)';
 const HIDE_DETAILS = true;

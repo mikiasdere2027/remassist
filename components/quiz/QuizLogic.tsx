@@ -14,6 +14,7 @@ import {
 } from '@/lib/quiz/quiz';
 import { attributionForSubmit } from '@/lib/analytics/attribution';
 import { track } from '@/lib/analytics/events';
+import { BOOK_URL } from '@/lib/nav';
 
 /**
  * QuizLogic — interactive qualification quiz, shared by /qualify and the home
@@ -453,7 +454,7 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
 
 
             <div className={styles.resCta}>
-              <a className={styles.cta} href="https://calendly.com/j-zemene-remassistance/new-meeting" target="_blank" rel="noopener">
+              <a className={styles.cta} href={BOOK_URL} target="_blank" rel="noopener">
                 Book a free consult
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
               </a>

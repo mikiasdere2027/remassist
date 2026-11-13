@@ -62,10 +62,10 @@ copies of redirect helpers, and 3 different submit styles.
 ## 5. Public site (phase F1)
 
 - ☐ `<FaqBlock ids>` from the CMS replaces the hardcoded 5-question FAQs on `/pricing`, `/qualify`, `/how-it-works`
-- ☐ `<BookCallButton placement>` reads the booking URL from one place (HomeHero has its own copy; Header, MobileNav, pricing hand-write the anchor)
+- ◐ Booking URL now comes from one place (`BOOK_URL`, enforced by a test) — a shared `<BookCallButton placement>` component is still open (HomeHero has its own copy; Header, MobileNav, pricing hand-write the anchor)
 - ☐ One `components/ui/Dialog` for the 4 modal implementations (booking, contact, popups, admin)
-- ☐ Move `useRail` to `components/ui/` (used by team, blog and interview rails)
-- ☐ Data out of `components/`: `services/directory.tsx` and `how-it-works/phases.ts` → `lib/content/` (service data is split across 3 files today)
+- ☑ ~~Move `useRail`~~ — not needed: only the two services rails use it (used by team, blog and interview rails)
+- ☑ Data out of `components/`: `services/directory.tsx` and `how-it-works/phases.ts` → `lib/content/` (service data is split across 3 files today)
 
 ## 6. Naming and folders
 

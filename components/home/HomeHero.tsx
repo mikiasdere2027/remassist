@@ -5,6 +5,7 @@ import HomeTrustBar from './HomeTrustBar';
 import { track } from '@/lib/analytics/events';
 import { HERO_INTERVIEW, interviewPoster, interviewVideo } from '@/lib/interviews';
 import styles from './HomeHero.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 /**
  * HomeHero — the interactive hero from index.html (Phase 02).
@@ -31,7 +32,7 @@ import styles from './HomeHero.module.css';
  * preload="auto"` back is a 9 MB regression on every home page load.
  */
 
-const BOOK = 'https://calendly.com/j-zemene-remassistance/new-meeting';
+const BOOK = BOOK_URL;
 const VIDEO = interviewVideo(HERO_INTERVIEW);
 const POSTER = interviewPoster(HERO_INTERVIEW);
 

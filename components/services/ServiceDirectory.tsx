@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BOOK_URL } from '@/lib/nav';
-import { categoryNumber, otherCategories } from './directory';
+import { categoryNumber, otherCategories } from '@/lib/content/service-directory';
 import styles from './ServiceDirectory.module.css';
 
 /**

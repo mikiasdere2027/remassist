@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { pageOg } from '@/lib/site';
 import QuizLogic from '@/components/quiz/QuizLogic';
 import styles from './page.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   // The root layout appends ' | Rem Assist'; carrying it here doubled it.
@@ -158,7 +159,7 @@ export default function Qualify() {
           <p>Bring the shape this page gave you and we will tell you where it is wrong — then show you
             the people who would actually do the work.</p>
           <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "13px", marginTop: "28px" }}>
-            <a className={styles['q-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+            <a className={styles['q-btn']} href={BOOK_URL} target='_blank' rel='noopener'>
               Book a free consult
               <svg width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
             </a>

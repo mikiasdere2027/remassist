@@ -4,6 +4,7 @@ import styles from './page.module.css';
 import { ServiceJsonLd } from '@/components/layout/JsonLd';
 import ContactRail from '@/components/services/ContactRail';
 import BlogRail from '@/components/services/BlogRail';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   title: 'Industry Specific',
@@ -41,7 +42,7 @@ export default function Page() {
           </ul>
   
           <div className={styles['iv-cta-row']}>
-            <a className={`${styles['iv-btn']} ${styles['hv-1']}`} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+            <a className={`${styles['iv-btn']} ${styles['hv-1']}`} href={BOOK_URL} target='_blank' rel='noopener'>
               Talk through your desk
               <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
             </a>
@@ -295,7 +296,7 @@ export default function Page() {
         <p className={styles['iv-band-note']}>We are an operations provider, not your compliance function and not your
           counsel. Where a regulation governs your desk, the obligation is yours and the scope is written so
           that stays true. See <a href='/how-it-works'>how an engagement runs</a>.</p>
-        <a className={styles['iv-inline-cta']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>Scope your desk on a call
+        <a className={styles['iv-inline-cta']} href={BOOK_URL} target='_blank' rel='noopener'>Scope your desk on a call
           <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
       </div>
     </section>

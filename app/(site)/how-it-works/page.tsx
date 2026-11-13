@@ -3,6 +3,7 @@ import { pageOg } from '@/lib/site';
 import Hero from '@/components/how-it-works/Hero';
 import PhaseScroller from '@/components/how-it-works/PhaseScroller';
 import styles from './page.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   title: 'How It Works',
@@ -192,7 +193,7 @@ export default function Page() {
         <p>Bring the volume and the hours. You will leave the call knowing the seats, the tier and the
           rate — or that we are not the right fit, which is also useful.</p>
         <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "13px", marginTop: "30px" }}>
-          <a className={styles['hw-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>
+          <a className={styles['hw-btn']} href={BOOK_URL} target='_blank' rel='noopener'>
             Book a free consult
             <svg width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg>
           </a>

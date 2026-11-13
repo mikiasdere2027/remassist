@@ -6,11 +6,11 @@ import { PRIMARY_LINKS, RESOURCE_LINKS, SERVICE_LINKS, BOOK_URL } from './nav';
 import { ROUTES } from './site';
 
 /** Every .tsx under a directory, recursively. */
-function walk(dir: string, out: string[] = []): string[] {
+function walk(dir: string, out: string[] = [], match: RegExp = /\.tsx$/): string[] {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else if (p.endsWith('.tsx')) out.push(p);
+    if (statSync(p).isDirectory()) walk(p, out, match);
+    else if (match.test(p)) out.push(p);
   }
   return out;
 }
@@ -76,7 +76,20 @@ describe('navigation data', () => {
   });
 
   it('books through the same external URL the header uses', () => {
-    expect(headerSource).toContain(BOOK_URL);
+    expect(headerSource).toContain('href={BOOK_URL}');
+  });
+
+  it('keeps the booking URL in one place (lib/nav.ts)', () => {
+    /* It was copied into 28 files once; a change of booking link meant a hunt.
+       Every page and component imports BOOK_URL instead. */
+    const copies: string[] = [];
+    for (const dir of ['app', 'components', 'lib']) {
+      for (const file of walk(join(process.cwd(), dir), [], /\.tsx?$/)) {
+        if (file.endsWith(join('lib', 'nav.ts')) || file.endsWith('.test.ts')) continue;
+        if (readFileSync(file, 'utf8').includes(BOOK_URL)) copies.push(file);
+      }
+    }
+    expect(copies).toEqual([]);
   });
 
   it('gives every entry a label', () => {

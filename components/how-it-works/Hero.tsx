@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import styles from './Hero.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 /**
  * The /how-it-works opening.
@@ -171,7 +172,7 @@ export default function Hero() {
             <div className={styles.cta}>
               <a
                 className={styles.btn}
-                href="https://calendly.com/j-zemene-remassistance/new-meeting"
+                href={BOOK_URL}
                 target="_blank"
                 rel="noopener"
               >

@@ -3,6 +3,7 @@ import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
 import { ServiceJsonLd } from '@/components/layout/JsonLd';
 import ContactRail from '@/components/services/ContactRail';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   title: 'SDR as a Service',
@@ -26,7 +27,7 @@ export default function Page() {
         <h1 style={{ margin: "0 auto 20px", fontFamily: "var(--font-display)", fontSize: "clamp(30px, 5.4vw, 50px)", lineHeight: 1.15, fontWeight: 700, color: "var(--brand-navy)", maxWidth: "22ch", textWrap: "balance" }}>SDRs who book meetings, not activity in a dashboard.</h1>
         <p style={{ margin: "0 auto 32px", fontSize: "18px", lineHeight: 1.6, color: "var(--ink-600)", maxWidth: "60ch" }}>Niche-trained SDRs who build lists, run multi-channel sequences, and book qualified meetings — a full outbound engine without the hiring cycle.</p>
         <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "center" }}>
-          <a href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener' style={{ background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 28px", borderRadius: "6px", transition: "background 150ms" }} className={styles['hv-1']}>Book a Call</a>
+          <a href={BOOK_URL} target='_blank' rel='noopener' style={{ background: "var(--brand-blue)", color: "#fff", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 28px", borderRadius: "6px", transition: "background 150ms" }} className={styles['hv-1']}>Book a Call</a>
           <a href='/pricing' style={{ color: "var(--brand-navy)", fontSize: "17px", fontWeight: 600, textDecoration: "none", padding: "14px 20px", borderRadius: "6px", border: "1px solid var(--border-strong)" }} className={styles['hv-2']}>See pricing</a>
         </div>
       </div>

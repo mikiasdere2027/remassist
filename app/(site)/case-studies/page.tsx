@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
+import { BOOK_URL } from '@/lib/nav';
 
 export const metadata: Metadata = {
   title: 'Case Studies',
@@ -31,7 +32,7 @@ export default function Page() {
             <h2>The first write-ups are in progress</h2>
             <p>We publish a study only once the client has approved the numbers in it, so this page is deliberately empty rather than padded out. On a consult we will walk you through comparable engagements directly — the process, the staffing, and the actual rate.</p>
             <div className={styles['rs-cta-row']}>
-              <a className={styles['rs-btn']} href='https://calendly.com/j-zemene-remassistance/new-meeting' target='_blank' rel='noopener'>Book a free consult
+              <a className={styles['rs-btn']} href={BOOK_URL} target='_blank' rel='noopener'>Book a free consult
                 <svg width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><path d='M5 12h14m-6-6 6 6-6 6' /></svg></a>
               <a className={`${styles['rs-btn']} ${styles['rs-btn--ghost']}`} href='/services'>Browse all 35 services</a>
             </div>
