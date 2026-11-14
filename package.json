@@ -21,6 +21,7 @@
     "supports es6-module"
   ],
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "@tiptap/extension-color": "^3.31.1",
     "@tiptap/extension-highlight": "^3.31.1",
     "@tiptap/extension-image": "^3.31.1",
@@ -39,8 +40,7 @@
     "sanitize-html": "^2.17.7",
     "server-only": "^0.0.1",
     "sharp": "^0.33.5",
-    "zod": "^4.4.3",
-    "@google/genai": "^2.24.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -54,8 +54,7 @@
     "node-html-parser": "^9.0.1",
     "tailwindcss": "^4.1.7",
     "typescript": "^5.7.2",
-    "vitest": "^4.1.11",
-    "tsx": "^4.23.12"
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": ">=20.9.0"
