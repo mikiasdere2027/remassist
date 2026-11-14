@@ -112,6 +112,24 @@ function Feedback({ state, pending, okText }: { state: ActionResult | null; pend
 }
 
 /** Add a note, log a call, or create a task — the three things done most. */
+const ADD_TASK_EVENT = 'lead:add-task';
+
+/** Opens the composer's Task tab (in the main column) from the Tasks card. */
+export function AddTaskButton() {
+  return (
+    <a
+      href="#add-task"
+      className={`${admin.btn} ${admin.btnGhost} ${s.addTaskBtn}`}
+      onClick={(e) => {
+        e.preventDefault();
+        window.dispatchEvent(new Event(ADD_TASK_EVENT));
+      }}
+    >
+      + Add task
+    </a>
+  );
+}
+
 export function Composer({
   leadId, team, me,
 }: {
@@ -139,8 +157,33 @@ export function Composer({
     { key: 'task', label: 'Task' },
   ] as const;
 
+  /* "Add task" in the Tasks card (or a #add-task link) opens the Task tab
+     here, scrolls to it and puts the cursor in the title. */
+  const sectionRef = useRef<HTMLElement>(null);
+  const [focusTask, setFocusTask] = useState(0);
+  useEffect(() => {
+    const open = () => {
+      setMode('task');
+      setFocusTask((n) => n + 1);
+    };
+    if (window.location.hash === '#add-task') open();
+    window.addEventListener(ADD_TASK_EVENT, open);
+    return () => window.removeEventListener(ADD_TASK_EVENT, open);
+  }, []);
+  useEffect(() => {
+    if (!focusTask) return;
+    const section = sectionRef.current;
+    if (section) {
+      // Stop below the sticky page header, whose height changes with the width.
+      const header = document.querySelector('[data-admin-topbar]')?.getBoundingClientRect().height ?? 0;
+      const top = section.getBoundingClientRect().top + window.scrollY - header - 12;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+    document.getElementById('task-title')?.focus({ preventScroll: true });
+  }, [focusTask]);
+
   return (
-    <section className={s.card} aria-label="Add to this lead">
+    <section ref={sectionRef} id="add-task" className={s.card} aria-label="Add to this lead">
       <div className={s.composerTabs} role="tablist">
         {tabs.map((t) => (
           <button

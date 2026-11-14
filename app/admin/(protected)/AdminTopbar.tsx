@@ -21,7 +21,7 @@ export default function AdminTopbar({
   action?: ReactNode;
 }) {
   return (
-    <header className={styles.topbar}>
+    <header className={styles.topbar} data-admin-topbar>
       <div className={styles.tbInner}>
         {/* Left: page title + subtitle */}
         <div>

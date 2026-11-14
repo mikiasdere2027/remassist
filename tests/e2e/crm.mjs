@@ -62,7 +62,11 @@ await p.fill('#call-body', 'Left a voicemail about the proposal.');
 await p.click('button:has-text("Log call")');
 await p.locator('text=Call logged').waitFor({ timeout: 10000 }).catch(() => {});
 
-await p.click('button[role=tab]:has-text("Task")');
+// "Add task" in the Tasks card opens the Task tab and focuses its title
+await p.click('a:has-text("Add task")');
+await p.waitForTimeout(600);
+ok((await p.getAttribute('button[role=tab]:has-text("Task")', 'aria-selected')) === 'true', '"Add task" opens the Task tab');
+ok(await p.evaluate(() => document.activeElement?.id === 'task-title'), '"Add task" puts the cursor in the task title');
 const taskTitle = `Send proposal ${stamp}`;
 await p.fill('#task-title', taskTitle);
 const due = new Date(Date.now() + 2 * 86_400_000);

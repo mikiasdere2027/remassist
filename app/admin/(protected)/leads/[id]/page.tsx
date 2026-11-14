@@ -13,7 +13,7 @@ import {
   type CallOutcome,
 } from '@/lib/crm/display';
 import StatusForm from './StatusForm';
-import { Composer, InlineSelect, LocalTime, QualificationForm, TaskCheck } from './LeadClient';
+import { AddTaskButton, Composer, InlineSelect, LocalTime, QualificationForm, TaskCheck } from './LeadClient';
 import AdminTopbar from '../../AdminTopbar';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
@@ -351,10 +351,11 @@ export default async function LeadDetail({
               </div>
               <div className={s.cardBody}>
                 {openTasks.length === 0 ? (
-                  <p className={s.cardNote}>No open tasks. Add one below the tabs to schedule the next follow-up.</p>
+                  <p className={s.cardNote}>No open tasks. Add one to schedule the next follow-up.</p>
                 ) : (
                   <TaskItems items={openTasks} />
                 )}
+                <AddTaskButton />
                 {doneTasks.length > 0 && (
                   <details>
                     <summary className={s.doneToggle}>{doneTasks.length} completed</summary>
