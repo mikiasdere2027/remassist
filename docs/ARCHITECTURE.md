@@ -4,7 +4,7 @@ The Next.js app: the public marketing site and the admin UI. The system-wide
 plan, module order and roadmap live in the backend repo:
 `remassist-backend/docs/ARCHITECTURE.md`. This file covers the frontend side.
 
-_Last updated: 2026-11-12_
+_Last updated: 2026-11-14_
 
 ---
 
@@ -39,12 +39,15 @@ app/
                         /blog, /blog/[slug], /case-studies, /services/*, legal
   admin/                signin, verify, invite, (protected)/… — outside (site),
                         so it ships none of the marketing chrome
-  api/                  leads, quiz, popups, auth   ← moves to the backend
+  api/                  revalidate (called by the backend; /api/v1 is a proxy rewrite),
+                        voice/* (Maya's Gemini session + calendar — stays here)
   not-found.tsx, global-error.tsx, sitemap, robots, icons, OG image
 components/             home, how-it-works, services, layout, quiz, widgets,
                         popups, loader, analytics
-lib/                    content loaders, quiz logic, nav, site config, analytics
-db/                     Drizzle schema + migrations   ← moves to the backend
+lib/                    api/ (client, server, public, types, leads), quiz logic,
+                        nav, site config, analytics, voice/ (Maya), crm/ (CRM
+                        display helpers, CSV parsing, custom-field forms)
+tests/e2e/              browser checks against a running stack (see its README)
 ```
 
 ## 3. What has to be rewired
@@ -94,6 +97,31 @@ Verified in a real browser with both apps running: every admin page (1280px
 and 390px), sign-in/invite/reset flows, a published FAQ answer and a changed
 rate appearing on the public site without a rebuild, a lead reaching the admin
 and the activity log, per-visitor rate limits through the proxy.
+
+### CRM and Maya (merged 2026-11-14)
+
+Mikias's work (site updates, Maya the voice assistant, CRM phase 1) was merged
+from `main` on 2026-11-14. His CRM screens are kept as he built them; their
+data now comes from the backend (`/v1/admin/leads/*`, `/v1/admin/tasks`):
+
+- `leads/[id]/crm-actions.ts`, `leads/new/create-lead.ts`,
+  `leads/import/import-leads.ts` — client-side calls to the API that replace
+  his server actions (same `ActionResult` shape, then `router.refresh()`).
+- `lib/api/leads.ts` — the lead types, status/source lists and `leadsApi`.
+  Scoring, dedupe, phone and assignment rules live only in the backend; the
+  lead page shows the backend's `scoreBreakdown`.
+- **Maya** keeps her own routes (`app/api/voice/*`: Gemini session token,
+  calendar availability and booking). Her leads post to
+  `/api/v1/public/leads` (source `voice_agent`) and a booking is stamped on
+  the lead through the backend (`lib/booking/stamp.ts`). `lib/voice/guard.ts`
+  refuses requests without a same-site Origin; `lib/voice/rate-limit.ts`
+  limits sessions per visitor.
+
+### Browser tests
+
+`tests/e2e/` has four scripts — public pages, sign-in/users, every admin page
+and flow, the CRM screens — run against a local stack (README there). All
+pass as of 2026-11-14.
 
 ## 4. Hardcoded content that should come from the CMS
 

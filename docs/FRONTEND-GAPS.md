@@ -107,3 +107,11 @@ JSON-LD coverage, `poweredByHeader: false`, no secrets committed.
   (Cloudinary uploads), A6 (`middleware.ts`), A7 (all routes ported or deleted)
   done. Admin pages at 390px fixed (nav, dashboard grid, filter pills, team
   toolbar, file inputs).
+- **2026-11-14, merge + CRM cleanup:** Mikias's site updates, Maya and CRM
+  phase 1 merged and moved onto the API (see ARCHITECTURE.md §3). Removed the
+  frontend copies of the CRM rules (scoring, dedupe, phone, assignment —
+  backend only now), the duplicate status lists in `lib/leads/display.ts`
+  and `tools/crm-backfill-scores.mts` (now `npm run leads:backfill-scores` in
+  the backend). Browser checks added under `tests/e2e/`. Still open:
+  `deploy/` (incl. `set-admin-password.mjs`) belongs to the old single-app
+  deploy and must be replaced when the VPS moves to the frontend + API setup.

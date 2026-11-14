@@ -6,6 +6,7 @@ Next.js app: the public Rem Assist site and the admin UI. The API lives in
 - `docs/ARCHITECTURE.md` — what this app does today, what moves to the API, CMS candidates
 - `../remassist-backend/docs/ARCHITECTURE.md` — the system-wide plan and module order
 - `docs/FRONTEND-GAPS.md` — known performance/code gaps, fixed in a later phase
+- `tests/e2e/README.md` — the browser checks (public, auth, admin, CRM)
 - `docs/RESTRUCTURE.md` — shared admin components, the `lib/api` pattern and screens to delete; apply them while rewiring each admin area
 
 ## Commands
@@ -21,6 +22,9 @@ Next.js app: the public Rem Assist site and the admin UI. The API lives in
    `api.*` (lib/api/client.ts) in client components — see docs/ARCHITECTURE.md
    §3 "How the frontend calls the API". Existing DB code is migrated slice by
    slice and deleted once its page is rewired.
+   Exception: Maya's `app/api/voice/*` routes (Gemini session token and the
+   booking calendar) stay in this app; her leads and bookings still go
+   through the backend.
 2. **All data goes through the backend** (the migration finished 2026-11-13).
    New admin features: backend module + endpoint first, then the page.
 3. **Don't hardcode business data.** Rates, contact details, the booking link,
