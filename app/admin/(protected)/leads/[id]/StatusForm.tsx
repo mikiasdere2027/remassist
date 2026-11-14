@@ -1,7 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { setLeadStatus } from './actions';
+import { setLeadStatus } from './crm-actions';
 import { SELECTABLE_STATUSES } from '@/lib/leads/display';
 import { STATUS_LABELS } from '@/lib/crm/display';
 import styles from '../../../admin.module.css';
@@ -10,6 +11,7 @@ import styles from '../../../admin.module.css';
  * The status control — placed directly in the topbar header slot.
  */
 export default function StatusForm({ id, current }: { id: string; current: string }) {
+  const router = useRouter();
   const [value, setValue] = useState(current);
   const [pending, start] = useTransition();
   const [failed, setFailed] = useState(false);
@@ -28,9 +30,11 @@ export default function StatusForm({ id, current }: { id: string; current: strin
           setValue(next);
           setFailed(false);
           start(async () => {
-            try {
-              await setLeadStatus(id, next);
-            } catch {
+            const r = await setLeadStatus(id, next);
+            if (r.ok) {
+              // The timeline and response clock change with the status.
+              router.refresh();
+            } else {
               setValue(previous);
               setFailed(true);
             }

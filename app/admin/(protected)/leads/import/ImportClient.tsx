@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import { IMPORT_FIELDS, applyMapping, guessMapping, parseCsv, type ImportField } from '@/lib/crm/csv';
-import { importLeads, type ImportSummary } from './actions';
+import { importLeads, type ImportSummary } from './import-leads';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
 
@@ -83,9 +83,16 @@ export default function ImportClient({ team, me }: { team: Array<{ id: string; n
 
   return (
     <div className={s.cardBody}>
-      <div>
+      <div style={{ minWidth: 0, maxWidth: '100%' }}>
         <label className={s.label} htmlFor="import-file">CSV file</label>
-        <input id="import-file" type="file" accept=".csv,text/csv" onChange={(e) => onFile(e.target.files?.[0])} />
+        {/* File inputs have an intrinsic width; cap it so phones don't scroll sideways. */}
+        <input
+          id="import-file"
+          type="file"
+          accept=".csv,text/csv"
+          style={{ maxWidth: '100%' }}
+          onChange={(e) => onFile(e.target.files?.[0])}
+        />
         <p className={s.cardNote}>
           Export from Excel, Google Sheets or another CRM as CSV. The first row must be the column names.
           Up to {MAX_ROWS} leads, 2 MB.

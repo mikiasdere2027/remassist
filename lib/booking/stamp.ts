@@ -1,66 +1,58 @@
-import { and, eq, gt, sql } from 'drizzle-orm';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { leads } from '@/db/schema';
+import 'server-only';
+import { API_URL } from '@/lib/api/server';
 
 /**
- * Write booking progress onto the lead Maya saved earlier in the call.
+ * Write Maya's booking onto the lead she saved earlier in the same
+ * conversation — POST /v1/public/leads/:id/booking on the backend. The
+ * backend only accepts it for that lead's own email and within two hours of
+ * the lead being created, adds a "meeting" entry to the lead's timeline, and
+ * (for a confirmed booking) alerts the team.
  *
- * The lead is created once (capture_lead), before the visitor has necessarily
- * said anything about a call. Asking for times and booking one happen later,
- * so they land here: merged into raw_fields for queries, and appended to the
- * message for whoever reads the lead.
- *
- * Matched on id AND email AND recency, because the id arrives from the
- * browser: a guessed or replayed one must not be able to touch somebody
- * else's record. Never throws — the booking itself is what matters.
+ * Best effort: a failure here must never fail the visitor's booking, which
+ * Calendly has already made. Errors are logged.
  */
+async function postBooking(
+  leadId: string,
+  body: { email: string; kind: 'requested' | 'booked'; fields?: Record<string, string>; note?: string },
+  forwardedFor: string | null,
+): Promise<void> {
+  try {
+    const res = await fetch(`${API_URL}/v1/public/leads/${encodeURIComponent(leadId)}/booking`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(forwardedFor ? { 'x-forwarded-for': forwardedFor } : {}),
+      },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok && res.status !== 404) {
+      console.error(`[voice] booking stamp answered ${res.status}`);
+    }
+  } catch (err) {
+    console.error('[voice] booking stamp failed', err);
+  }
+}
 
-const MATCH_WINDOW_MS = 2 * 60 * 60_000;
-
+/** After a confirmed Calendly booking. */
 export async function stampLead(
   leadId: string | undefined,
   email: string | undefined,
   fields: Record<string, string>,
-  note?: string,
+  note: string | undefined,
+  forwardedFor: string | null,
 ): Promise<void> {
-  if (!leadId || !email || !isDatabaseConfigured()) return;
-  try {
-    await getDb()
-      .update(leads)
-      .set({
-        rawFields: sql`coalesce(${leads.rawFields}, '{}'::jsonb) || ${JSON.stringify(fields)}::jsonb`,
-        ...(note ? { message: sql`coalesce(${leads.message}, '') || ${'\n' + note}` } : {}),
-      })
-      .where(and(
-        eq(leads.id, leadId),
-        eq(leads.email, email.trim().toLowerCase()),
-        gt(leads.createdAt, new Date(Date.now() - MATCH_WINDOW_MS)),
-      ));
-  } catch (err) {
-    console.error('[voice] lead stamp failed', err);
-  }
+  if (!leadId || !email) return;
+  await postBooking(leadId, { email, kind: 'booked', fields, note }, forwardedFor);
 }
 
-/**
- * The visitor asked for a call after their lead was saved. Idempotent: Maya
- * may look up times several times, so this flips the flag and rewrites the
- * "Meeting requested: no" line toLeadBody wrote, rather than appending.
- */
-export async function markMeetingRequested(leadId: string | undefined, email: string | undefined): Promise<void> {
-  if (!leadId || !email || !isDatabaseConfigured()) return;
-  try {
-    await getDb()
-      .update(leads)
-      .set({
-        rawFields: sql`coalesce(${leads.rawFields}, '{}'::jsonb) || '{"meetingRequested":"yes"}'::jsonb`,
-        message: sql`replace(coalesce(${leads.message}, ''), 'Meeting requested: no', 'Meeting requested: YES')`,
-      })
-      .where(and(
-        eq(leads.id, leadId),
-        eq(leads.email, email.trim().toLowerCase()),
-        gt(leads.createdAt, new Date(Date.now() - MATCH_WINDOW_MS)),
-      ));
-  } catch (err) {
-    console.error('[voice] meeting-request stamp failed', err);
-  }
+/** As soon as the visitor asks for a call, whether or not the booking works. */
+export async function markMeetingRequested(
+  leadId: string | undefined,
+  email: string | undefined,
+  forwardedFor: string | null,
+): Promise<void> {
+  if (!leadId || !email) return;
+  await postBooking(leadId, { email, kind: 'requested' }, forwardedFor);
 }

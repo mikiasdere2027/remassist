@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireUser } from '@/lib/auth/require';
-import { getTeam } from '@/lib/crm/leads';
+import { apiServer } from '@/lib/api/server';
+import type { Assignee } from '@/lib/api/leads';
 import AdminTopbar from '../../AdminTopbar';
 import ImportClient from './ImportClient';
 import admin from '../../../admin.module.css';
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function ImportLeadsPage() {
   const me = await requireUser();
-  const team = await getTeam();
+  const team = await apiServer<Assignee[]>('/admin/leads/assignees');
   return (
     <>
       <AdminTopbar title="Import leads" subtitle="From a spreadsheet, an event list or another CRM" />

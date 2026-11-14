@@ -1,13 +1,13 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { isDatabaseConfigured } from '@/db';
+import { isApiError } from '@/lib/api/errors';
+import { apiServer } from '@/lib/api/server';
+import type { Assignee, LeadDetail as LeadDetailData, TimelineItem } from '@/lib/api/leads';
 import {
   SOURCE_LABELS, answerFor, formatDate, formatUtm, orderedAnswers, questionFor, unknownRawKeys,
 } from '@/lib/leads/display';
 import { requireUser } from '@/lib/auth/require';
-import { currentWorkspaceId } from '@/lib/crm/workspace';
-import { getLeadDetail, getLeadFieldDefs, getTeam, type TimelineItem } from '@/lib/crm/leads';
 import { scoreLead } from '@/lib/crm/scoring';
 import {
   CALL_OUTCOME_LABELS, PRIORITIES, PRIORITY_LABELS, STATUS_LABELS, formatDuration, initials, responseClock,
@@ -16,9 +16,6 @@ import {
 import type { QuizResult } from '@/lib/quiz/quiz';
 import StatusForm from './StatusForm';
 import { Composer, InlineSelect, LocalTime, QualificationForm, TaskCheck } from './LeadClient';
-import {
-  addLeadNote, addLeadTask, logLeadCall, saveQualification, setLeadOwner, setLeadPriority, setTaskDone,
-} from './actions';
 import AdminTopbar from '../../AdminTopbar';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
@@ -51,16 +48,22 @@ export default async function LeadDetail({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  if (!isDatabaseConfigured()) notFound();
-  /* A malformed id would make Postgres throw on the uuid cast — a 500 for
-     what is really a bad URL. */
+  /* A malformed id is a bad URL, not a server error. */
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const me = await requireUser();
-  const ws = currentWorkspaceId();
-  const [detail, defs, team] = await Promise.all([getLeadDetail(ws, id), getLeadFieldDefs(ws), getTeam()]);
-  if (!detail) notFound();
-  const { lead, quizzes, timeline, tasks } = detail;
+  let lead: LeadDetailData;
+  let team: Assignee[];
+  try {
+    [lead, team] = await Promise.all([
+      apiServer<LeadDetailData>(`/admin/leads/${id}`),
+      apiServer<Assignee[]>('/admin/leads/assignees'),
+    ]);
+  } catch (err) {
+    if (isApiError(err, 404) || isApiError(err, 400)) notFound();
+    throw err;
+  }
+  const { quizSubmissions: quizzes, timeline, tasks, fieldDefs: defs } = lead;
 
   const tab: Tab = TABS.some((t) => t.key === sp.tab) ? (sp.tab as Tab) : 'inquiry';
   const custom = (lead.custom ?? {}) as Record<string, unknown>;
@@ -75,7 +78,12 @@ export default async function LeadDetail({
     serviceInterest: lead.serviceInterest,
     quiz: quiz ? { completed: quiz.completed, seats: Number(quote?.seats) || 0, timing: quiz.answers?.timing } : null,
   });
-  const clock = responseClock(lead.createdAt, lead.firstContactedAt, new Date(), lead.status);
+  const clock = responseClock(
+    new Date(lead.createdAt),
+    lead.firstContactedAt ? new Date(lead.firstContactedAt) : null,
+    new Date(),
+    lead.status,
+  );
   const openTasks = tasks.filter((t) => !t.doneAt);
   const doneTasks = tasks.filter((t) => t.doneAt);
   const displayName = lead.name || lead.email;
@@ -117,7 +125,8 @@ export default async function LeadDetail({
                   value={lead.ownerId ?? ''}
                   placeholder="Unassigned"
                   options={ownerOptions}
-                  action={setLeadOwner.bind(null, lead.id)}
+                  leadId={lead.id}
+                  field="owner"
                 />
               </div>
               <div className={s.section}>
@@ -125,12 +134,12 @@ export default async function LeadDetail({
                 <KV label="Email"><a href={`mailto:${lead.email}`}>{lead.email}</a></KV>
                 <KV label="Phone">{lead.phone ? <a href={`tel:${lead.phone.replace(/[^\d+]/g, '')}`}>{lead.phone}</a> : null}</KV>
                 <KV label="Country">{lead.country}</KV>
-                <KV label="Privacy consent">{lead.consentAt ? <>Agreed <LocalTime iso={lead.consentAt.toISOString()} mode="date" /></> : null}</KV>
+                <KV label="Privacy consent">{lead.consentAt ? <>Agreed <LocalTime iso={lead.consentAt} mode="date" /></> : null}</KV>
               </div>
               <div className={s.section}>
                 <h3 className={s.sectionTitle}>Source</h3>
                 <KV label="Channel">{SOURCE_LABELS[lead.source] ?? lead.source}</KV>
-                <KV label="Received"><LocalTime iso={lead.createdAt.toISOString()} /></KV>
+                <KV label="Received"><LocalTime iso={lead.createdAt} /></KV>
                 <KV label="Campaign">{campaign || 'None'}</KV>
                 <KV label="Landing page">{lead.pageUrl}</KV>
                 <KV label="Referrer">{lead.referrer || 'Direct / none'}</KV>
@@ -248,7 +257,7 @@ export default async function LeadDetail({
                   <h2 className={s.cardTitle}>Qualification</h2>
                   <span className={s.cardNote}>Is this a fit, and what would they buy?</span>
                 </div>
-                <QualificationForm defs={defs} values={custom} action={saveQualification.bind(null, lead.id)} />
+                <QualificationForm defs={defs} values={custom} leadId={lead.id} />
               </section>
             )}
 
@@ -276,9 +285,7 @@ export default async function LeadDetail({
             )}
 
             <Composer
-              note={addLeadNote.bind(null, lead.id)}
-              call={logLeadCall.bind(null, lead.id)}
-              task={addLeadTask.bind(null, lead.id)}
+              leadId={lead.id}
               team={team}
               me={me.id}
             />
@@ -321,7 +328,8 @@ export default async function LeadDetail({
                   label="Priority"
                   value={lead.priority}
                   options={PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
-                  action={setLeadPriority.bind(null, lead.id)}
+                  leadId={lead.id}
+                  field="priority"
                 />
               </div>
             </section>
@@ -342,7 +350,7 @@ export default async function LeadDetail({
                   </div>
                 </div>
                 <KV label="Next follow-up">
-                  {lead.nextFollowUpAt ? <LocalTime iso={lead.nextFollowUpAt.toISOString()} /> : null}
+                  {lead.nextFollowUpAt ? <LocalTime iso={lead.nextFollowUpAt} /> : null}
                 </KV>
                 <KV label="Status">{STATUS_LABELS[lead.status] ?? lead.status}</KV>
               </div>
@@ -404,24 +412,24 @@ function Quote({ label, value }: { label: string; value?: string | number }) {
   );
 }
 
-function TaskItems({ items }: { items: Array<{ id: string; title: string; dueAt: Date | null; doneAt: Date | null; priority: string; assigneeName: string | null; assigneeEmail: string | null }> }) {
+function TaskItems({ items }: { items: Array<{ id: string; title: string; dueAt: string | null; doneAt: string | null; priority: string; assigneeName: string | null }> }) {
   const now = Date.now();
   return (
     <ul className={s.taskList}>
       {items.map((t) => {
-        const overdue = !t.doneAt && t.dueAt && t.dueAt.getTime() < now;
+        const overdue = !t.doneAt && t.dueAt && new Date(t.dueAt).getTime() < now;
         return (
           <li key={t.id} className={`${s.task} ${t.doneAt ? s.taskDone : ''}`}>
-            <TaskCheck id={t.id} title={t.title} done={Boolean(t.doneAt)} action={setTaskDone} />
+            <TaskCheck id={t.id} title={t.title} done={Boolean(t.doneAt)} />
             <div>
               <div className={s.taskTitle}>{t.title}</div>
               <div className={s.taskMeta}>
                 {t.dueAt && (
                   <span className={overdue ? s.overdue : undefined}>
-                    {overdue ? 'Overdue · ' : 'Due '}<LocalTime iso={t.dueAt.toISOString()} />
+                    {overdue ? 'Overdue · ' : 'Due '}<LocalTime iso={t.dueAt} />
                   </span>
                 )}
-                <span>{t.assigneeName || t.assigneeEmail || 'Unassigned'}</span>
+                <span>{t.assigneeName || 'Unassigned'}</span>
                 {t.priority === 'high' && <span className={s.overdue}>High</span>}
               </div>
             </div>
@@ -438,10 +446,11 @@ const ICONS: Record<string, React.ReactNode> = {
   status_change: <path d="M4 12h12M12 6l6 6-6 6" />,
   owner_change: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
   system: <><circle cx="12" cy="12" r="9" /><path d="M12 8v4l3 2" /></>,
+  meeting: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></>,
 };
 
 function TimelineEntry({ a }: { a: TimelineItem }) {
-  const who = a.actorName?.trim() || a.actorEmail || 'System';
+  const who = a.actorName?.trim() || 'System';
   const meta = (a.meta ?? {}) as Record<string, unknown>;
   let head: React.ReactNode;
   let body: string | null = a.body;
@@ -467,7 +476,7 @@ function TimelineEntry({ a }: { a: TimelineItem }) {
       body = null;
       break;
     default:
-      head = a.actorName || a.actorEmail ? <><b>{who}</b> · {a.body}</> : <>{a.body}</>;
+      head = a.actorName ? <><b>{who}</b> · {a.body}</> : <>{a.body}</>;
       body = null;
   }
 
@@ -480,7 +489,7 @@ function TimelineEntry({ a }: { a: TimelineItem }) {
       <div>
         <div className={s.eventHead}>
           <span>{head}</span>
-          <span className={s.eventTime}><LocalTime iso={a.occurredAt.toISOString()} /></span>
+          <span className={s.eventTime}><LocalTime iso={a.occurredAt} /></span>
         </div>
         {body && <p className={s.eventBody}>{body}</p>}
         {reasons && reasons.length > 0 && (

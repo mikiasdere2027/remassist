@@ -38,7 +38,11 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ ok: false, error: 'invalid' }, { status: 400 });
 
-  await markMeetingRequested(parsed.data.leadId, parsed.data.email);
+  await markMeetingRequested(
+    parsed.data.leadId,
+    parsed.data.email,
+    req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip'),
+  );
   if (!calendlyConfigured()) return Response.json({ ok: false, error: 'not_configured' });
 
   const tz = safeTimeZone(parsed.data.timezone);

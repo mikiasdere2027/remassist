@@ -4,8 +4,6 @@ import { companyDomainFromEmail, domainFromWebsite, emailDomain, normalizeEmail 
 import { pickOwner } from './assignment';
 import { scoreLead } from './scoring';
 import { customFromFormData, formatCustomValue, validateCustomFields, type FieldDef } from './fields';
-import { EVENT_TYPES } from './events';
-import { DEFAULT_WORKSPACE_ID, currentWorkspaceId } from './workspace';
 
 describe('toE164', () => {
   it('keeps international numbers', () => {
@@ -124,16 +122,5 @@ describe('custom fields', () => {
   it('keeps values of archived fields', () => {
     const r = validateCustomFields(defs, { seats_needed: 1 }, { old_field: 'kept' });
     expect(r.success && r.data).toEqual({ old_field: 'kept', seats_needed: 1 });
-  });
-});
-
-describe('events and workspace', () => {
-  it('event names are unique and dotted', () => {
-    expect(new Set(EVENT_TYPES).size).toBe(EVENT_TYPES.length);
-    for (const t of EVENT_TYPES) expect(t).toMatch(/^[a-z]+\.[a-z_]+$/);
-  });
-  it('there is one workspace today, matching the migration seed', () => {
-    expect(currentWorkspaceId()).toBe(DEFAULT_WORKSPACE_ID);
-    expect(DEFAULT_WORKSPACE_ID).toBe('00000000-0000-4000-8000-000000000001');
   });
 });

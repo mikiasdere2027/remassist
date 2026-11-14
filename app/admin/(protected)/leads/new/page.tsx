@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireUser } from '@/lib/auth/require';
-import { getTeam } from '@/lib/crm/leads';
+import { apiServer } from '@/lib/api/server';
+import type { Assignee } from '@/lib/api/leads';
 import { SERVICES } from '@/lib/services';
 import AdminTopbar from '../../AdminTopbar';
 import NewLeadForm from './NewLeadForm';
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function NewLeadPage() {
   const me = await requireUser();
-  const team = await getTeam();
+  const team = await apiServer<Assignee[]>('/admin/leads/assignees');
   const services = SERVICES.map((x) => x.name).filter((n) => n !== 'All Services');
 
   return (

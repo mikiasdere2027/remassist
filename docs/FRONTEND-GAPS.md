@@ -62,6 +62,7 @@ Full list of files that touch the database: see `docs/ARCHITECTURE.md` §3.
 | ✅ Medium | Focus styles removed | `app/blog/page.module.css:22,105` set `outline: none`; no replacement found _(unverified)_ | Add `:focus-visible` styles |
 | ✅ Low | `h1` placement (verified 2026-11-13: exactly one per page) | `page.tsx` for home, how-it-works and services has no `h1`; it may be in child components _(unverified)_ | Check there is exactly one `h1` per page |
 | Low | No Content-Security-Policy | Next sets nosniff, Referrer-Policy and X-Frame-Options; no CSP. Whether Nginx adds one is unchecked | Add a CSP that allows GTM/GA, Calendly and Cloudinary |
+| Low | Users screen sometimes doesn't refresh after an invite (found 2026-11-14) | The browser test (`tests/e2e/auth.mjs`) failed 2 of 5 runs: the invite was created and its link shown, but the new row never appeared until a reload. `router.refresh()` in `UsersManager.run` didn't land, or landed with stale data | Reproduce, then add the created invitation to local state (or `await` a refetch) instead of relying on the refresh alone |
 | Low | Sitemap after the split | `app/sitemap.ts` will need blog slugs from the API _(unverified)_ | Fetch from the API at build time or on revalidate |
 
 Fine as they are: robots, sitemap, per-page metadata, admin `noindex`,

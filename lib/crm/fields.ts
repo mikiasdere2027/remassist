@@ -18,7 +18,7 @@ export interface FieldDef {
   type: FieldType;
   options?: string[] | null;
   required?: boolean;
-  archivedAt?: Date | null;
+  archivedAt?: Date | string | null;
 }
 
 export const FIELD_KEY = /^[a-z][a-z0-9_]{0,39}$/;

@@ -1,5 +1,5 @@
 import { Type, type FunctionDeclaration } from '@google/genai';
-import type { LeadInput } from '@/lib/leads/schema';
+import type { LeadSubmission } from '@/lib/api/leads';
 
 /**
  * What Maya can do besides talk: hand a qualified visitor to the team
@@ -92,13 +92,13 @@ function str(v: unknown, max: number): string | undefined {
 }
 
 /**
- * Map the model's function-call arguments onto the /api/leads body.
+ * Map the model's function-call arguments onto the POST /v1/public/leads body.
  *
  * Kept pure so it is testable without a session. The qualification answers
  * have no columns of their own, so they go into `message` for the person
  * reading the lead and into `rawFields` for anything that queries them later.
  */
-export function toLeadBody(args: CaptureLeadArgs, page?: string): Omit<LeadInput, 'attribution'> {
+export function toLeadBody(args: CaptureLeadArgs, page?: string): Omit<LeadSubmission, 'attribution'> {
   const teamSize = str(args.teamSize, 10);
   const workingHours = str(args.workingHours, 200);
   const notes = str(args.notes, 3000);

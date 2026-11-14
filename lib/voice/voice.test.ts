@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LeadBody } from '@/lib/leads/schema';
+import { PUBLIC_LEAD_SOURCES } from '@/lib/api/leads';
 import { CONTACT } from '@/lib/chat/kb';
 import { SERVICES } from '@/lib/services';
 import { buildSystemPrompt } from './prompt';
@@ -26,16 +26,21 @@ describe('buildSystemPrompt', () => {
 describe('toLeadBody', () => {
   const page = 'https://remassistance.com/services/sdr-as-a-service?utm_source=x';
 
-  it('produces a body /api/leads accepts', () => {
+  it('produces a body POST /v1/public/leads accepts', () => {
     const body = toLeadBody({
       name: 'Ada Lovelace', email: 'Ada@Example.com', company: 'Engines Ltd',
       service: 'SDR as a Service', teamSize: 2, workingHours: 'US Eastern',
       notes: 'Outbound calls', meetingRequested: true, consentGiven: true,
     }, page);
-    const parsed = LeadBody.safeParse(body);
-    expect(parsed.success).toBe(true);
-    expect(parsed.data?.source).toBe('voice_agent');
-    expect(parsed.data?.email).toBe('ada@example.com');
+    // The backend lower-cases the email and validates the rest (dto/lead.dto.ts);
+    // here: the source is one it accepts, and every field is within its caps.
+    expect(PUBLIC_LEAD_SOURCES).toContain(body.source);
+    expect(body.source).toBe('voice_agent');
+    expect(body.email).toBe('Ada@Example.com');
+    expect(body.name!.length).toBeLessThanOrEqual(120);
+    expect(body.message!.length).toBeLessThanOrEqual(5000);
+    expect(Object.keys(body.rawFields ?? {}).length).toBeLessThanOrEqual(40);
+    expect(body.consent).toBe(true);
   });
 
   it('puts the qualification answers where a person and a query can both find them', () => {

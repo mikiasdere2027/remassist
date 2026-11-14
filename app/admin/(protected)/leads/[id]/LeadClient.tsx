@@ -1,7 +1,17 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
-import type { ActionResult } from './actions';
+import {
+  addLeadNote,
+  addLeadTask,
+  logLeadCall,
+  saveQualification,
+  setLeadOwner,
+  setLeadPriority,
+  setTaskDone,
+  type ActionResult,
+} from './crm-actions';
 import type { FieldDef } from '@/lib/crm/fields';
 import { CALL_OUTCOMES, CALL_OUTCOME_LABELS, PRIORITIES, PRIORITY_LABELS } from '@/lib/crm/display';
 import admin from '../../../admin.module.css';
@@ -11,7 +21,13 @@ import s from '../../crm.module.css';
    Kept mounted so a half-written note survives switching tabs. */
 const HIDE = { display: 'none' } as const;
 
-type FormAction = (prev: ActionResult | null, fd: FormData) => Promise<ActionResult>;
+/** Re-fetch the page's server data after a successful save. */
+function useRefreshOnOk(state: ActionResult | null) {
+  const router = useRouter();
+  useEffect(() => {
+    if (state?.ok) router.refresh();
+  }, [state, router]);
+}
 
 /** A date in the viewer's own time zone. Server render shows UTC until hydration. */
 export function LocalTime({ iso, mode = 'datetime' }: { iso: string; mode?: 'datetime' | 'date' }) {
@@ -29,15 +45,18 @@ export function LocalTime({ iso, mode = 'datetime' }: { iso: string; mode?: 'dat
 
 /** A select that saves on change (owner, priority). */
 export function InlineSelect({
-  id, label, value, options, action, placeholder,
+  id, label, value, options, leadId, field, placeholder,
 }: {
   id: string;
   label: string;
   value: string;
   options: Array<{ value: string; label: string }>;
-  action: (value: string) => Promise<ActionResult>;
+  leadId: string;
+  field: 'owner' | 'priority';
   placeholder?: string;
 }) {
+  const router = useRouter();
+  const action = (v: string) => (field === 'owner' ? setLeadOwner(leadId, v) : setLeadPriority(leadId, v));
   const [current, setCurrent] = useState(value);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +80,8 @@ export function InlineSelect({
             if (!r.ok) {
               setCurrent(prev);
               setError(r.error);
+            } else {
+              router.refresh();
             }
           });
         }}
@@ -72,12 +93,6 @@ export function InlineSelect({
       {error && <span className={s.error} role="alert">{error}</span>}
     </div>
   );
-}
-
-/** Sets the hidden tz field so typed times are read in the viewer's zone. */
-function stampTz(e: React.FormEvent<HTMLFormElement>) {
-  const tz = e.currentTarget.elements.namedItem('tz');
-  if (tz instanceof HTMLInputElement) tz.value = String(new Date().getTimezoneOffset());
 }
 
 function useResetOnSuccess(state: ActionResult | null) {
@@ -98,18 +113,22 @@ function Feedback({ state, pending, okText }: { state: ActionResult | null; pend
 
 /** Add a note, log a call, or create a task — the three things done most. */
 export function Composer({
-  note, call, task, team, me,
+  leadId, team, me,
 }: {
-  note: FormAction;
-  call: FormAction;
-  task: FormAction;
+  leadId: string;
   team: Array<{ id: string; name: string }>;
   me: string;
 }) {
   const [mode, setMode] = useState<'note' | 'call' | 'task'>('note');
-  const [noteState, noteAction, notePending] = useActionState(note, null);
-  const [callState, callAction, callPending] = useActionState(call, null);
-  const [taskState, taskAction, taskPending] = useActionState(task, null);
+  const [noteState, noteAction, notePending] = useActionState(
+    (_prev: ActionResult | null, fd: FormData) => addLeadNote(leadId, fd), null);
+  const [callState, callAction, callPending] = useActionState(
+    (_prev: ActionResult | null, fd: FormData) => logLeadCall(leadId, fd), null);
+  const [taskState, taskAction, taskPending] = useActionState(
+    (_prev: ActionResult | null, fd: FormData) => addLeadTask(leadId, fd), null);
+  useRefreshOnOk(noteState);
+  useRefreshOnOk(callState);
+  useRefreshOnOk(taskState);
   const noteRef = useResetOnSuccess(noteState);
   const callRef = useResetOnSuccess(callState);
   const taskRef = useResetOnSuccess(taskState);
@@ -167,8 +186,7 @@ export function Composer({
         </div>
       </form>
 
-      <form ref={taskRef} action={taskAction} onSubmit={stampTz} className={s.cardBody} style={mode === 'task' ? undefined : HIDE}>
-        <input type="hidden" name="tz" defaultValue="0" />
+      <form ref={taskRef} action={taskAction} className={s.cardBody} style={mode === 'task' ? undefined : HIDE}>
         <div>
           <label className={s.label} htmlFor="task-title">Task</label>
           <input id="task-title" name="title" className={s.input} placeholder="e.g. Send case studies and book a discovery call" required maxLength={200} />
@@ -201,12 +219,12 @@ export function Composer({
 }
 
 /** Tick a task done (or reopen it). */
-export function TaskCheck({ id, title, done, action }: {
+export function TaskCheck({ id, title, done }: {
   id: string;
   title: string;
   done: boolean;
-  action: (taskId: string, isDone: boolean) => Promise<ActionResult>;
 }) {
+  const router = useRouter();
   const [checked, setChecked] = useState(done);
   const [pending, start] = useTransition();
   useEffect(() => setChecked(done), [done]);
@@ -220,8 +238,9 @@ export function TaskCheck({ id, title, done, action }: {
         const next = e.target.checked;
         setChecked(next);
         start(async () => {
-          const r = await action(id, next).catch(() => ({ ok: false as const, error: '' }));
+          const r = await setTaskDone(id, next).catch(() => ({ ok: false as const, error: '' }));
           if (!r.ok) setChecked(!next);
+          else router.refresh();
         });
       }}
     />
@@ -229,12 +248,14 @@ export function TaskCheck({ id, title, done, action }: {
 }
 
 /** The Qualification tab: the workspace's lead fields, rendered from their definitions. */
-export function QualificationForm({ defs, values, action }: {
+export function QualificationForm({ defs, values, leadId }: {
   defs: FieldDef[];
   values: Record<string, unknown>;
-  action: FormAction;
+  leadId: string;
 }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionState(
+    (_prev: ActionResult | null, fd: FormData) => saveQualification(leadId, defs, fd), null);
+  useRefreshOnOk(state);
   const live = defs.filter((d) => !d.archivedAt);
   if (live.length === 0) {
     return <p className={s.muted}>No qualification fields are set up for this workspace.</p>;

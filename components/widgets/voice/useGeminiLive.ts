@@ -132,7 +132,12 @@ export function useGeminiLive() {
     if (name === CAPTURE_LEAD) {
       const lead = args as CaptureLeadArgs;
       const body = toLeadBody(lead, window.location.href);
-      const res = await post('/api/leads', { ...body, attribution: attributionForSubmit() });
+      // The backend caps `page` at 500 characters; trim rather than lose the lead.
+      const res = await post('/api/v1/public/leads', {
+        ...body,
+        page: body.page?.slice(0, 500),
+        attribution: attributionForSubmit(),
+      });
       if (res.ok) {
         leadRef.current = { id: typeof res.id === 'string' ? res.id : undefined, email: body.email };
         setLeadSaved(true);

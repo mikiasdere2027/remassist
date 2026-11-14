@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useActionState } from 'react';
-import { createLead, type NewLeadState } from './actions';
+import { createLead, type NewLeadState } from './create-lead';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
 

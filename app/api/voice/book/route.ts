@@ -4,8 +4,6 @@ import { voiceAgentConfigured } from '@/lib/voice/config';
 import { book, calendlyConfigured, CalendlyError, eventType } from '@/lib/booking/calendly';
 import { safeTimeZone, slotLabel } from '@/lib/booking/slots';
 import { markMeetingRequested, stampLead } from '@/lib/booking/stamp';
-import { notifyText } from '@/lib/notify';
-import { SITE_URL } from '@/lib/site';
 
 /**
  * POST /api/voice/book — Maya's book_meeting tool.
@@ -36,9 +34,11 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ ok: false, error: 'bad_input' });
   const d = parsed.data;
+  /* The visitor's address, so the backend's per-visitor limits apply. */
+  const forwardedFor = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip');
 
   /* Whatever happens next, they asked for a call: the team should see that. */
-  await markMeetingRequested(d.leadId, d.email);
+  await markMeetingRequested(d.leadId, d.email, forwardedFor);
   if (!calendlyConfigured()) return Response.json({ ok: false, error: 'not_configured' });
   const tz = safeTimeZone(d.timezone);
 
@@ -73,17 +73,10 @@ export async function POST(req: Request) {
       rescheduleUrl: booking.rescheduleUrl,
     },
     `Meeting booked: ${label} (${tz})`,
+    forwardedFor,
   );
-
-  void notifyText(
-    [
-      'Meeting booked by Maya',
-      `Name: ${d.name}`,
-      `Email: ${d.email}`,
-      `When: ${label} (${tz})`,
-      d.leadId ? `Open in admin: ${SITE_URL}/admin/leads/${d.leadId}` : undefined,
-    ].filter(Boolean).join('\n'),
-  );
+  /* The backend alerts the team (email + webhook) when it records the
+     booking on the lead. Calendly also emails the host directly. */
 
   return Response.json({ ok: true, when: label, timezone: tz });
 }

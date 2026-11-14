@@ -1,4 +1,4 @@
-import { rateLimit } from '@/lib/rate-limit';
+import { rateLimit } from './rate-limit';
 
 /**
  * Request guards shared by the /api/voice/* routes.
@@ -22,9 +22,15 @@ export function clientIp(req: Request): string {
  * somebody else's page spending our quota. A missing Origin is let through:
  * same-origin fetches from older browsers omit it, and curl can forge it anyway.
  */
+/**
+ * True unless the request carries an Origin header for this site. Browsers
+ * send Origin on every POST (same-origin included), so a missing one means a
+ * script or a server — refused, since these endpoints cost money (Gemini
+ * sessions) and book real meetings (Calendly).
+ */
 export function foreignOrigin(req: Request): boolean {
   const origin = req.headers.get('origin');
-  if (!origin) return false;
+  if (!origin) return true;
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host');
   try {
     return new URL(origin).host !== host;

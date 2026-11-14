@@ -1,11 +1,9 @@
 import Link from 'next/link';
-import { isDatabaseConfigured } from '@/db';
+import { apiServer } from '@/lib/api/server';
+import type { TaskPage } from '@/lib/api/leads';
 import { requireUser } from '@/lib/auth/require';
-import { currentWorkspaceId } from '@/lib/crm/workspace';
-import { TASK_VIEWS, countTasks, listTasks, type TaskView } from '@/lib/crm/tasks';
 import { PRIORITY_LABELS, type Priority } from '@/lib/crm/display';
 import { LocalTime, TaskCheck } from '../leads/[id]/LeadClient';
-import { setTaskDone } from '../leads/[id]/actions';
 import AdminTopbar from '../AdminTopbar';
 import admin from '../../admin.module.css';
 import s from '../crm.module.css';
@@ -16,23 +14,21 @@ import s from '../crm.module.css';
  */
 export const dynamic = 'force-dynamic';
 
+const TASK_VIEWS = [
+  { key: 'open', label: 'Open' },
+  { key: 'overdue', label: 'Overdue' },
+  { key: 'done', label: 'Completed' },
+] as const;
+type TaskView = (typeof TASK_VIEWS)[number]['key'];
+
 export default async function TasksPage({ searchParams }: { searchParams: Promise<{ view?: string; who?: string }> }) {
   const sp = await searchParams;
-  const me = await requireUser();
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <AdminTopbar title="Tasks" subtitle="Database not configured" />
-        <div className={admin.view}><p className={admin.empty}>No database is configured in this environment.</p></div>
-      </>
-    );
-  }
-
-  const ws = currentWorkspaceId();
+  await requireUser();
   const view: TaskView = TASK_VIEWS.some((v) => v.key === sp.view) ? (sp.view as TaskView) : 'open';
   const everyone = sp.who === 'all';
-  const assigneeId = everyone ? undefined : me.id;
-  const [rows, counts] = await Promise.all([listTasks(ws, { view, assigneeId }), countTasks(ws, assigneeId)]);
+  const { items: rows, counts } = await apiServer<TaskPage>(
+    `/admin/tasks?view=${view}&scope=${everyone ? 'all' : 'mine'}`,
+  );
   const now = Date.now();
   const href = (v: TaskView, who = sp.who) => {
     const p = new URLSearchParams();
@@ -73,10 +69,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
             ) : (
               <ul className={s.leadList}>
                 {rows.map((t) => {
-                  const overdue = !t.doneAt && t.dueAt && t.dueAt.getTime() < now;
+                  const overdue = !t.doneAt && t.dueAt && new Date(t.dueAt).getTime() < now;
                   return (
                     <li key={t.id} className={`${s.taskRow} ${t.doneAt ? s.taskDone : ''}`}>
-                      <TaskCheck id={t.id} title={t.title} done={Boolean(t.doneAt)} action={setTaskDone} />
+                      <TaskCheck id={t.id} title={t.title} done={Boolean(t.doneAt)} />
                       <div className={s.leadWhoText}>
                         <span className={s.taskTitle}>{t.title}</span>
                         {t.leadId && (
@@ -86,12 +82,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                         )}
                       </div>
                       <span className={`${s.leadCellValue} ${overdue ? s.overdue : ''}`}>
-                        {t.doneAt ? <>Done <LocalTime iso={t.doneAt.toISOString()} /></>
-                          : t.dueAt ? <>{overdue ? 'Overdue · ' : 'Due '}<LocalTime iso={t.dueAt.toISOString()} /></>
+                        {t.doneAt ? <>Done <LocalTime iso={t.doneAt} /></>
+                          : t.dueAt ? <>{overdue ? 'Overdue · ' : 'Due '}<LocalTime iso={t.dueAt} /></>
                           : <span className={s.muted}>No due date</span>}
                       </span>
                       <span className={`${s.badge} ${s[`p_${t.priority}`]}`}>{PRIORITY_LABELS[t.priority as Priority]}</span>
-                      <span className={s.leadCellValue}>{everyone ? (t.assigneeName || t.assigneeEmail || 'Unassigned') : ''}</span>
+                      <span className={s.leadCellValue}>{everyone ? (t.assigneeName || 'Unassigned') : ''}</span>
                     </li>
                   );
                 })}

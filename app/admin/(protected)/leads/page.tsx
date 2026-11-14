@@ -1,14 +1,17 @@
 import Link from 'next/link';
-import { and, desc, eq, lt, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
-import { getDb, isDatabaseConfigured } from '@/db';
-import { leads, users } from '@/db/schema';
-import { ALL_LEAD_SOURCES } from '@/lib/leads/schema';
-import { LEAD_STATUSES, SOURCE_LABELS, formatDate, formatRelativeTime } from '@/lib/leads/display';
-import { LEAD_VIEWS, buildLeadFilters, type LeadSearch } from '@/lib/leads/query';
+import { apiServer } from '@/lib/api/server';
+import {
+  LEAD_SOURCES,
+  LEAD_STATUSES,
+  LEAD_VIEWS,
+  leadExportHref,
+  leadQuery,
+  type Assignee,
+  type LeadPage,
+  type LeadViewCounts,
+} from '@/lib/api/leads';
+import { SOURCE_LABELS, formatDate, formatRelativeTime } from '@/lib/leads/display';
 import { requireUser } from '@/lib/auth/require';
-import { currentWorkspaceId } from '@/lib/crm/workspace';
-import { getTeam } from '@/lib/crm/leads';
 import { PRIORITY_LABELS, STATUS_LABELS, initials, type Priority } from '@/lib/crm/display';
 import AdminTopbar from '../AdminTopbar';
 import styles from '../../admin.module.css';
@@ -19,83 +22,57 @@ import s from '../crm.module.css';
  *
  * Quick views across the top (all, mine, unassigned, follow-up due, hot), the
  * filters under them, and one card row per lead showing who owns it, how it
- * scores and when it is next due. Server-rendered from Postgres; filters are
- * plain GET parameters, so every view is a link that can be bookmarked, and
- * the CSV export applies exactly the same filters (lib/leads/query.ts).
+ * scores and when it is next due. Server-rendered from the API
+ * (GET /v1/admin/leads, /views, /assignees); filters are plain GET
+ * parameters, so every view is a link that can be bookmarked, and the CSV
+ * export applies exactly the same filters.
  */
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type LeadSearch = {
+  q?: string;
+  source?: string;
+  status?: string;
+  view?: string;
+  owner?: string;
+  before?: string;
+};
+
+/** Drop anything the API would reject, so a mistyped URL shows all leads, not an error. */
+function cleanSearch(raw: LeadSearch): LeadSearch {
+  const sp: LeadSearch = {};
+  if (raw.q?.trim()) sp.q = raw.q.trim().slice(0, 200);
+  if (raw.source && (LEAD_SOURCES as readonly string[]).includes(raw.source)) sp.source = raw.source;
+  if (raw.status && (LEAD_STATUSES as readonly string[]).includes(raw.status)) sp.status = raw.status;
+  if (raw.view && LEAD_VIEWS.some((v) => v.key && v.key === raw.view)) sp.view = raw.view;
+  if (raw.owner && (raw.owner === 'none' || UUID.test(raw.owner))) sp.owner = raw.owner;
+  if (raw.before && raw.before.length <= 200) sp.before = raw.before;
+  return sp;
+}
 
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<LeadSearch> }) {
-  const sp = await searchParams;
+  const sp = cleanSearch(await searchParams);
   const filtered = Boolean(sp.q || sp.source || sp.status || sp.owner);
 
-  if (!isDatabaseConfigured()) {
-    return (
-      <>
-        <AdminTopbar title="Leads" subtitle="Database not configured" />
-        <div className={styles.view}>
-          <div className={styles.notice}>
-            <strong>No database configured</strong>
-            There is no <code>DATABASE_URL</code> in this environment, so there are no leads to
-            show. The public form degrades too — <code>/api/leads</code> answers 503 and visitors
-            fall back to composing an email, so nothing is being lost while this is unset.
-          </div>
-        </div>
-      </>
-    );
-  }
-
   const me = await requireUser();
-  const ws = currentWorkspaceId();
-  const db = getDb();
-  const where = buildLeadFilters(sp, { userId: me.id, workspaceId: ws });
-
-  /* Keyset pagination on created_at, which leads_created_idx already covers. */
-  const page = [...where];
-  const before = sp.before ? new Date(sp.before) : null;
-  if (before && !Number.isNaN(before.getTime())) page.push(lt(leads.createdAt, before));
-
-  const owner = alias(users, 'owner');
-  const [rows, [{ count }], team, viewCounts] = await Promise.all([
-    db
-      .select({
-        id: leads.id,
-        createdAt: leads.createdAt,
-        name: leads.name,
-        email: leads.email,
-        phone: leads.phone,
-        company: leads.company,
-        serviceInterest: leads.serviceInterest,
-        source: leads.source,
-        status: leads.status,
-        score: leads.score,
-        priority: leads.priority,
-        nextFollowUpAt: leads.nextFollowUpAt,
-        ownerName: owner.name,
-        ownerEmail: owner.email,
-      })
-      .from(leads)
-      .leftJoin(owner, eq(owner.id, leads.ownerId))
-      .where(page.length ? and(...page) : undefined)
-      .orderBy(desc(leads.createdAt))
-      .limit(PAGE_SIZE + 1),
-    db.select({ count: sql<number>`count(*)::int` }).from(leads).where(where.length ? and(...where) : undefined),
-    getTeam(),
-    /* One count per quick view, for the numbers on the tabs. */
-    Promise.all(
-      LEAD_VIEWS.map(async (v) => {
-        const w = buildLeadFilters({ view: v.key || undefined }, { userId: me.id, workspaceId: ws });
-        const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(leads).where(and(...w));
-        return [v.key, n] as const;
-      }),
-    ).then((pairs) => new Map(pairs)),
+  const [page, team, counts] = await Promise.all([
+    apiServer<LeadPage>(`/admin/leads?${leadQuery(sp)}&limit=${PAGE_SIZE}`),
+    apiServer<Assignee[]>('/admin/leads/assignees'),
+    apiServer<LeadViewCounts>('/admin/leads/views'),
   ]);
-
-  const hasMore = rows.length > PAGE_SIZE;
-  const visible = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
-  const nextCursor = hasMore ? visible[visible.length - 1].createdAt.toISOString() : null;
+  const visible = page.items;
+  const count = page.total;
+  const nextCursor = page.nextCursor;
+  const viewCounts = new Map<string, number>([
+    ['', counts.all],
+    ['mine', counts.mine],
+    ['unassigned', counts.unassigned],
+    ['followup', counts.followup],
+    ['hot', counts.hot],
+  ]);
   const now = Date.now();
 
   const qs = (extra: Record<string, string | undefined>) => {
@@ -113,7 +90,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         action={
           <span className={s.headerActions}>
             <Link className={`${styles.btn} ${styles.btnGhost}`} href="/admin/leads/import">Import</Link>
-            <a className={`${styles.btn} ${styles.btnGhost}`} href={`/admin/leads/export${qs({ before: undefined }) ? `?${qs({ before: undefined })}` : ''}`}>
+            <a className={`${styles.btn} ${styles.btnGhost}`} href={leadExportHref(sp)} download>
               Export CSV
             </a>
             <Link className={styles.btnHeader} href="/admin/leads/new">
@@ -158,7 +135,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
               <FilterSelect id="f-status" name="status" label="Status" value={sp.status} all="All statuses"
                 options={LEAD_STATUSES.map((st) => ({ value: st, label: STATUS_LABELS[st] ?? st }))} />
               <FilterSelect id="f-source" name="source" label="Source" value={sp.source} all="All sources"
-                options={ALL_LEAD_SOURCES.map((src) => ({ value: src, label: SOURCE_LABELS[src] ?? src }))} />
+                options={LEAD_SOURCES.map((src) => ({ value: src, label: SOURCE_LABELS[src] ?? src }))} />
               <button
                 className={`${styles.btn} ${styles.btnSoft} ${styles.btnIcon} ${filtered ? styles.filterOn : ''}`}
                 type="submit"
@@ -178,9 +155,9 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             ) : (
               <ul className={s.leadList}>
                 {visible.map((r) => {
-                  const due = r.nextFollowUpAt;
+                  const due = r.nextFollowUpAt ? new Date(r.nextFollowUpAt) : null;
                   const overdue = due && due.getTime() < now;
-                  const ownerLabel = r.ownerName?.trim() || r.ownerEmail;
+                  const ownerLabel = r.ownerName?.trim();
                   return (
                     <li key={r.id} className={s.leadRow}>
                       <div className={s.leadWho}>
@@ -209,7 +186,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
                             {overdue ? 'Overdue · ' : ''}{formatDate(due).slice(0, 10)}
                           </time>
                         ) : (
-                          <time dateTime={r.createdAt.toISOString()} title={formatDate(r.createdAt)}>
+                          <time dateTime={r.createdAt} title={formatDate(r.createdAt)}>
                             {formatRelativeTime(r.createdAt)} · {SOURCE_LABELS[r.source] ?? r.source}
                           </time>
                         )}
