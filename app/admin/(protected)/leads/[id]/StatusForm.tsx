@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { setLeadStatus } from './crm-actions';
-import { SELECTABLE_STATUSES } from '@/lib/leads/display';
+import { SELECTABLE_STATUSES } from '@/lib/api/leads';
 import { STATUS_LABELS } from '@/lib/crm/display';
 import styles from '../../../admin.module.css';
 

@@ -31,6 +31,7 @@ const leadUrl = p.url();
 ok(true, `added a lead by hand → ${leadUrl.replace(B, '')}`);
 ok((await p.locator('h1').first().textContent()).includes('Selam'), 'lead page shows the new lead');
 ok(await p.locator('text=Added by hand').count() > 0, 'timeline starts with "Added by hand"');
+ok(await p.locator('[aria-label="Why this score"] li').count() > 0, 'lead score is explained (reasons from the backend)');
 
 // duplicate
 await p.goto(`${B}/admin/leads/new`);

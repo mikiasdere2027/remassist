@@ -132,6 +132,8 @@ export interface LeadDetail {
   ownerName: string | null;
   priority: Priority;
   score: number | null;
+  /** The score recomputed from the current data, with the reasons for it. */
+  scoreBreakdown: { score: number; priority: Priority; reasons: string[] };
   tags: string[];
   nextFollowUpAt: string | null;
   firstContactedAt: string | null;

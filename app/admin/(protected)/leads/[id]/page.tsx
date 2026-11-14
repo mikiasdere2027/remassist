@@ -8,12 +8,10 @@ import {
   SOURCE_LABELS, answerFor, formatDate, formatUtm, orderedAnswers, questionFor, unknownRawKeys,
 } from '@/lib/leads/display';
 import { requireUser } from '@/lib/auth/require';
-import { scoreLead } from '@/lib/crm/scoring';
 import {
   CALL_OUTCOME_LABELS, PRIORITIES, PRIORITY_LABELS, STATUS_LABELS, formatDuration, initials, responseClock,
   type CallOutcome,
 } from '@/lib/crm/display';
-import type { QuizResult } from '@/lib/quiz/quiz';
 import StatusForm from './StatusForm';
 import { Composer, InlineSelect, LocalTime, QualificationForm, TaskCheck } from './LeadClient';
 import AdminTopbar from '../../AdminTopbar';
@@ -67,17 +65,7 @@ export default async function LeadDetail({
 
   const tab: Tab = TABS.some((t) => t.key === sp.tab) ? (sp.tab as Tab) : 'inquiry';
   const custom = (lead.custom ?? {}) as Record<string, unknown>;
-  const quiz = quizzes[0];
-  const quote = quiz?.result as Partial<QuizResult> | undefined;
-  const score = scoreLead({
-    source: lead.source,
-    email: lead.email,
-    phone: lead.phone,
-    company: lead.company,
-    message: lead.message,
-    serviceInterest: lead.serviceInterest,
-    quiz: quiz ? { completed: quiz.completed, seats: Number(quote?.seats) || 0, timing: quiz.answers?.timing } : null,
-  });
+  const score = lead.scoreBreakdown;
   const clock = responseClock(
     new Date(lead.createdAt),
     lead.firstContactedAt ? new Date(lead.firstContactedAt) : null,
