@@ -7,6 +7,28 @@ import { BOOK_URL } from '@/lib/nav';
  * cards spelling REMOTE, followed by the blue promise bar. Static markup, so
  * this stays a server component.
  */
+/**
+ * The RA monogram (public/images/RA Logo.svg), inlined rather than loaded as an
+ * <img>: an SVG image cannot see the page's fonts, so "ASSIST" fell back to
+ * Arial. Inline, the text is set in Sora, the site's own display face.
+ */
+function RaLogo() {
+  return (
+    <svg className={styles.raLogo} viewBox="0 0 772.35 633.08" role="img" aria-label="Rem Assist">
+      <g fill="#239ad6">
+        <polygon points="224.73 129.53 218.65 142.49 184.2 215.96 108.43 377.61 22.79 377.61 98.69 215.96 139.28 129.53 224.73 129.53" />
+        <polygon points="425.24 377.61 339.59 377.61 263.82 215.96 229.38 142.49 223.3 129.53 308.74 129.53 348.4 213.99 425.24 377.61" />
+        <path d="M425,107.98c0,52.57-37.57,96.37-87.33,106.01l-39.67-84.46h19.01c11.9,0,21.54-9.65,21.54-21.54,0-5.94-2.41-11.33-6.31-15.24-3.89-3.89-9.28-6.31-15.24-6.31h-157.52L200.09,0h116.93c59.63,0,107.98,48.35,107.98,107.98Z" />
+        <path d="M337.67,213.99c-6.68,1.3-13.59,1.97-20.65,1.97H98.69l40.59-86.44h158.73l39.67,84.46Z" />
+        <path d="M750.17,375.64c-6.68,1.3-13.59,1.97-20.65,1.97h-218.33l40.59-86.44h158.73l39.67,84.46Z" />
+        <polygon points="764.39 377.61 678.75 377.61 568.53 142.49 458.31 377.61 372.67 377.61 549.97 0 587.08 0 764.39 377.61" />
+        <text x="386.17" y="573.87" textAnchor="middle" textLength="772" lengthAdjust="spacingAndGlyphs"
+          style={{ fontFamily: 'var(--font-display)', fontSize: 208.46, fontWeight: 800 }}>ASSIST</text>
+      </g>
+    </svg>
+  );
+}
+
 const BOOK = BOOK_URL;
 
 const LETTERS = [
@@ -54,7 +76,10 @@ export default function RemAcronym() {
       <div className={styles.wrap}>
         <span className={shared.eyebrow}>Rem Assist</span>
         <div className={shared.head}>
-          <h2 className={shared.title}><span>REM</span>&#8202;— It&rsquo;s in the name</h2>
+          <div className={styles.titleCol}>
+            <h2 className={shared.title}><span>REM</span>&#8202;— It&rsquo;s in the name</h2>
+            <RaLogo />
+          </div>
           <div className={shared.aside}>
             <p className={shared.desc}>
               Our name reflects how we deliver impact. Every engagement is built around our{' '}

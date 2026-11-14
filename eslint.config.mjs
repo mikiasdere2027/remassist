@@ -17,11 +17,17 @@ const eslintConfig = [
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     ignores: [
+      /* Worktrees another tool keeps here. They are whole checkouts of
+         this repo, so linting them lints every file twice and fails the
+         build on code that is not on this branch. */
+      '.kilo/**',
+      'regency-valet-parking-services/**',
       'tools/**',
       'uploads/**',
       '.next/',
-      /* Build output from tools/dev-isolated.mjs — same reason as .next/. */
-      '.next-dev*/',
+      /* Build output from tools/dev-isolated.mjs and any other side build dir
+         (.next-prodcheck, …) — same reason as .next/. */
+      '.next-*/',
       'next-env.d.ts',
       'package-lock.json',
       /* Static UI prototype for the admin, plus (unhelpfully) a checked-in

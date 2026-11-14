@@ -31,3 +31,6 @@ Test Admin/.edge-prof/
 # dev-server logs
 $log
 *.log
+# Worktrees another tool keeps here — whole checkouts of this repo, 157MB
+# and counting. Committing or shipping them is never intended.
+.kilo/

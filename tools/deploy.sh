@@ -60,8 +60,14 @@ EXCLUDES=(
   # Build output from tools/dev-isolated.mjs. A separate pattern because tar
   # matches these literally: --exclude=./.next does NOT cover ./.next-dev,
   # so without it ~70 MB of local dev output ships on every deploy.
-  --exclude=./.next-dev*
+  # Any .next-* dir, not just .next-dev: a local .next-prodcheck once shipped
+  # and its generated files failed the box's lint step with 29k problems.
+  --exclude=./.next-*
   --exclude=./.git
+  # Worktrees another tool keeps here: whole checkouts of this repo,
+  # 157 MB at the time of writing. Without this the tarball goes from
+  # 10 MB to well over 150, on a link that already drops 10 MB uploads.
+  --exclude=./.kilo
   --exclude=./.playwright-mcp
   --exclude=./.claude
   --exclude=./dev.log

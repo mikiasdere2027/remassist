@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import MobileNav from './MobileNav';
+import HeaderScrollState from './HeaderScrollState';
 import styles from './Header.module.css';
 import { BOOK_URL } from '@/lib/nav';
 
@@ -15,35 +16,12 @@ import { BOOK_URL } from '@/lib/nav';
  */
 export default function Header() {
   return (
-    <header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        background: 'rgba(255,255,255,0.92)',
-        backdropFilter: 'blur(8px)',
-        borderBottom: '1px solid var(--border-default)',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 1200,
-          boxSizing: 'border-box',
-          margin: '0 auto',
-          padding: '0 24px',
-          height: 72,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 32,
-          // min-width:0 lets the nav row shrink below its content width so the
-          // ≤820px overflow-x rule in Header.module.css can take effect.
-          minWidth: 0,
-          position: 'relative',
-        }}
-      >
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }} aria-label="Rem Assist — home">
-          <img src="/images/rem-logo.svg" alt="Rem Assist" style={{ height: 42, display: 'block' }} />
+    <header className={styles.bar}>
+      {/* Writes data-scrolled on <html>; see Header.module.css for why. */}
+      <HeaderScrollState />
+      <div className={styles['bar-inner']}>
+        <Link href="/" className={styles.brand} aria-label="Rem Assist — home">
+          <img src="/images/rem-logo.svg" alt="Rem Assist" />
         </Link>
 
         <nav className={styles['nav-row']} aria-label="Main">

@@ -4,8 +4,9 @@ import styles from './HomeSections.module.css';
 
 /**
  * ServiceGrid — "We extend your team!" section (index.html, Phase 02).
- * Server component: the three flagship service cards link to the ported
- * /services/* routes.
+ * Server component: the flagship service cards link to the ported
+ * /services/* routes. 04 (Managed IT) points at /services/managed-it, which the
+ * /services directory lists as its 05, so the two numberings differ there.
  */
 const SERVICES = [
   {
@@ -34,6 +35,15 @@ const SERVICES = [
     faces: ['/images/Agents/gtm-1.jpg', '/images/Agents/gtm-2.jpg', '/images/Agents/gtm-3.jpg'],
     checks: ['Month-end close', 'AP & AR', 'ISO-audited controls'],
     icon: <><path d="M3 10h18M6 6h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" /><path d="M9 15h4" /></>,
+  },
+  {
+    href: '/services/managed-it',
+    num: '04',
+    title: 'Managed IT',
+    desc: 'Your outsourced IT team: help desk, device and network management, cloud, cybersecurity and backup, run as one managed service.',
+    faces: ['/images/Agents/it-1.jpg', '/images/Agents/it-2.jpg', '/images/Agents/it-3.jpg'],
+    checks: ['Tier 1 & 2 help desk', 'Endpoints · Security · Cloud', 'Co-managed or fully managed'],
+    icon: <><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /><path d="m9.5 9.5-2 1.5 2 1.5M14.5 9.5l2 1.5-2 1.5" /></>,
   },
 ];
 

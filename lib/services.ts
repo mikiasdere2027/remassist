@@ -81,7 +81,7 @@ export const SERVICES: Service[] = [
     path: '/services/managed-it',
     name: 'Managed IT',
     description:
-      'Endpoints, help desk, security, and cloud — run as one coordinated layer, with the same operational discipline we bring to your sales and support seats.',
+      'A dedicated IT team for help desk, devices, network, cloud, cybersecurity and backup — co-managed with your IT lead or fully managed, under independently audited ISO 9001 and ISO 27001 controls.',
   },
   {
     path: '/services/ai-and-automation',

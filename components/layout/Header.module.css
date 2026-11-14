@@ -113,3 +113,46 @@
 @media (max-width: 820px) {
   .nav-row { display: none; }
 }
+
+/* ---- the bar itself ----------------------------------------------------
+   These were inline styles on the <header> element until 2026-09-21. Inline
+   styles cannot carry a media query or a state, and they outrank every
+   selector in this file, so the transparent-over-hero treatment below was
+   impossible to express until they moved here. Values are unchanged. */
+.bar { position: sticky; top: 0; z-index: 50;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-default);
+  transition: background 200ms var(--ease-out), border-color 200ms var(--ease-out); }
+
+.bar-inner { width: 100%; max-width: 1200px; box-sizing: border-box; margin: 0 auto;
+  padding: 0 24px; height: 72px; display: flex; align-items: center; gap: 32px;
+  /* min-width:0 lets the nav row shrink below its content width so the
+     ≤820px overflow-x rule below can take effect. */
+  min-width: 0; position: relative; }
+
+.brand { display: flex; align-items: center; flex-shrink: 0; }
+.brand img { height: 42px; display: block; }
+
+/* ---- transparent over a dark hero --------------------------------------
+   Only on phones, only on a page whose hero declares itself dark, and only
+   while the page is at the top. All three conditions matter:
+
+   - Phones only, because the desktop header carries the whole nav row and a
+     transparent strip behind grey link text over moving video is unreadable.
+   - `body:has([data-hero="dark"])` rather than a route check, because the
+     header is a server component rendered once in the root layout and knows
+     nothing about which page is under it. The hero declares itself instead,
+     so any future dark hero opts in by adding the attribute.
+   - Not scrolled, because a sticky transparent bar over the sections below
+     puts a cyan logo and white bars on top of white cards. `data-scrolled`
+     is set by HeaderScrollState; the `:not([data-scrolled="1"])` form means
+     the overlay is the DEFAULT, so the first paint is already correct and
+     there is no white flash before hydration. */
+@media (max-width: 820px) {
+  html:not([data-scrolled="1"]) body:has([data-hero="dark"]) .bar {
+    background: transparent;
+    border-bottom-color: transparent;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+}

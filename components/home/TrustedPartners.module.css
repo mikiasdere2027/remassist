@@ -194,6 +194,25 @@ a.logoWrap:hover .logo { filter: contrast(105%) brightness(1.02); }
   }
 }
 
+/* ── Elastic cards ──────────────────────────────────────────────────────────
+   From tablet up the cards share the row rather than each insisting on 176px.
+   Five of them look identical to before — max-width caps them at 176 and the
+   track centres what is left over — but a sixth logo then fits a 1280px window
+   instead of missing it by 18px and putting the whole row on a scrollbar. They
+   stop shrinking at 148px, which still clears the 130px logo box, so a seventh
+   overflows and brings the chevrons back rather than squeezing the logos. */
+@media (min-width: 768px) {
+  .item {
+    /* Basis 0, not auto: the cards then divide the row evenly instead of each
+       shrinking by however wide its own logo happens to be, which is what left
+       a six-card row at 176/164/166/176/176/176. */
+    flex: 1 1 0;
+    width: auto;
+    min-width: 148px;
+    max-width: 176px;
+  }
+}
+
 /* ── Tablet ──────────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .barOuter {
@@ -208,7 +227,7 @@ a.logoWrap:hover .logo { filter: contrast(105%) brightness(1.02); }
   .track {
     justify-content: flex-start;
   }
-  .item { width: 176px; height: 100px; padding: 0 16px; }
+  .item { height: 100px; padding: 0 16px; }
   .logo  { height: 44px; max-width: 120px; }
 }
 

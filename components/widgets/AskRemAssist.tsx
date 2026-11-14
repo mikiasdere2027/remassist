@@ -31,6 +31,9 @@ const REPEAT_INTERVAL = 5 * 60_000;
 
 export default function AskRemAssist() {
   const [open, setOpen] = useState(false);
+  /* Minimising hides the panel but keeps it mounted, so the conversation (and
+     a voice call) survives until the visitor reopens it. Closing unmounts it. */
+  const [mounted, setMounted] = useState(false);
   const [teaserVisible, setTeaserVisible] = useState(false);
   /* When true the teaser cycle has been permanently stopped (user opened or ×-dismissed) */
   const stopped = useRef(false);
@@ -60,6 +63,7 @@ export default function AskRemAssist() {
   function openChat(placement = 'launcher') {
     stopped.current = true;
     setTeaserVisible(false);
+    setMounted(true);
     setOpen(true);
     track('chat_open', { placement });
   }
@@ -72,7 +76,15 @@ export default function AskRemAssist() {
 
   return (
     <div className={styles.root}>
-      {open && <AskRemAssistPanel onClose={() => setOpen(false)} />}
+      {mounted && (
+        <div className={open ? undefined : styles.panelHidden}>
+          <AskRemAssistPanel
+            visible={open}
+            onMinimize={() => setOpen(false)}
+            onClose={() => { setOpen(false); setMounted(false); }}
+          />
+        </div>
+      )}
 
       {!open && teaserVisible && (
         <div

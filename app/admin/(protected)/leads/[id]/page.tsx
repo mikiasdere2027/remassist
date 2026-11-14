@@ -1,44 +1,85 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { isApiError } from '@/lib/api/errors';
-import type { LeadDetail as Lead } from '@/lib/api/leads';
-import { apiServer } from '@/lib/api/server';
+import { isDatabaseConfigured } from '@/db';
 import {
   SOURCE_LABELS, answerFor, formatDate, formatUtm, orderedAnswers, questionFor, unknownRawKeys,
 } from '@/lib/leads/display';
+import { requireUser } from '@/lib/auth/require';
+import { currentWorkspaceId } from '@/lib/crm/workspace';
+import { getLeadDetail, getLeadFieldDefs, getTeam, type TimelineItem } from '@/lib/crm/leads';
+import { scoreLead } from '@/lib/crm/scoring';
+import {
+  CALL_OUTCOME_LABELS, PRIORITIES, PRIORITY_LABELS, STATUS_LABELS, formatDuration, initials, responseClock,
+  type CallOutcome,
+} from '@/lib/crm/display';
+import type { QuizResult } from '@/lib/quiz/quiz';
 import StatusForm from './StatusForm';
+import { Composer, InlineSelect, LocalTime, QualificationForm, TaskCheck } from './LeadClient';
+import {
+  addLeadNote, addLeadTask, logLeadCall, saveQualification, setLeadOwner, setLeadPriority, setTaskDone,
+} from './actions';
 import AdminTopbar from '../../AdminTopbar';
-import styles from '../../../admin.module.css';
+import admin from '../../../admin.module.css';
+import s from '../../crm.module.css';
 
 /**
- * Lead detail — MIGRATION-PLAN §10, and the screen this phase exists for.
+ * Lead detail — the CRM's main working screen (phase 1).
  *
- * The contract: everything the visitor actually submitted is on this page.
- * Named rows for the fields we know, a raw dump for anything a form has started
- * sending since, and the quiz answers rendered as the questions they answered.
+ * Profile on the left, Inquiry / Qualification / Conversion in the middle with
+ * the composer and timeline under them, status rail on the right — after the
+ * reference CRM's "Lead's information" layout.
  *
- * Empty values are rendered as "not provided", never omitted. A row that
- * disappears when null makes an unanswered field indistinguishable from one
- * that was never on the form.
+ * Still true from the original page: everything the visitor submitted is on
+ * this page (Inquiry tab, with the raw submission under it), and an empty
+ * value says so rather than vanishing.
  */
 export const dynamic = 'force-dynamic';
 
-export default async function LeadDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+const TABS = [
+  { key: 'inquiry', label: 'Inquiry' },
+  { key: 'qualification', label: 'Qualification' },
+  { key: 'conversion', label: 'Conversion' },
+] as const;
+type Tab = (typeof TABS)[number]['key'];
 
-  /* A malformed id is a 400 from the backend; to a visitor it is a bad URL. */
+export default async function LeadDetail({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
+  if (!isDatabaseConfigured()) notFound();
+  /* A malformed id would make Postgres throw on the uuid cast — a 500 for
+     what is really a bad URL. */
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
-  let lead: Lead;
-  try {
-    lead = await apiServer<Lead>(`/admin/leads/${id}`);
-  } catch (err) {
-    if (isApiError(err, 404) || isApiError(err, 400)) notFound();
-    throw err;
-  }
-  const quizzes = lead.quizSubmissions;
+  const me = await requireUser();
+  const ws = currentWorkspaceId();
+  const [detail, defs, team] = await Promise.all([getLeadDetail(ws, id), getLeadFieldDefs(ws), getTeam()]);
+  if (!detail) notFound();
+  const { lead, quizzes, timeline, tasks } = detail;
 
+  const tab: Tab = TABS.some((t) => t.key === sp.tab) ? (sp.tab as Tab) : 'inquiry';
+  const custom = (lead.custom ?? {}) as Record<string, unknown>;
+  const quiz = quizzes[0];
+  const quote = quiz?.result as Partial<QuizResult> | undefined;
+  const score = scoreLead({
+    source: lead.source,
+    email: lead.email,
+    phone: lead.phone,
+    company: lead.company,
+    message: lead.message,
+    serviceInterest: lead.serviceInterest,
+    quiz: quiz ? { completed: quiz.completed, seats: Number(quote?.seats) || 0, timing: quiz.answers?.timing } : null,
+  });
+  const clock = responseClock(lead.createdAt, lead.firstContactedAt, new Date(), lead.status);
+  const openTasks = tasks.filter((t) => !t.doneAt);
+  const doneTasks = tasks.filter((t) => t.doneAt);
+  const displayName = lead.name || lead.email;
+  const ownerOptions = team.map((m) => ({ value: m.id, label: m.id === me.id ? `${m.name} (me)` : m.name }));
   const raw = lead.rawFields ?? null;
   const extraKeys = unknownRawKeys(raw);
   const campaign = formatUtm(lead.utm);
@@ -46,20 +87,13 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
   return (
     <>
       <AdminTopbar
-        title="Lead"
-        /* Who it is, the way the list names them: name over email, and email
-           alone when a form did not ask for one. Not the source and date —
-           those are on the strip and the panel note below. */
-        subtitle={lead.name ? `${lead.name} · ${lead.email}` : lead.email}
+        title={displayName}
+        subtitle={[lead.company, SOURCE_LABELS[lead.source] ?? lead.source].filter(Boolean).join(' · ')}
         action={<StatusForm id={lead.id} current={lead.status} />}
       />
 
-      <div className={styles.view}>
-        {/* The same back button the team, catalog and review screens use, in the
-            same place. It used to be the topbar's title, which cost the page a
-            title and made this the one detail screen where going back was not
-            where going back is everywhere else. */}
-        <Link className={styles.memberBackBtn} href="/admin/leads">
+      <div className={admin.view}>
+        <Link className={admin.memberBackBtn} href="/admin/leads">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M19 12H5" />
             <polyline points="12 19 5 12 12 5" />
@@ -67,199 +101,393 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
           Back to leads
         </Link>
 
-        {/* Where the lead came from, on one strip. This was duplicated by a
-            Context panel at the foot of the page which said the same three
-            things again and added two more; the two extras moved up here and
-            the panel went. One place to read context beats two that can
-            disagree. */}
-        <div className={styles.leadTopContextBar}>
-          <ContextItem label="Source" value={SOURCE_LABELS[lead.source] ?? lead.source} />
-          <Divider />
-          <ContextItem label="Page" value={lead.pageUrl} fallback="—" mono />
-          <Divider />
-          <ContextItem label="Referrer" value={lead.referrer} fallback="Direct / None" mono />
-          <Divider />
-          <ContextItem label="Lead ID" value={lead.id} mono />
-          <Divider />
-          {/* The one field here that is genuinely often absent — most leads
-              arrive with no campaign at all — so it says so in words rather
-              than showing a dash that reads like a missing value. */}
-          <ContextItem label="Campaign" value={campaign} fallback="None" mono />
-        </div>
-
-        <div className={styles.detailGrid}>
-          {/* Top Row — Column 1: Submitted fields */}
-          <section className={styles.panel}>
-            <div className={styles.panelHead}>
-              <div>
-                <h2 className={styles.panelTitle}>Submitted fields</h2>
-                <span className={styles.panelNote}>Submitted on {formatDate(lead.createdAt)}</span>
+        <div className={s.layout}>
+          {/* ── profile ── */}
+          <aside className={s.profileCol} aria-label="Lead profile">
+            <div className={s.card}>
+              <div className={s.identity}>
+                <span className={s.avatar} aria-hidden="true">{initials(displayName)}</span>
+                <h2 className={s.personName}>{displayName}</h2>
+                <p className={s.personSub}>{lead.company || 'No company given'}</p>
+              </div>
+              <div className={s.section}>
+                <InlineSelect
+                  id="lead-owner"
+                  label="Owner"
+                  value={lead.ownerId ?? ''}
+                  placeholder="Unassigned"
+                  options={ownerOptions}
+                  action={setLeadOwner.bind(null, lead.id)}
+                />
+              </div>
+              <div className={s.section}>
+                <h3 className={s.sectionTitle}>Contact</h3>
+                <KV label="Email"><a href={`mailto:${lead.email}`}>{lead.email}</a></KV>
+                <KV label="Phone">{lead.phone ? <a href={`tel:${lead.phone.replace(/[^\d+]/g, '')}`}>{lead.phone}</a> : null}</KV>
+                <KV label="Country">{lead.country}</KV>
+                <KV label="Privacy consent">{lead.consentAt ? <>Agreed <LocalTime iso={lead.consentAt.toISOString()} mode="date" /></> : null}</KV>
+              </div>
+              <div className={s.section}>
+                <h3 className={s.sectionTitle}>Source</h3>
+                <KV label="Channel">{SOURCE_LABELS[lead.source] ?? lead.source}</KV>
+                <KV label="Received"><LocalTime iso={lead.createdAt.toISOString()} /></KV>
+                <KV label="Campaign">{campaign || 'None'}</KV>
+                <KV label="Landing page">{lead.pageUrl}</KV>
+                <KV label="Referrer">{lead.referrer || 'Direct / none'}</KV>
               </div>
             </div>
-            <dl className={styles.dl}>
-              {/* The quiz asks for one "name"; the contact forms ask for first
-                  and last. Show the full name always, and the parts when given. */}
-              <Row
-                label="Name"
-                value={lead.name || [lead.firstName, lead.lastName].filter(Boolean).join(' ') || null}
-              />
-              {lead.firstName && <Row label="First name" value={lead.firstName} />}
-              {lead.lastName && <Row label="Last name" value={lead.lastName} />}
-              <Row label="Email" value={lead.email} mono />
-              <Row label="Phone" value={lead.phone} mono />
-              <Row label="Company" value={lead.company} />
-              <Row label="Country" value={lead.country} />
-              <Row label="Service interest" value={lead.serviceInterest} />
-              <Row label="Message" value={lead.message} pre />
-              <dt>Privacy consent</dt>
-              <dd>
-                {lead.consentAt ? (
-                  <>Agreed <span className={styles.mono}>{formatDate(lead.consentAt)}</span></>
-                ) : (
-                  <span className={styles.none}>Not recorded</span>
-                )}
-              </dd>
-            </dl>
-          </section>
+          </aside>
 
-          {/* Top Row — Column 2: Raw submission */}
-          <section className={styles.panel}>
-            <div className={styles.panelHead}>
-              <div>
-                <h2 className={styles.panelTitle}>Raw submission</h2>
-                <span className={styles.panelNote}>
-                  {raw ? `${Object.keys(raw).length} fields captured` : 'Not captured'} · {formatDate(lead.createdAt)}
-                </span>
-              </div>
-            </div>
-            {raw && Object.keys(raw).length > 0 ? (
-              <dl className={styles.dl}>
-                {Object.entries(raw).map(([k, v]) => (
-                  <RawPair key={k} k={k} v={v} flagged={extraKeys.includes(k)} />
+          {/* ── main ── */}
+          <div className={s.mainCol}>
+            <div className={s.mainHead}>
+              <nav className={s.tabs} aria-label="Lead sections">
+                {TABS.map((t) => (
+                  <Link
+                    key={t.key}
+                    href={t.key === 'inquiry' ? `/admin/leads/${lead.id}` : `/admin/leads/${lead.id}?tab=${t.key}`}
+                    className={`${s.tab} ${tab === t.key ? s.tabOn : ''}`}
+                    aria-current={tab === t.key ? 'page' : undefined}
+                    scroll={false}
+                  >
+                    {t.label}
+                  </Link>
                 ))}
-              </dl>
-            ) : (
-              <p className={styles.empty}>
-                <strong>Nothing captured</strong>
-                This lead predates raw-field capture, or arrived from a surface that does not send
-                one. The named fields above are all there is.
-              </p>
+              </nav>
+            </div>
+
+            {tab === 'inquiry' && (
+              <>
+                <section className={s.card}>
+                  <div className={s.cardHead}>
+                    <h2 className={s.cardTitle}>What they asked for</h2>
+                    <span className={s.cardNote}>Submitted {formatDate(lead.createdAt)}</span>
+                  </div>
+                  <div className={s.cardBody}>
+                    <div className={s.fieldGrid}>
+                      <KV label="Service interest">{lead.serviceInterest}</KV>
+                      <KV label="Name given">{[lead.firstName, lead.lastName].filter(Boolean).join(' ') || lead.name}</KV>
+                      <div className={s.fieldWide}>
+                        <KV label="Message">{lead.message ? <p className={s.message}>{lead.message}</p> : null}</KV>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {quizzes.map((q) => (
+                  <section key={q.id} className={s.card}>
+                    <div className={s.cardHead}>
+                      <h2 className={s.cardTitle}>Fit finder answers</h2>
+                      <span className={s.cardNote}>{q.completed ? 'Completed' : 'Partial'} · {formatDate(q.createdAt)}</span>
+                    </div>
+                    <dl className={admin.qa}>
+                      {orderedAnswers(q.answers).map(([key, value]) => {
+                        const a = answerFor(key, value);
+                        return (
+                          <Fragment key={key}>
+                            <dt>{questionFor(key) ?? key}</dt>
+                            <dd>
+                              {a.label}
+                              {a.note && <span className={admin.answerNote}> — {a.note}</span>}
+                            </dd>
+                          </Fragment>
+                        );
+                      })}
+                    </dl>
+                    {q.result && (
+                      <>
+                        <div className={s.cardHead} style={{ borderTop: '1px solid var(--hairline)' }}>
+                          <h2 className={s.cardTitle}>The quote they were shown</h2>
+                          <span className={s.cardNote}>Snapshot as shown, not recalculated</span>
+                        </div>
+                        <div className={admin.quote}>
+                          <Quote label="Service" value={q.result.service} />
+                          <Quote label="Tier" value={q.result.tier} />
+                          <Quote label="Seats" value={q.result.seats} />
+                          <Quote label="Hours" value={q.result.hours} />
+                          <Quote label="Rate" value={q.result.rate ? `$${q.result.rate}/hr` : undefined} />
+                          <Quote label="Estimate" value={q.result.cost} />
+                        </div>
+                      </>
+                    )}
+                  </section>
+                ))}
+
+                <details className={s.card}>
+                  <summary className={s.cardHead} style={{ cursor: 'pointer' }}>
+                    <span className={s.cardTitle}>Raw submission</span>
+                    <span className={s.cardNote}>
+                      {raw ? `${Object.keys(raw).length} fields captured` : 'Not captured'} · Lead ID {lead.id}
+                    </span>
+                  </summary>
+                  {raw && Object.keys(raw).length > 0 ? (
+                    <dl className={admin.dl}>
+                      {Object.entries(raw).map(([k, v]) => (
+                        <Fragment key={k}>
+                          <dt className={admin.mono}>
+                            {k}
+                            {extraKeys.includes(k) && <span className={admin.tag}>new</span>}
+                          </dt>
+                          <dd>{v ? <p className={admin.pre}>{v}</p> : <span className={admin.none}>Empty</span>}</dd>
+                        </Fragment>
+                      ))}
+                    </dl>
+                  ) : (
+                    <p className={admin.empty}>
+                      <strong>Nothing captured</strong>
+                      This lead predates raw-field capture, or arrived from a surface that does not send one.
+                    </p>
+                  )}
+                </details>
+              </>
             )}
-          </section>
 
-          {/* Fit finder answers (if taken) */}
-          {quizzes.map((q) => (
-            <section key={q.id} className={`${styles.panel} ${styles.detailWide}`}>
-              <div className={styles.panelHead}>
-                <h2 className={styles.panelTitle}>Fit finder answers</h2>
-                <span className={styles.panelNote}>
-                  {q.completed ? 'Completed' : 'Partial'} · {formatDate(q.createdAt)}
-                </span>
+            {tab === 'qualification' && (
+              <section className={s.card}>
+                <div className={s.cardHead}>
+                  <h2 className={s.cardTitle}>Qualification</h2>
+                  <span className={s.cardNote}>Is this a fit, and what would they buy?</span>
+                </div>
+                <QualificationForm defs={defs} values={custom} action={saveQualification.bind(null, lead.id)} />
+              </section>
+            )}
+
+            {tab === 'conversion' && (
+              <section className={s.card}>
+                <div className={s.cardHead}>
+                  <h2 className={s.cardTitle}>Ready to convert?</h2>
+                  <span className={s.cardNote}>Converting creates the company, contact and deal</span>
+                </div>
+                <div className={s.cardBody}>
+                  <ul className={s.checklist}>
+                    <Check ok={Boolean(lead.ownerId)}>Has an owner</Check>
+                    <Check ok={['qualified', 'converted', 'won'].includes(lead.status)}>Status is Qualified</Check>
+                    <Check ok={Boolean(lead.company)}>Company is known</Check>
+                    <Check ok={Array.isArray(custom.services_needed) && custom.services_needed.length > 0}>Services needed are recorded</Check>
+                    <Check ok={Boolean(custom.budget) && custom.budget !== 'Not shared'}>Budget is known</Check>
+                    <Check ok={Boolean(custom.decision_maker)}>Decision maker is identified</Check>
+                  </ul>
+                  <p className={s.cardNote}>
+                    Converting a lead into a deal arrives with the Deals pipeline (phase 2). Until then, use this list
+                    to see what is still missing.
+                  </p>
+                </div>
+              </section>
+            )}
+
+            <Composer
+              note={addLeadNote.bind(null, lead.id)}
+              call={logLeadCall.bind(null, lead.id)}
+              task={addLeadTask.bind(null, lead.id)}
+              team={team}
+              me={me.id}
+            />
+
+            <section className={s.card}>
+              <div className={s.cardHead}>
+                <h2 className={s.cardTitle}>Activity</h2>
+                <span className={s.cardNote}>{timeline.length} {timeline.length === 1 ? 'entry' : 'entries'}</span>
               </div>
-
-              <dl className={styles.qa}>
-                {orderedAnswers(q.answers).map(([key, value]) => {
-                  const a = answerFor(key, value);
-                  return (
-                    <Fragment key={key}>
-                      <dt>{questionFor(key) ?? key}</dt>
-                      <dd>
-                        {a.label}
-                        {a.note && <span className={styles.answerNote}> — {a.note}</span>}
-                      </dd>
-                    </Fragment>
-                  );
-                })}
-              </dl>
-
-              {q.result && (
-                <>
-                  <div className={styles.panelHead} style={{ borderTop: '1px solid #edf0f6' }}>
-                    <h2 className={styles.panelTitle}>The quote they were shown</h2>
-                    <span className={styles.panelNote}>Priced when submitted, not recalculated</span>
-                  </div>
-                  <div className={styles.quote}>
-                    <Quote label="Service" value={q.result.service} />
-                    <Quote label="Tier" value={q.result.tier} />
-                    <Quote label="Seats" value={q.result.seats} />
-                    <Quote label="Hours" value={q.result.hours} />
-                    <Quote label="Rate" value={q.result.rate ? `$${q.result.rate}/hr` : undefined} />
-                    <Quote label="Estimate" value={q.result.cost} />
-                  </div>
-                </>
+              {timeline.length === 0 ? (
+                <p className={admin.empty}>
+                  <strong>No activity yet</strong>
+                  Notes, calls, tasks and status changes will appear here.
+                </p>
+              ) : (
+                <ol className={s.timeline}>
+                  {timeline.map((a) => <TimelineEntry key={a.id} a={a} />)}
+                </ol>
               )}
             </section>
-          ))}
+          </div>
+
+          {/* ── rail ── */}
+          <aside className={s.railCol} aria-label="Lead status">
+            <section className={s.card}>
+              <div className={s.cardBody}>
+                <div className={s.statRow}>
+                  <span className={s.kvLabel}>Lead score</span>
+                  <span className={`${s.badge} ${s[`p_${score.priority}`]}`}>{PRIORITY_LABELS[score.priority]} score</span>
+                </div>
+                <span className={s.scoreBig}>{score.score}<span className={s.cardNote}> / 100</span></span>
+                <div className={s.scoreBar}><div className={s.scoreFill} style={{ width: `${score.score}%` }} /></div>
+                {score.reasons.length > 0 && (
+                  <ul className={s.reasons} aria-label="Why this score">
+                    {score.reasons.map((r) => <li key={r}>{r}</li>)}
+                  </ul>
+                )}
+                <InlineSelect
+                  id="lead-priority"
+                  label="Priority"
+                  value={lead.priority}
+                  options={PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
+                  action={setLeadPriority.bind(null, lead.id)}
+                />
+              </div>
+            </section>
+
+            <section className={s.card}>
+              <div className={s.cardBody}>
+                <span className={s.kvLabel}>First response</span>
+                <div className={`${s.clock} ${clock.late ? s.clockLate : ''}`}>
+                  <span className={s.clockRing} aria-hidden="true" />
+                  <div>
+                    <div className={s.clockValue}>{clock.state === 'unknown' ? 'Not recorded' : formatDuration(clock.ms)}</div>
+                    <div className={s.clockLabel}>
+                      {clock.state === 'responded' ? 'to first contact'
+                        : clock.state === 'waiting' ? 'waiting for first contact'
+                        : 'contacted before response times were tracked'}
+                      {clock.late ? ' · over the 24h target' : ''}
+                    </div>
+                  </div>
+                </div>
+                <KV label="Next follow-up">
+                  {lead.nextFollowUpAt ? <LocalTime iso={lead.nextFollowUpAt.toISOString()} /> : null}
+                </KV>
+                <KV label="Status">{STATUS_LABELS[lead.status] ?? lead.status}</KV>
+              </div>
+            </section>
+
+            <section className={s.card}>
+              <div className={s.cardHead}>
+                <h2 className={s.cardTitle}>Tasks</h2>
+                <span className={s.cardNote}>{openTasks.length} open</span>
+              </div>
+              <div className={s.cardBody}>
+                {openTasks.length === 0 ? (
+                  <p className={s.cardNote}>No open tasks. Add one below the tabs to schedule the next follow-up.</p>
+                ) : (
+                  <TaskItems items={openTasks} />
+                )}
+                {doneTasks.length > 0 && (
+                  <details>
+                    <summary className={s.doneToggle}>{doneTasks.length} completed</summary>
+                    <TaskItems items={doneTasks} />
+                  </details>
+                )}
+              </div>
+            </section>
+          </aside>
         </div>
       </div>
     </>
   );
 }
 
-/**
- * One label/value pair on the context strip.
- *
- * Every label is a bare word. Two of these used to read "Page =" and
- * "Referrer =" while the third read "Source", which is the kind of difference
- * that makes a reader stop and wonder what the equals sign means.
- */
-function ContextItem({
-  label, value, fallback, mono,
-}: { label: string; value?: string | null; fallback?: string; mono?: boolean }) {
+function KV({ label, children }: { label: string; children: React.ReactNode }) {
+  const empty = children === null || children === undefined || children === '';
   return (
-    <div className={styles.leadContextItem}>
-      <span className={styles.leadContextLabel}>{label}</span>
-      <span className={`${styles.leadContextValue} ${mono ? styles.mono : ''}`}>
-        {value || fallback || <span className={styles.none}>Not recorded</span>}
-      </span>
+    <div className={s.kv}>
+      <span className={s.kvLabel}>{label}</span>
+      <span className={s.kvValue}>{empty ? <span className={s.muted}>Not provided</span> : children}</span>
     </div>
   );
 }
 
-function Divider() {
-  return <span className={styles.leadContextDivider} aria-hidden="true" />;
-}
-
-/** A labelled row that shows its own absence rather than vanishing. */
-function Row({
-  label, value, mono, pre,
-}: { label: string; value?: string | null; mono?: boolean; pre?: boolean }) {
+function Check({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
-    <>
-      <dt>{label}</dt>
-      <dd className={mono ? styles.mono : undefined}>
-        {value
-          ? (pre ? <p className={styles.pre}>{value}</p> : value)
-          : <span className={styles.none}>Not provided</span>}
-      </dd>
-    </>
-  );
-}
-
-/** A raw key/value, flagged when no named row above already covers it. */
-function RawPair({ k, v, flagged }: { k: string; v: string; flagged: boolean }) {
-  return (
-    <>
-      <dt className={styles.mono}>
-        {k}
-        {flagged && <span className={styles.tag}>new</span>}
-      </dt>
-      <dd>
-        {v ? <p className={styles.pre}>{v}</p> : <span className={styles.none}>Empty</span>}
-      </dd>
-    </>
+    <li>
+      <span className={`${s.tick} ${ok ? s.tickOk : ''}`} aria-hidden="true">{ok ? '✓' : '·'}</span>
+      <span>{children}<span className={admin.srOnly}>{ok ? ' (done)' : ' (missing)'}</span></span>
+    </li>
   );
 }
 
 function Quote({ label, value }: { label: string; value?: string | number }) {
   return (
-    <div className={styles.quoteItem}>
-      <span className={styles.quoteLabel}>{label}</span>
-      <span className={styles.quoteValue}>
-        {value === undefined || value === null || value === ''
-          ? <span className={styles.none}>—</span>
-          : value}
+    <div className={admin.quoteItem}>
+      <span className={admin.quoteLabel}>{label}</span>
+      <span className={admin.quoteValue}>
+        {value === undefined || value === null || value === '' ? <span className={admin.none}>—</span> : value}
       </span>
     </div>
   );
 }
+
+function TaskItems({ items }: { items: Array<{ id: string; title: string; dueAt: Date | null; doneAt: Date | null; priority: string; assigneeName: string | null; assigneeEmail: string | null }> }) {
+  const now = Date.now();
+  return (
+    <ul className={s.taskList}>
+      {items.map((t) => {
+        const overdue = !t.doneAt && t.dueAt && t.dueAt.getTime() < now;
+        return (
+          <li key={t.id} className={`${s.task} ${t.doneAt ? s.taskDone : ''}`}>
+            <TaskCheck id={t.id} title={t.title} done={Boolean(t.doneAt)} action={setTaskDone} />
+            <div>
+              <div className={s.taskTitle}>{t.title}</div>
+              <div className={s.taskMeta}>
+                {t.dueAt && (
+                  <span className={overdue ? s.overdue : undefined}>
+                    {overdue ? 'Overdue · ' : 'Due '}<LocalTime iso={t.dueAt.toISOString()} />
+                  </span>
+                )}
+                <span>{t.assigneeName || t.assigneeEmail || 'Unassigned'}</span>
+                {t.priority === 'high' && <span className={s.overdue}>High</span>}
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+const ICONS: Record<string, React.ReactNode> = {
+  note: <path d="M4 4h12l4 4v12H4zM8 10h8M8 14h8M8 18h5" />,
+  call: <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />,
+  status_change: <path d="M4 12h12M12 6l6 6-6 6" />,
+  owner_change: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+  system: <><circle cx="12" cy="12" r="9" /><path d="M12 8v4l3 2" /></>,
+};
+
+function TimelineEntry({ a }: { a: TimelineItem }) {
+  const who = a.actorName?.trim() || a.actorEmail || 'System';
+  const meta = (a.meta ?? {}) as Record<string, unknown>;
+  let head: React.ReactNode;
+  let body: string | null = a.body;
+
+  switch (a.type) {
+    case 'note':
+      head = <><b>{who}</b> added a note</>;
+      break;
+    case 'call': {
+      const outcome = CALL_OUTCOME_LABELS[meta.outcome as CallOutcome] ?? 'Call';
+      const mins = Math.round(Number(meta.durationSec ?? 0) / 60);
+      head = <><b>{who}</b> logged a call · {outcome}{mins > 0 ? ` · ${mins} min` : ''}</>;
+      break;
+    }
+    case 'status_change':
+      head = <><b>{who}</b> changed status: {STATUS_LABELS[String(meta.from)] ?? String(meta.from)} → <b>{STATUS_LABELS[String(meta.to)] ?? String(meta.to)}</b></>;
+      body = null;
+      break;
+    case 'owner_change':
+      head = meta.to
+        ? <><b>{who}</b> assigned the lead to <b>{String(meta.toName ?? 'someone')}</b></>
+        : <><b>{who}</b> unassigned the lead</>;
+      body = null;
+      break;
+    default:
+      head = a.actorName || a.actorEmail ? <><b>{who}</b> · {a.body}</> : <>{a.body}</>;
+      body = null;
+  }
+
+  const reasons = Array.isArray(meta.reasons) ? (meta.reasons as string[]) : null;
+  return (
+    <li className={s.event}>
+      <span className={`${s.eventIcon} ${s[`ev_${a.type}`] ?? ''}`} aria-hidden="true">
+        <svg viewBox="0 0 24 24">{ICONS[a.type] ?? ICONS.system}</svg>
+      </span>
+      <div>
+        <div className={s.eventHead}>
+          <span>{head}</span>
+          <span className={s.eventTime}><LocalTime iso={a.occurredAt.toISOString()} /></span>
+        </div>
+        {body && <p className={s.eventBody}>{body}</p>}
+        {reasons && reasons.length > 0 && (
+          <ul className={s.reasons} aria-label="Score reasons">{reasons.map((r) => <li key={r}>{r}</li>)}</ul>
+        )}
+      </div>
+    </li>
+  );
+}
+

@@ -1,35 +1,18 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { LEAD_STATUSES, setLeadStatus, type LeadStatus } from '@/lib/api/leads';
+import { useState, useTransition } from 'react';
+import { setLeadStatus } from './actions';
+import { SELECTABLE_STATUSES } from '@/lib/leads/display';
+import { STATUS_LABELS } from '@/lib/crm/display';
 import styles from '../../../admin.module.css';
 
 /**
  * The status control — placed directly in the topbar header slot.
- * PATCH /v1/admin/leads/:id, then a refresh so the page re-reads the lead.
  */
-export default function StatusForm({ id, current }: { id: string; current: LeadStatus }) {
-  const router = useRouter();
-  const [value, setValue] = useState<LeadStatus>(current);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function change(next: LeadStatus) {
-    const previous = value;
-    setValue(next);
-    setError(null);
-    setPending(true);
-    try {
-      await setLeadStatus(id, next);
-      router.refresh();
-    } catch (err) {
-      setValue(previous);
-      setError(err instanceof Error ? err.message : 'Save failed');
-    } finally {
-      setPending(false);
-    }
-  }
+export default function StatusForm({ id, current }: { id: string; current: string }) {
+  const [value, setValue] = useState(current);
+  const [pending, start] = useTransition();
+  const [failed, setFailed] = useState(false);
 
   return (
     <div className={styles.statusForm}>
@@ -39,20 +22,41 @@ export default function StatusForm({ id, current }: { id: string; current: LeadS
         aria-label="Lead status"
         value={value}
         disabled={pending}
-        onChange={(e) => void change(e.target.value as LeadStatus)}
+        onChange={(e) => {
+          const next = e.target.value;
+          const previous = value;
+          setValue(next);
+          setFailed(false);
+          start(async () => {
+            try {
+              await setLeadStatus(id, next);
+            } catch {
+              setValue(previous);
+              setFailed(true);
+            }
+          });
+        }}
       >
-        {LEAD_STATUSES.map((s) => (
+        {/* A legacy or system status (won, lost, converted) stays visible as the
+            current value but cannot be chosen again. */}
+        {!(SELECTABLE_STATUSES as readonly string[]).includes(current) && (
+          <option value={current} disabled>
+            Status: {STATUS_LABELS[current] ?? current}
+          </option>
+        )}
+        {SELECTABLE_STATUSES.map((s) => (
           <option key={s} value={s}>
-            Status: {s}
+            Status: {STATUS_LABELS[s]}
           </option>
         ))}
       </select>
       {pending && <span className={styles.statusNote}>Saving…</span>}
-      {error && (
-        <span className={styles.statusErr} role="alert" title={error}>
-          Save failed: {error}
+      {failed && (
+        <span className={styles.statusErr} role="alert">
+          Save failed
         </span>
       )}
     </div>
   );
 }
+
