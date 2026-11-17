@@ -1,5 +1,5 @@
 import {
-  pgTable, pgEnum, uuid, text, timestamp, jsonb, boolean, integer, bigint, index, uniqueIndex,
+  pgTable, pgEnum, uuid, text, timestamp, jsonb, boolean, integer, bigint, date, index, uniqueIndex, type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './auth';
@@ -112,7 +112,9 @@ export const activities = pgTable('activities', {
   leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'cascade' }),
   companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
   contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'cascade' }),
+  dealId: uuid('deal_id').references((): AnyPgColumn => deals.id, { onDelete: 'cascade' }),
 }, (t) => [
+  index('activities_deal_idx').on(t.dealId, t.occurredAt.desc()),
   index('activities_lead_idx').on(t.leadId, t.occurredAt.desc()),
   index('activities_company_idx').on(t.companyId, t.occurredAt.desc()),
   index('activities_contact_idx').on(t.contactId, t.occurredAt.desc()),
@@ -133,7 +135,9 @@ export const tasks = pgTable('tasks', {
   leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'cascade' }),
   companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
   contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'cascade' }),
+  dealId: uuid('deal_id').references((): AnyPgColumn => deals.id, { onDelete: 'cascade' }),
 }, (t) => [
+  index('tasks_deal_idx').on(t.dealId),
   index('tasks_assignee_open_idx').on(t.workspaceId, t.assigneeId, t.dueAt).where(sql`${t.doneAt} is null`),
   index('tasks_lead_idx').on(t.leadId),
 ]);
@@ -185,4 +189,75 @@ export const crmEvents = pgTable('crm_events', {
 }, (t) => [
   index('crm_events_pending_idx').on(t.id).where(sql`${t.processedAt} is null`),
   index('crm_events_subject_idx').on(t.subjectType, t.subjectId),
+]);
+
+/* ── Deals (phase 2, migration 0017) ─────────────────────────────────────── */
+
+export const stageKind = pgEnum('stage_kind', ['open', 'won', 'lost']);
+
+/**
+ * Pipeline stages, per workspace — an industry edition brings its own. Exactly
+ * one 'won' and one 'lost' stage are expected; open stages are ordered by
+ * position and carry the default win probability used for the forecast.
+ */
+export const pipelineStages = pgTable('pipeline_stages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  name: text('name').notNull(),
+  position: integer('position').notNull().default(0),
+  /** Default win probability, 0–100, for deals in this stage. */
+  probability: integer('probability').notNull().default(0),
+  kind: stageKind('kind').notNull().default('open'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  archivedAt: timestamp('archived_at', { withTimezone: true }),
+}, (t) => [
+  index('pipeline_stages_workspace_idx').on(t.workspaceId, t.position),
+]);
+
+export const lossReasons = pgTable('loss_reasons', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  label: text('label').notNull(),
+  position: integer('position').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  archivedAt: timestamp('archived_at', { withTimezone: true }),
+});
+
+export const deals = pgTable('deals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  title: text('title').notNull(),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
+  contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
+  leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  ownerId: text('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  stageId: uuid('stage_id').notNull().references(() => pipelineStages.id, { onDelete: 'restrict' }),
+  service: text('service'),
+  tier: text('tier'),
+  seats: integer('seats'),
+  /** Hours per month across all seats, as the fit finder quotes them. */
+  hoursPerMonth: integer('hours_per_month'),
+  /** Hourly rate in cents. */
+  rateCents: integer('rate_cents'),
+  /** Monthly recurring value in cents: hours × rate, or entered directly. */
+  monthlyValueCents: integer('monthly_value_cents').notNull().default(0),
+  currency: text('currency').notNull().default('USD'),
+  /** Overrides the stage's default probability when set. */
+  probability: integer('probability'),
+  /** A calendar day (YYYY-MM-DD), not an instant. */
+  expectedClose: date('expected_close', { mode: 'string' }),
+  stageChangedAt: timestamp('stage_changed_at', { withTimezone: true }).notNull().defaultNow(),
+  closedAt: timestamp('closed_at', { withTimezone: true }),
+  lossReasonId: uuid('loss_reason_id').references(() => lossReasons.id, { onDelete: 'set null' }),
+  lossNote: text('loss_note'),
+  quizSubmissionId: uuid('quiz_submission_id'),
+  custom: jsonb('custom').$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  archivedAt: timestamp('archived_at', { withTimezone: true }),
+}, (t) => [
+  index('deals_workspace_stage_idx').on(t.workspaceId, t.stageId),
+  index('deals_owner_idx').on(t.workspaceId, t.ownerId),
+  index('deals_company_idx').on(t.companyId),
+  index('deals_lead_idx').on(t.leadId),
 ]);

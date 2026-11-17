@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, isNull } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { getDb } from '@/db';
-import { activities, customFieldDefs, leads, quizSubmissions, tasks, users } from '@/db/schema';
+import { activities, customFieldDefs, deals, leads, pipelineStages, quizSubmissions, tasks, users } from '@/db/schema';
 import type { FieldDef } from './fields';
 import { scoped, type WorkspaceId } from './workspace';
 
@@ -92,3 +92,13 @@ export async function getLeadDetail(ws: WorkspaceId, id: string) {
 export type LeadDetail = NonNullable<Awaited<ReturnType<typeof getLeadDetail>>>;
 export type TimelineItem = LeadDetail['timeline'][number];
 export type LeadTask = LeadDetail['tasks'][number];
+
+/** Deals created from this lead (by conversion). */
+export async function getDealsForLead(ws: WorkspaceId, leadId: string) {
+  return getDb()
+    .select({ id: deals.id, title: deals.title, stageName: pipelineStages.name })
+    .from(deals)
+    .innerJoin(pipelineStages, eq(pipelineStages.id, deals.stageId))
+    .where(and(eq(deals.workspaceId, ws), eq(deals.leadId, leadId)))
+    .orderBy(desc(deals.createdAt));
+}

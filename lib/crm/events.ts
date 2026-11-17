@@ -24,10 +24,18 @@ export const EVENT_TYPES = [
   'activity.logged',
   'task.created',
   'task.completed',
+  'deal.created',
+  'deal.updated',
+  'deal.stage_changed',
+  'deal.won',
+  'deal.lost',
+  'deal.reopened',
+  'company.updated',
+  'contact.updated',
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
-export type SubjectType = 'lead' | 'company' | 'contact' | 'task';
+export type SubjectType = 'lead' | 'company' | 'contact' | 'task' | 'deal';
 
 /** The database or an open transaction — anything that can insert. */
 export type Writer = Pick<ReturnType<typeof getDb>, 'insert'>;
@@ -65,11 +73,12 @@ export interface ActivityInput {
   leadId?: string | null;
   companyId?: string | null;
   contactId?: string | null;
+  dealId?: string | null;
 }
 
 export async function logActivity(db: Writer, a: ActivityInput): Promise<void> {
-  if (!a.leadId && !a.companyId && !a.contactId) {
-    throw new Error('an activity must belong to a lead, company or contact');
+  if (!a.leadId && !a.companyId && !a.contactId && !a.dealId) {
+    throw new Error('an activity must belong to a lead, company, contact or deal');
   }
   await db.insert(activities).values({
     workspaceId: a.workspaceId,
@@ -81,5 +90,6 @@ export async function logActivity(db: Writer, a: ActivityInput): Promise<void> {
     leadId: a.leadId ?? null,
     companyId: a.companyId ?? null,
     contactId: a.contactId ?? null,
+    dealId: a.dealId ?? null,
   });
 }

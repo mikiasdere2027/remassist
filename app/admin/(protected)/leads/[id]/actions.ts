@@ -233,29 +233,33 @@ export async function setTaskDone(taskId: string, isDone: boolean): Promise<Acti
   const user = await editor();
   if (!UUID.test(taskId)) return { ok: false, error: 'Unknown task.' };
   const ws = currentWorkspaceId();
-  let leadId: string | null = null;
+  let owner: { leadId: string | null; dealId: string | null; companyId: string | null } = { leadId: null, dealId: null, companyId: null };
   await getDb().transaction(async (tx) => {
     const [t] = await tx
-      .select({ id: tasks.id, title: tasks.title, leadId: tasks.leadId, doneAt: tasks.doneAt })
+      .select({ id: tasks.id, title: tasks.title, leadId: tasks.leadId, dealId: tasks.dealId, companyId: tasks.companyId, doneAt: tasks.doneAt })
       .from(tasks)
       .where(scoped(tasks.workspaceId, ws, eq(tasks.id, taskId)))
       .for('update');
     if (!t) throw new Error('not found');
-    leadId = t.leadId;
+    owner = { leadId: t.leadId, dealId: t.dealId, companyId: t.companyId };
     if (Boolean(t.doneAt) === isDone) return;
     await tx.update(tasks).set({ doneAt: isDone ? new Date() : null }).where(eq(tasks.id, taskId));
     if (isDone) {
-      await recordEvent(tx, { workspaceId: ws, type: 'task.completed', subjectType: 'task', subjectId: taskId, actorId: user.id, payload: { leadId: t.leadId } });
+      await recordEvent(tx, { workspaceId: ws, type: 'task.completed', subjectType: 'task', subjectId: taskId, actorId: user.id, payload: owner });
     }
-    if (t.leadId) {
+    /* The task's record gets the entry: lead, deal or company. */
+    if (t.leadId || t.dealId || t.companyId) {
       await logActivity(tx, {
-        workspaceId: ws, type: 'system', leadId: t.leadId, actorId: user.id,
+        workspaceId: ws, type: 'system', actorId: user.id, ...owner,
         body: `${isDone ? 'Completed' : 'Reopened'} task: ${t.title}`, meta: { taskId },
       });
-      await syncFollowUp(tx, t.leadId);
     }
+    if (t.leadId) await syncFollowUp(tx, t.leadId);
   });
-  return leadId ? done(leadId) : { ok: true, at: Date.now() };
+  revalidatePath('/admin/tasks');
+  if (owner.dealId) revalidatePath(`/admin/deals/${owner.dealId}`);
+  if (owner.companyId) revalidatePath(`/admin/companies/${owner.companyId}`);
+  return owner.leadId ? done(owner.leadId) : { ok: true, at: Date.now() };
 }
 
 /**

@@ -339,3 +339,89 @@
   .taskRow { grid-template-columns: 22px minmax(0, 1fr); }
   .taskRow > :nth-child(n + 3) { grid-column: 2; }
 }
+
+.valueLine { margin: 0; padding: 12px 14px; border-radius: 12px; background: #f5f8fe; font-size: 14px; color: var(--ink-700); }
+.valueLine b { font-size: 18px; color: var(--ink-900); font-variant-numeric: tabular-nums; }
+
+/* ── pipeline board ── */
+.board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(250px, 1fr);
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  align-items: start;
+}
+.column {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-height: 320px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #eef2f9;
+  border: 2px dashed transparent;
+  transition: border-color 120ms, background 120ms;
+}
+.columnOver { border-color: var(--brand-blue); background: #e4edfb; }
+.col_won { background: #e9f7ef; }
+.col_lost { background: #f7eeee; }
+.columnHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.columnHead h2 { margin: 0; font-size: 14px; font-weight: 700; color: var(--ink-900); }
+.columnTotal { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink-900); font-variant-numeric: tabular-nums; }
+.columnTotal > span:first-child { font-size: 12px; font-weight: 500; color: var(--ink-500); }
+.columnList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.columnEmpty { padding: 18px 10px; border-radius: 12px; border: 1px dashed var(--line-strong); text-align: center; font-size: 12.5px; color: var(--ink-500); }
+.dealCard {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--hairline);
+  box-shadow: 0 6px 16px -14px rgba(0, 5, 67, 0.4);
+  cursor: grab;
+}
+.dealCard:active { cursor: grabbing; }
+.dealDragging { opacity: 0.45; }
+.dealTitle { font-size: 14px; font-weight: 600; color: var(--ink-900); text-decoration: none; overflow-wrap: anywhere; }
+.dealTitle:hover { color: var(--blue-700); }
+.dealMeta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.dealFoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.avatarXs { width: 24px; height: 24px; font-size: 10px; box-shadow: none; }
+.miniSelect {
+  max-width: 120px;
+  height: 26px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--ink-700);
+  background: #f5f7fa;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+}
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 900px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { display: grid; gap: 4px; padding: 16px 18px; border-radius: 18px; background: #fff; box-shadow: var(--shadow-sm); }
+.statLabel { font-size: 12px; color: var(--ink-500); }
+.statValue { font-size: 24px; font-weight: 700; color: var(--ink-900); font-variant-numeric: tabular-nums; }
+.statHint { font-size: 12px; color: var(--ink-500); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+
+/* ── companies ── */
+.companyRow { grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.9fr) minmax(70px, 0.6fr) minmax(140px, 1.2fr) minmax(100px, 1fr) minmax(120px, 1fr) 36px; }
+@media (max-width: 1280px) {
+  .companyRow { grid-template-columns: minmax(200px, 2fr) minmax(110px, 1fr) minmax(140px, 1.2fr) minmax(100px, 1fr) 36px; }
+  .companyRow > :nth-child(3), .companyRow > :nth-child(6) { display: none; }
+}
+.contactItem { display: grid; gap: 2px; padding: 8px 0; }
+.contactItem + .contactItem { border-top: 1px solid var(--hairline); }
+.contactItem a { color: var(--blue-700); text-decoration: none; }
+
+/* ── settings ── */
+.narrowWide { max-width: 980px; }
+.settingsRow { display: grid; grid-template-columns: minmax(0, 1fr) 110px auto; align-items: center; gap: 12px; }
+.settingsRow + .settingsRow { padding-top: 12px; border-top: 1px solid var(--hairline); }
+.probField { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-500); }
+@media (max-width: 640px) { .settingsRow { grid-template-columns: minmax(0, 1fr) 100px; } .settingsRow > :last-child { grid-column: 1 / -1; } }

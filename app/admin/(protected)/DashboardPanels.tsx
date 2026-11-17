@@ -240,23 +240,29 @@ const PIPELINE_COLORS: Record<string, string> = {
   new: '#34bdf0',
   contacted: '#e5a82e',
   qualified: '#326dda',
-  won: '#12b76a',
-  lost: '#d92d20',
+  nurturing: '#7c5cd6',
+  converted: '#12b76a',
+  unqualified: '#d92d20',
   spam: '#667180',
 };
 
 export function LeadPipeline({
-  statusCounts,
+  statusCounts: rawCounts,
   leadTotal,
 }: {
   statusCounts: Map<string, number>;
   leadTotal: number;
 }) {
+  /* Pre-CRM statuses fold into their CRM equivalents: won → converted,
+     lost → unqualified (the deals phase migrates the rows themselves). */
+  const statusCounts = new Map(rawCounts);
+  statusCounts.set('converted', (rawCounts.get('converted') ?? 0) + (rawCounts.get('won') ?? 0));
+  statusCounts.set('unqualified', (rawCounts.get('unqualified') ?? 0) + (rawCounts.get('lost') ?? 0));
   const steps = [
     { key: 'new', label: 'New', color: PIPELINE_COLORS.new, count: statusCounts.get('new') ?? 0 },
     { key: 'contacted', label: 'Contacted', color: PIPELINE_COLORS.contacted, count: statusCounts.get('contacted') ?? 0 },
     { key: 'qualified', label: 'Qualified', color: PIPELINE_COLORS.qualified, count: statusCounts.get('qualified') ?? 0 },
-    { key: 'won', label: 'Won', color: PIPELINE_COLORS.won, count: statusCounts.get('won') ?? 0 },
+    { key: 'converted', label: 'Converted', color: PIPELINE_COLORS.converted, count: statusCounts.get('converted') ?? 0 },
   ];
 
   /* Uniform dot size — the line is a clean connector, not a funnel. */
@@ -273,12 +279,13 @@ export function LeadPipeline({
     { key: 'new', label: 'New', dotColor: PIPELINE_COLORS.new },
     { key: 'contacted', label: 'Contacted', dotColor: PIPELINE_COLORS.contacted },
     { key: 'qualified', label: 'Qualified', dotColor: PIPELINE_COLORS.qualified },
-    { key: 'won', label: 'Won', dotColor: PIPELINE_COLORS.won },
-    { key: 'lost', label: 'Lost', dotColor: PIPELINE_COLORS.lost },
+    { key: 'nurturing', label: 'Nurturing', dotColor: PIPELINE_COLORS.nurturing },
+    { key: 'converted', label: 'Converted', dotColor: PIPELINE_COLORS.converted },
+    { key: 'unqualified', label: 'Unqualified', dotColor: PIPELINE_COLORS.unqualified },
     { key: 'spam', label: 'Spam', dotColor: PIPELINE_COLORS.spam },
   ];
 
-  const won = statusCounts.get('won') ?? 0;
+  const won = statusCounts.get('converted') ?? 0;
   const overallConversion = leadTotal > 0 ? Math.round((won / leadTotal) * 100) : 0;
 
   /* Dynamic funnel thickness: grows from thin (4px) to thick (16px) to show the funnel,
