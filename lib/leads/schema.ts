@@ -10,7 +10,7 @@ import { z } from 'zod';
 export const LEAD_SOURCES = ['qualify_quiz', 'ask_widget', 'contact_form', 'pricing_cta', 'voice_agent'] as const;
 /** Every source a lead can have, including the ones only the team can set
     (adding by hand, importing). Filters use this; the public form uses the above. */
-export const ALL_LEAD_SOURCES = [...LEAD_SOURCES, 'manual', 'import', 'referral', 'outbound', 'event'] as const;
+export const ALL_LEAD_SOURCES = [...LEAD_SOURCES, 'manual', 'import', 'referral', 'outbound', 'event', 'booking'] as const;
 export const TEAM_LEAD_SOURCES = ['manual', 'referral', 'outbound', 'event'] as const;
 
 export const LeadBody = z.object({

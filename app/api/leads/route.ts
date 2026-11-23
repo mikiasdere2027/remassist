@@ -8,6 +8,7 @@ import { notifyNewLead } from '@/lib/notify';
 import { scoreLead } from '@/lib/crm/scoring';
 import { logActivity, recordEvent } from '@/lib/crm/events';
 import { currentWorkspaceId } from '@/lib/crm/workspace';
+import { applyInboundAutomation } from '@/lib/crm/automationData';
 import { SOURCE_LABELS } from '@/lib/leads/display';
 
 /**
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
     /* One transaction: the lead, its quiz, the event and the timeline entry
        land together or not at all, so the event log never describes a lead
        that does not exist. */
-    const row = await db.transaction(async (tx) => {
+    const { row, auto } = await db.transaction(async (tx) => {
       const [row] = await tx
         .insert(leads)
         .values({
@@ -114,12 +115,17 @@ export async function POST(req: Request) {
         body: `Captured from ${SOURCE_LABELS[cols.source] ?? cols.source}`,
         meta: { source: cols.source, page, score: scored.score, reasons: scored.reasons },
       });
-      return row;
+      /* Link to a known contact or company, assign an owner, add the first-contact task. */
+      const auto = await applyInboundAutomation(tx, workspaceId, {
+        id: row.id, email: cols.email, name: cols.name, serviceInterest: cols.serviceInterest, source: cols.source,
+      });
+      return { row, auto };
     });
 
     // Notification failures never fail the request — the lead is already saved.
     void notifyNewLead({
       id: row.id,
+      owner: auto.ownerName ?? undefined,
       email: cols.email,
       name: cols.name,
       company: cols.company,

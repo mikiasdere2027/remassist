@@ -14,7 +14,7 @@ import { DEFAULT_WORKSPACE_ID, companies, contacts, crmPriority, workspaces } fr
    LEAD_SOURCES); the rest are for leads the team adds or imports (0015). */
 export const leadSource = pgEnum('lead_source', [
   'qualify_quiz', 'ask_widget', 'contact_form', 'pricing_cta', 'voice_agent',
-  'manual', 'import', 'referral', 'outbound', 'event',
+  'manual', 'import', 'referral', 'outbound', 'event', 'booking',
 ]);
 
 /* nurturing / unqualified / converted were added in 0015. won and lost stay

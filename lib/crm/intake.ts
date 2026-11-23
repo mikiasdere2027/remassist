@@ -28,7 +28,7 @@ export const TeamLeadInput = z.object({
   country: opt(80),
   serviceInterest: opt(120),
   message: opt(5000),
-  source: z.enum([...TEAM_LEAD_SOURCES, 'import']).default('manual'),
+  source: z.enum([...TEAM_LEAD_SOURCES, 'import', 'booking']).default('manual'),
   ownerId: opt(100),
 });
 export type TeamLead = z.infer<typeof TeamLeadInput>;
@@ -55,7 +55,7 @@ export async function createTeamLead(
   tx: Tx,
   ws: WorkspaceId,
   input: TeamLead,
-  actorId: string,
+  actorId: string | null,
   note?: string,
 ): Promise<string> {
   const name = [input.firstName, input.lastName].filter(Boolean).join(' ') || undefined;

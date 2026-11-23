@@ -29,6 +29,7 @@ const SOURCE_POINTS: Record<string, number> = {
   pricing_cta: 15,
   contact_form: 10,
   referral: 20,
+  booking: 25,
   ask_widget: 5,
 };
 

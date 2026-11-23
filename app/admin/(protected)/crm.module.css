@@ -494,3 +494,10 @@
 .miniMeta { font-size: 12.5px; color: var(--ink-500); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .inlineAvatar { display: inline-grid; margin-right: 8px; vertical-align: middle; }
+
+/* ── automation settings ── */
+.checkLine { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-700); }
+.checkLine input[type='checkbox'] { width: 18px; height: 18px; accent-color: var(--brand-blue); }
+.tinyInput { width: 70px; height: 34px; }
+.padNote { margin: 0; padding: 0 22px 18px; }
+.digest { margin: 0; padding: 14px 16px; border-radius: 12px; background: #f5f7fa; font: inherit; font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink-900); }

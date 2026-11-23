@@ -25,6 +25,8 @@ export interface LeadNotification {
   pageUrl?: string;
   quote?: string;
   answers?: Record<string, string>;
+  /** Who the lead was assigned to automatically, if anyone. */
+  owner?: string;
 }
 
 export function formatLeadNotification(n: LeadNotification): string {
@@ -33,6 +35,7 @@ export function formatLeadNotification(n: LeadNotification): string {
     `Email: ${n.email}`,
   ];
   if (n.name) lines.push(`Name: ${n.name}`);
+  lines.push(`Owner: ${n.owner ?? 'Unassigned'}`);
   if (n.company) lines.push(`Company: ${n.company}`);
   if (n.phone) lines.push(`Phone: ${n.phone}`);
   if (n.pageUrl) lines.push(`Page: ${n.pageUrl}`);
