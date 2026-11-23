@@ -127,6 +127,13 @@
       "when": 1788892300000,
       "tag": "0017_crm_deals",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788892400000,
+      "tag": "0018_crm_customers",
+      "breakpoints": true
     }
   ]
 }

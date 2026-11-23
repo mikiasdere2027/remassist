@@ -1,4 +1,5 @@
 import { CALL_OUTCOME_LABELS, STATUS_LABELS, type CallOutcome } from '@/lib/crm/display';
+import { ENGAGEMENT_STATUS_LABELS } from '@/lib/crm/engagements';
 import { formatMoney } from '@/lib/crm/money';
 import { LocalTime, TaskCheck } from './leads/[id]/LeadClient';
 import { setTaskDone } from './leads/[id]/actions';
@@ -100,6 +101,7 @@ const ICONS: Record<string, React.ReactNode> = {
   status_change: <path d="M4 12h12M12 6l6 6-6 6" />,
   stage_change: <path d="M3 17h4V7H3zM10 17h4V4h-4zM17 17h4v-7h-4z" />,
   owner_change: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+  file: <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8zM14 3v5h5M9 13h6M9 17h4" />,
   system: <><circle cx="12" cy="12" r="9" /><path d="M12 8v4l3 2" /></>,
 };
 
@@ -129,8 +131,15 @@ function TimelineEntry({ a, subject }: { a: TimelineItem; subject: string }) {
       head = <><b>{who}</b> logged a call · {outcome}{mins > 0 ? ` · ${mins} min` : ''}</>;
       break;
     }
-    case 'status_change':
-      head = <><b>{who}</b> changed status: {STATUS_LABELS[String(meta.from)] ?? String(meta.from)} → <b>{STATUS_LABELS[String(meta.to)] ?? String(meta.to)}</b></>;
+    case 'status_change': {
+      /* Leads and customers have different statuses; meta.kind says which. */
+      const labels: Record<string, string> = meta.kind === 'engagement' ? ENGAGEMENT_STATUS_LABELS : STATUS_LABELS;
+      head = <><b>{who}</b> changed status: {labels[String(meta.from)] ?? String(meta.from)} → <b>{labels[String(meta.to)] ?? String(meta.to)}</b></>;
+      if (meta.kind !== 'engagement') body = null;
+      break;
+    }
+    case 'file':
+      head = <><b>{who}</b> · {a.body}</>;
       body = null;
       break;
     case 'stage_change':

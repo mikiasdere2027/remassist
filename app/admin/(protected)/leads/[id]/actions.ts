@@ -233,22 +233,22 @@ export async function setTaskDone(taskId: string, isDone: boolean): Promise<Acti
   const user = await editor();
   if (!UUID.test(taskId)) return { ok: false, error: 'Unknown task.' };
   const ws = currentWorkspaceId();
-  let owner: { leadId: string | null; dealId: string | null; companyId: string | null } = { leadId: null, dealId: null, companyId: null };
+  let owner: { leadId: string | null; dealId: string | null; companyId: string | null; engagementId: string | null } = { leadId: null, dealId: null, companyId: null, engagementId: null };
   await getDb().transaction(async (tx) => {
     const [t] = await tx
-      .select({ id: tasks.id, title: tasks.title, leadId: tasks.leadId, dealId: tasks.dealId, companyId: tasks.companyId, doneAt: tasks.doneAt })
+      .select({ id: tasks.id, title: tasks.title, leadId: tasks.leadId, dealId: tasks.dealId, companyId: tasks.companyId, engagementId: tasks.engagementId, doneAt: tasks.doneAt })
       .from(tasks)
       .where(scoped(tasks.workspaceId, ws, eq(tasks.id, taskId)))
       .for('update');
     if (!t) throw new Error('not found');
-    owner = { leadId: t.leadId, dealId: t.dealId, companyId: t.companyId };
+    owner = { leadId: t.leadId, dealId: t.dealId, companyId: t.companyId, engagementId: t.engagementId };
     if (Boolean(t.doneAt) === isDone) return;
     await tx.update(tasks).set({ doneAt: isDone ? new Date() : null }).where(eq(tasks.id, taskId));
     if (isDone) {
       await recordEvent(tx, { workspaceId: ws, type: 'task.completed', subjectType: 'task', subjectId: taskId, actorId: user.id, payload: owner });
     }
     /* The task's record gets the entry: lead, deal or company. */
-    if (t.leadId || t.dealId || t.companyId) {
+    if (t.leadId || t.dealId || t.companyId || t.engagementId) {
       await logActivity(tx, {
         workspaceId: ws, type: 'system', actorId: user.id, ...owner,
         body: `${isDone ? 'Completed' : 'Reopened'} task: ${t.title}`, meta: { taskId },
@@ -259,6 +259,7 @@ export async function setTaskDone(taskId: string, isDone: boolean): Promise<Acti
   revalidatePath('/admin/tasks');
   if (owner.dealId) revalidatePath(`/admin/deals/${owner.dealId}`);
   if (owner.companyId) revalidatePath(`/admin/companies/${owner.companyId}`);
+  if (owner.engagementId) revalidatePath(`/admin/customers/${owner.engagementId}`);
   return owner.leadId ? done(owner.leadId) : { ok: true, at: Date.now() };
 }
 

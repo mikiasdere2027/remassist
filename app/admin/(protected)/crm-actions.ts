@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { and, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDb, isDatabaseConfigured } from '@/db';
-import { companies, deals, tasks, users } from '@/db/schema';
+import { companies, deals, engagements, tasks, users } from '@/db/schema';
 import { assertUser } from '@/lib/auth/require';
 import { canEditLeads } from '@/lib/auth/roles';
 import { currentWorkspaceId } from '@/lib/crm/workspace';
@@ -18,7 +18,7 @@ import type { ActionResult } from './leads/[id]/actions';
  * first-response clock and tasks drive its follow-up date.)
  */
 
-type Kind = 'deal' | 'company';
+type Kind = 'deal' | 'company' | 'engagement';
 const UUID = /^[0-9a-f-]{36}$/i;
 
 async function editor() {
@@ -32,14 +32,14 @@ async function editor() {
 async function resolve(kind: Kind, id: string) {
   if (!UUID.test(id)) throw new Error('not found');
   const ws = currentWorkspaceId();
-  const table = kind === 'deal' ? deals : companies;
+  const table = kind === 'deal' ? deals : kind === 'engagement' ? engagements : companies;
   const [row] = await getDb().select({ id: table.id }).from(table).where(and(eq(table.workspaceId, ws), eq(table.id, id))).limit(1);
   if (!row) throw new Error('not found');
-  return { ws, ref: kind === 'deal' ? { dealId: id } : { companyId: id } };
+  return { ws, ref: kind === 'deal' ? { dealId: id } : kind === 'engagement' ? { engagementId: id } : { companyId: id } };
 }
 
 function done(kind: Kind, id: string): ActionResult {
-  revalidatePath(kind === 'deal' ? `/admin/deals/${id}` : `/admin/companies/${id}`);
+  revalidatePath(kind === 'deal' ? `/admin/deals/${id}` : kind === 'engagement' ? `/admin/customers/${id}` : `/admin/companies/${id}`);
   if (kind === 'deal') revalidatePath('/admin/deals');
   revalidatePath('/admin/tasks');
   return { ok: true, at: Date.now() };

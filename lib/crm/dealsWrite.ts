@@ -7,6 +7,7 @@ import { logActivity, recordEvent } from './events';
 import { monthlyValueCents, parseMoneyToCents } from './money';
 import { toE164 } from './phone';
 import type { WorkspaceId } from './workspace';
+import { createEngagementForDeal } from './engagementsData';
 
 /**
  * Deal writes: create (from a lead or from scratch), find-or-create the
@@ -246,5 +247,7 @@ export async function moveDeal(
     await tx.update(companies).set({ lifecycle: 'customer', updatedAt: now }).where(eq(companies.id, deal.companyId));
     await logActivity(tx, { workspaceId: ws, type: 'system', companyId: deal.companyId, actorId, body: `Became a customer: ${deal.title} won`, meta: { dealId } });
   }
+  /* Every won deal becomes a customer engagement (lib/crm/engagementsData.ts). */
+  if (to.kind === 'won') await createEngagementForDeal(tx, ws, dealId, actorId);
   return { ok: true };
 }

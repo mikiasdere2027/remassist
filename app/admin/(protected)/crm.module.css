@@ -425,3 +425,31 @@
 .settingsRow + .settingsRow { padding-top: 12px; border-top: 1px solid var(--hairline); }
 .probField { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-500); }
 @media (max-width: 640px) { .settingsRow { grid-template-columns: minmax(0, 1fr) 100px; } .settingsRow > :last-child { grid-column: 1 / -1; } }
+
+/* ── customers ── */
+.checkSteps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.checkSteps li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--hairline); }
+.checkSteps li:last-child { border-bottom: 0; }
+.checkSteps label { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-900); cursor: pointer; }
+.checkSteps input { width: 18px; height: 18px; margin: 0; accent-color: var(--brand-blue); cursor: pointer; }
+.stepDone label span { color: var(--ink-500); text-decoration: line-through; }
+.monoArea { font-variant-numeric: tabular-nums; min-height: 120px; }
+.uploadRow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 16px 22px; border-top: 1px solid var(--hairline); }
+.uploadRow .select { width: auto; min-width: 130px; }
+.uploadRow .label { margin: 0; }
+.fileList { list-style: none; margin: 0; padding: 0 22px; }
+.fileItem { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.fileItem a { color: var(--blue-700); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.fileItem a:hover { text-decoration: underline; }
+.roleList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.roleList li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; padding: 10px 12px; border-radius: 12px; background: #f5f8fe; font-size: 14px; }
+.customerRow { grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.9fr) minmax(110px, 1fr) minmax(120px, 1fr) minmax(130px, 1.1fr) minmax(110px, 1fr) 36px; }
+@media (max-width: 1280px) {
+  .customerRow { grid-template-columns: minmax(200px, 2fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(130px, 1.1fr) 36px; }
+  .customerRow > :nth-child(4), .customerRow > :nth-child(6) { display: none; }
+}
+.renewSoon { color: var(--medium-700); font-weight: 600; }
+.s_onboarding { background: #eef4fd; color: var(--blue-700); }
+.s_active { background: var(--low-50); color: var(--low-700); }
+.s_paused { background: var(--medium-50); color: var(--medium-700); }
+.s_churned { background: var(--critical-50); color: var(--critical-600); }

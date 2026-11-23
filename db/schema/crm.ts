@@ -113,7 +113,9 @@ export const activities = pgTable('activities', {
   companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
   contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'cascade' }),
   dealId: uuid('deal_id').references((): AnyPgColumn => deals.id, { onDelete: 'cascade' }),
+  engagementId: uuid('engagement_id').references((): AnyPgColumn => engagements.id, { onDelete: 'cascade' }),
 }, (t) => [
+  index('activities_engagement_idx').on(t.engagementId, t.occurredAt.desc()),
   index('activities_deal_idx').on(t.dealId, t.occurredAt.desc()),
   index('activities_lead_idx').on(t.leadId, t.occurredAt.desc()),
   index('activities_company_idx').on(t.companyId, t.occurredAt.desc()),
@@ -136,7 +138,9 @@ export const tasks = pgTable('tasks', {
   companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
   contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'cascade' }),
   dealId: uuid('deal_id').references((): AnyPgColumn => deals.id, { onDelete: 'cascade' }),
+  engagementId: uuid('engagement_id').references((): AnyPgColumn => engagements.id, { onDelete: 'cascade' }),
 }, (t) => [
+  index('tasks_engagement_idx').on(t.engagementId),
   index('tasks_deal_idx').on(t.dealId),
   index('tasks_assignee_open_idx').on(t.workspaceId, t.assigneeId, t.dueAt).where(sql`${t.doneAt} is null`),
   index('tasks_lead_idx').on(t.leadId),
@@ -260,4 +264,89 @@ export const deals = pgTable('deals', {
   index('deals_owner_idx').on(t.workspaceId, t.ownerId),
   index('deals_company_idx').on(t.companyId),
   index('deals_lead_idx').on(t.leadId),
+]);
+
+/* ── Customers (phase 3, migration 0018) ──────────────────────────────────── */
+
+/**
+ * What a won deal becomes: the service being delivered to a customer. "Renewal
+ * due" is not a status: it is derived from renewal_date, so it can never be
+ * stale.
+ */
+export const engagementStatus = pgEnum('engagement_status', ['onboarding', 'active', 'paused', 'churned']);
+
+/** A role on an engagement: what is staffed, how many, and who fills it. */
+export interface EngagementRole {
+  role: string;
+  seats: number;
+  hoursPerMonth?: number | null;
+  /** Names of the Rem Assist staff placed in this role. */
+  staff?: string[];
+}
+
+/** One onboarding step, ticked off as the customer is set up. */
+export interface OnboardingStep {
+  key: string;
+  label: string;
+  doneAt?: string | null;
+  doneBy?: string | null;
+}
+
+export const engagements = pgTable('engagements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'restrict' }),
+  dealId: uuid('deal_id').references(() => deals.id, { onDelete: 'set null' }),
+  title: text('title').notNull(),
+  service: text('service'),
+  status: engagementStatus('status').notNull().default('onboarding'),
+  /** Account manager. */
+  ownerId: text('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  monthlyValueCents: integer('monthly_value_cents').notNull().default(0),
+  currency: text('currency').notNull().default('USD'),
+  roles: jsonb('roles').$type<EngagementRole[]>().notNull().default([]),
+  onboarding: jsonb('onboarding').$type<OnboardingStep[]>().notNull().default([]),
+  startDate: date('start_date', { mode: 'string' }),
+  contractEnd: date('contract_end', { mode: 'string' }),
+  renewalDate: date('renewal_date', { mode: 'string' }),
+  /** Days' notice either side must give before the renewal date. */
+  noticeDays: integer('notice_days'),
+  churnedAt: timestamp('churned_at', { withTimezone: true }),
+  churnReason: text('churn_reason'),
+  custom: jsonb('custom').$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  archivedAt: timestamp('archived_at', { withTimezone: true }),
+}, (t) => [
+  index('engagements_workspace_status_idx').on(t.workspaceId, t.status),
+  index('engagements_company_idx').on(t.companyId),
+  uniqueIndex('engagements_deal_uq').on(t.dealId).where(sql`${t.dealId} is not null`),
+  index('engagements_renewal_idx').on(t.workspaceId, t.renewalDate).where(sql`${t.renewalDate} is not null`),
+]);
+
+export const attachmentKind = pgEnum('attachment_kind', ['contract', 'proposal', 'invoice', 'other']);
+
+/**
+ * Files on a record (contracts first). Stored privately on disk outside the
+ * public uploads folder (lib/crm/files.ts) and only ever served through the
+ * signed-in admin route /admin/files/[id].
+ */
+export const attachments = pgTable('attachments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  kind: attachmentKind('kind').notNull().default('other'),
+  /** Path relative to the private file directory. Never shown to users. */
+  storageKey: text('storage_key').notNull(),
+  name: text('name').notNull(),
+  sizeBytes: integer('size_bytes').notNull(),
+  mime: text('mime').notNull(),
+  uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  archivedAt: timestamp('archived_at', { withTimezone: true }),
+  engagementId: uuid('engagement_id').references(() => engagements.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
+  dealId: uuid('deal_id').references(() => deals.id, { onDelete: 'cascade' }),
+}, (t) => [
+  index('attachments_engagement_idx').on(t.engagementId),
+  index('attachments_company_idx').on(t.companyId),
 ]);

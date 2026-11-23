@@ -4,6 +4,8 @@ import { isDatabaseConfigured } from '@/db';
 import { requireUser } from '@/lib/auth/require';
 import { currentWorkspaceId } from '@/lib/crm/workspace';
 import { getCompanyDetail } from '@/lib/crm/deals';
+import { engagementsForCompany } from '@/lib/crm/engagementsData';
+import { ENGAGEMENT_STATUS_LABELS, type EngagementStatus } from '@/lib/crm/engagements';
 import { getTeam } from '@/lib/crm/leads';
 import { formatMoney } from '@/lib/crm/money';
 import { STATUS_LABELS, initials } from '@/lib/crm/display';
@@ -29,7 +31,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   if (!isDatabaseConfigured() || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const me = await requireUser();
   const ws = currentWorkspaceId();
-  const [detail, team] = await Promise.all([getCompanyDetail(ws, id), getTeam()]);
+  const [detail, team, customerOf] = await Promise.all([getCompanyDetail(ws, id), getTeam(), engagementsForCompany(ws, id)]);
   if (!detail) notFound();
   const { company, contacts, deals, leads, timeline, tasks } = detail;
 
@@ -88,6 +90,29 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
           </aside>
 
           <div className={s.mainCol}>
+            {customerOf.length > 0 && (
+              <section className={s.card}>
+                <div className={s.cardHead}>
+                  <h2 className={s.cardTitle}>Customer engagements</h2>
+                  <Link className={s.doneToggle} href="/admin/customers">All customers</Link>
+                </div>
+                <div className={admin.tableWrap}>
+                  <table className={admin.table}>
+                    <thead><tr><th scope="col">Engagement</th><th scope="col">Status</th><th scope="col">Monthly</th><th scope="col">Renews</th></tr></thead>
+                    <tbody>
+                      {customerOf.map((c) => (
+                        <tr key={c.id}>
+                          <td><Link className={admin.rowLink} href={`/admin/customers/${c.id}`}><span className={admin.cellPrimary}>{c.title}</span></Link></td>
+                          <td><span className={`${s.badge} ${s[`s_${c.status}`]}`}>{ENGAGEMENT_STATUS_LABELS[c.status as EngagementStatus]}</span></td>
+                          <td className={admin.nowrap}>{formatMoney(c.monthlyValueCents, c.currency)}</td>
+                          <td className={admin.nowrap}>{c.renewalDate ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
             <section className={s.card}>
               <div className={s.cardHead}>
                 <h2 className={s.cardTitle}>Deals</h2>

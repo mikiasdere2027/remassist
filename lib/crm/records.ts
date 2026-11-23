@@ -8,13 +8,14 @@ import type { WorkspaceId } from './workspace';
  * The timeline and the task list, for any record type. Leads, deals and
  * companies all show the same two things, read the same way.
  */
-export type RecordRef = { leadId: string } | { dealId: string } | { companyId: string };
+export type RecordRef = { leadId: string } | { dealId: string } | { companyId: string } | { engagementId: string };
 
 function activityWhere(ws: WorkspaceId, ref: RecordRef): SQL {
   const by =
     'leadId' in ref ? eq(activities.leadId, ref.leadId)
       : 'dealId' in ref ? eq(activities.dealId, ref.dealId)
-        : eq(activities.companyId, ref.companyId);
+        : 'engagementId' in ref ? eq(activities.engagementId, ref.engagementId)
+          : eq(activities.companyId, ref.companyId);
   return and(eq(activities.workspaceId, ws), by) as SQL;
 }
 
@@ -22,7 +23,8 @@ function taskWhere(ws: WorkspaceId, ref: RecordRef): SQL {
   const by =
     'leadId' in ref ? eq(tasks.leadId, ref.leadId)
       : 'dealId' in ref ? eq(tasks.dealId, ref.dealId)
-        : eq(tasks.companyId, ref.companyId);
+        : 'engagementId' in ref ? eq(tasks.engagementId, ref.engagementId)
+          : eq(tasks.companyId, ref.companyId);
   return and(eq(tasks.workspaceId, ws), by) as SQL;
 }
 

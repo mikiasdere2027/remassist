@@ -31,3 +31,6 @@ Test Admin/.edge-prof/
 # Worktrees another tool keeps here — whole checkouts of this repo, 157MB
 # and counting. Committing or shipping them is never intended.
 .kilo/
+
+# Private CRM files (contracts) in local dev; see lib/crm/files.ts
+.private-files/
