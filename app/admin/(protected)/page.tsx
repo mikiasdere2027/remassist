@@ -15,6 +15,13 @@ import {
 } from './DashboardPanels';
 import styles from '../admin.module.css';
 import AdminTopbar from './AdminTopbar';
+import { currentWorkspaceId } from '@/lib/crm/workspace';
+import { activityStream, comingUp, dashboardNumbers, topOpenDeals } from '@/lib/crm/reportsData';
+import { change } from '@/lib/crm/reports';
+import { effectiveProbability, formatMoney, formatMoneyShort } from '@/lib/crm/money';
+import { initials } from '@/lib/crm/display';
+import { LocalTime } from './leads/[id]/LeadClient';
+import s from './crm.module.css';
 
 /**
  * The admin landing page.
@@ -120,7 +127,6 @@ export default async function DashboardPage() {
   const leadTotal = Number(totals[0]?.n ?? 0);
   const quizzes = Number(quizTotals[0]?.n ?? 0);
   const anonymous = Number(quizTotals[0]?.anonymous ?? 0);
-  const completed = Number(quizTotals[0]?.completed ?? 0);
   const untouched = statusCount.get('new') ?? 0;
 
   const sourceRows = bySource
@@ -143,15 +149,22 @@ export default async function DashboardPage() {
     };
   });
 
-  const firstName = user.name ? user.name.trim().split(/\s+/)[0] : 'Johnathan';
+  /* The person's own first name, or the start of their email; never a placeholder. */
+  const firstName = user.name?.trim() ? user.name.trim().split(/\s+/)[0] : user.email.split('@')[0];
   const todayFormatted = new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   }).format(today);
-  const newLeadsMsg = `${untouched > 0 ? untouched : 14} new lead${(untouched > 0 ? untouched : 14) === 1 ? '' : 's'}`;
-  const publishedPostsMsg = `${postCounts[0]?.live ?? 2} published post${(postCounts[0]?.live ?? 2) === 1 ? '' : 's'}`;
+  const ws = currentWorkspaceId();
+  const [crm, topDeals, upcoming, stream] = await Promise.all([
+    dashboardNumbers(ws, user.id), topOpenDeals(ws), comingUp(ws, user.id), activityStream(ws),
+  ]);
+  const leadsChange = change(crm.leads30, crm.leadsPrev30);
+  const waitingMsg = untouched === 0 ? 'every lead has had a first response' : `${untouched} ${untouched === 1 ? 'lead is' : 'leads are'} waiting for a first response`;
+  const livePosts = Number(postCounts[0]?.live ?? 0);
+  const publishedPostsMsg = `${livePosts} published post${livePosts === 1 ? '' : 's'}`;
 
   return (
     <>
@@ -172,67 +185,111 @@ export default async function DashboardPage() {
       <div className={styles.view}>
         {/* Greeting Section */}
         <div className={styles.greeting}>
-          <h2 className={styles.greetingTitle}>Good morning, {firstName}.</h2>
+          <h2 className={styles.greetingTitle}>Welcome back, {firstName}.</h2>
           <p className={styles.greetingSub}>
-            <span className={styles.greetingDate}>{todayFormatted}</span> · {newLeadsMsg} and {publishedPostsMsg} since yesterday
+            <span className={styles.greetingDate}>{todayFormatted}</span> · {waitingMsg} · {publishedPostsMsg}
           </p>
         </div>
 
-        {/* ROW 1: 4 Stat Cards */}
-        <div className={styles.stats}>
-          <StatCard
-            href="/admin/leads"
-            value={leadTotal}
-            label="Leads captured"
-            icon={ICON.inbox}
-            delta={{
-              text: `+${leadTotal > 0 ? leadTotal : 1} this period`,
-              tone: 'up',
-              icon: ICON.arrowUpRight,
-            }}
-            note={leadTotal > 0 ? `vs last week` : 'vs 114 last week'}
-            btnLabel="View leads →"
-          />
-          <StatCard
-            href="/admin/leads?status=new"
-            value={untouched}
-            label="Awaiting a first response"
-            icon={ICON.clock}
-            delta={
-              untouched > 0
-                ? { text: 'Needs attention', tone: 'needs', icon: ICON.alertCircle }
-                : { text: 'All caught up', tone: 'up', icon: ICON.check }
-            }
-            note={untouched > 0 ? 'Requires reply' : 'All caught up'}
-            btnLabel={untouched > 0 ? 'Respond →' : undefined}
-          />
-          <StatCard
-            href="/admin/quizzes"
-            value={quizzes}
-            label="Fit finder submissions"
-            icon={ICON.checkSquare}
-            delta={{
-              text: `+${completed > 0 ? completed : 1} completed`,
-              tone: 'up',
-              icon: ICON.arrowUpRight,
-            }}
-            note={`• ${completed} completed`}
-            btnLabel="Review →"
-          />
-          <StatCard
-            href="/admin/quizzes?only=anonymous"
-            value={anonymous}
-            label="Quizzes with no contact details"
-            icon={ICON.bookmark}
-            delta={
-              anonymous > 0
-                ? { text: 'Needs attention', tone: 'needs', icon: ICON.alertCircle }
-                : { text: 'All caught up', tone: 'up', icon: ICON.check }
-            }
-            note={anonymous > 0 ? 'Interest with nobody to reply' : 'Everyone left details'}
-            btnLabel="Fix →"
-          />
+        {/* CRM headline numbers: each opens the list behind it. */}
+        <div className={`${s.kpis} ${styles.section}`}>
+          <Kpi href="/admin/leads?status=new" label="Awaiting a first response" value={String(untouched)}
+            hint={untouched > 0 ? 'Reply to these first' : 'All caught up'} tone={untouched > 0 ? 'down' : 'up'} />
+          <Kpi href="/admin/leads" label="New leads, last 30 days" value={String(crm.leads30)}
+            hint={leadsChange === null ? `${crm.leadsPrev30} in the 30 days before` : `${leadsChange > 0 ? '+' : ''}${leadsChange}% on the 30 days before`}
+            tone={leadsChange === null ? undefined : leadsChange >= 0 ? 'up' : 'down'} />
+          <Kpi href="/admin/deals" label="Open pipeline" value={`${formatMoneyShort(crm.pipeline)}/mo`}
+            hint={`${crm.openDeals} open ${crm.openDeals === 1 ? 'deal' : 'deals'} · ${formatMoneyShort(crm.weighted)} weighted`} />
+          <Kpi href="/admin/customers" label="Monthly recurring revenue" value={`${formatMoneyShort(crm.mrr)}/mo`}
+            hint={`${crm.customers} live ${crm.customers === 1 ? 'customer' : 'customers'}`} />
+          <Kpi href="/admin/tasks?view=overdue" label="My overdue tasks" value={String(crm.overdueMine)}
+            hint={crm.overdueAll > crm.overdueMine ? `${crm.overdueAll} across the team` : crm.overdueMine ? 'Due before now' : 'Nothing overdue'}
+            tone={crm.overdueMine > 0 ? 'down' : 'up'} />
         </div>
+
+        <div className={`${s.dashGrid} ${styles.section}`}>
+          <section className={s.card}>
+            <div className={s.cardHead}>
+              <h2 className={s.cardTitle}>Top open deals</h2>
+              <Link className={s.doneToggle} href="/admin/deals">Pipeline</Link>
+            </div>
+            {topDeals.length === 0 ? (
+              <p className={styles.empty}><strong>No open deals</strong>Convert a qualified lead to start the pipeline.</p>
+            ) : (
+              <ul className={s.miniList}>
+                {topDeals.map((d) => (
+                  <li key={d.id}>
+                    <span>
+                      <Link href={`/admin/deals/${d.id}`}>{d.title}</Link>
+                      <span className={s.cardNote}> · {d.stage} · {effectiveProbability(d.probability, d.stageProbability)}%</span>
+                    </span>
+                    <span className={s.miniMeta}>{formatMoney(d.value, d.currency)}/mo</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className={s.card}>
+            <div className={s.cardHead}>
+              <h2 className={s.cardTitle}>Coming up</h2>
+              <Link className={s.doneToggle} href="/admin/tasks">My tasks</Link>
+            </div>
+            {upcoming.tasks.length === 0 && upcoming.renewals.length === 0 ? (
+              <p className={styles.empty}><strong>Nothing due this week</strong>Tasks due in the next 7 days and renewals in the next 60 show here.</p>
+            ) : (
+              <ul className={s.miniList}>
+                {upcoming.tasks.map((t) => {
+                  const href = t.leadId ? `/admin/leads/${t.leadId}` : t.dealId ? `/admin/deals/${t.dealId}`
+                    : t.engagementId ? `/admin/customers/${t.engagementId}` : t.companyId ? `/admin/companies/${t.companyId}` : '/admin/tasks';
+                  const late = Boolean(t.dueAt && t.dueAt.getTime() < Date.now());
+                  return (
+                    <li key={t.id}>
+                      <Link href={href}>{t.title}</Link>
+                      <span className={`${s.miniMeta} ${late ? s.overdue : ''}`}>{late ? 'Overdue · ' : null}{t.dueAt && <LocalTime iso={t.dueAt.toISOString()} />}</span>
+                    </li>
+                  );
+                })}
+                {upcoming.renewals.map((r) => (
+                  <li key={r.id}>
+                    <span><Link href={`/admin/customers/${r.id}`}>{r.companyName ?? r.title}</Link><span className={s.cardNote}> · renewal · {formatMoney(r.value, r.currency)}/mo</span></span>
+                    <span className={s.miniMeta}>{r.renewalDate}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        <section className={`${s.card} ${styles.section}`}>
+          <div className={s.cardHead}>
+            <h2 className={s.cardTitle}>Activity</h2>
+            <span className={s.cardNote}>The latest across leads, deals and customers</span>
+          </div>
+          {stream.length === 0 ? (
+            <p className={styles.empty}><strong>No activity yet</strong>Notes, calls, status changes and new leads appear here.</p>
+          ) : (
+            <ul className={s.miniList}>
+              {stream.map((a) => {
+                const target = a.dealId ? { href: `/admin/deals/${a.dealId}`, name: a.dealTitle }
+                  : a.engagementId ? { href: `/admin/customers/${a.engagementId}`, name: a.engagementTitle }
+                  : a.leadId ? { href: `/admin/leads/${a.leadId}`, name: a.leadName }
+                  : a.companyId ? { href: `/admin/companies/${a.companyId}`, name: a.companyName } : null;
+                const who = a.actorName?.trim() || a.actorEmail || 'System';
+                return (
+                  <li key={a.id}>
+                    <span>
+                      <span className={`${s.avatar} ${s.avatarXs} ${s.inlineAvatar}`} aria-hidden="true">{initials(who)}</span>
+                      <b>{who}</b> {ACTIVITY_VERBS[a.type] ?? 'updated'}{' '}
+                      {target && target.name ? <Link href={target.href}>{target.name}</Link> : null}
+                    </span>
+                    <span className={s.miniMeta}><LocalTime iso={a.occurredAt.toISOString()} /></span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         {/* ROW 2: Recent leads (Full Width — latest 5) */}
         <section className={`${styles.panel} ${styles.section}`}>
@@ -342,98 +399,24 @@ export default async function DashboardPage() {
   );
 }
 
-function StatCard({
-  href,
-  value,
-  label,
-  icon,
-  delta,
-  note,
-  btnLabel,
-}: {
-  href: string;
-  value: number;
-  label: string;
-  icon: React.ReactNode;
-  delta?: {
-    text: string;
-    tone: 'up' | 'needs' | 'neutral';
-    icon?: React.ReactNode;
-  };
-  note?: string;
-  btnLabel?: string;
-}) {
+const ACTIVITY_VERBS: Record<string, string> = {
+  note: 'added a note on',
+  call: 'logged a call with',
+  email: 'emailed',
+  meeting: 'met',
+  status_change: 'changed the status of',
+  owner_change: 'reassigned',
+  stage_change: 'moved',
+  file: 'added a file to',
+  system: 'updated',
+};
+
+function Kpi({ href, label, value, hint, tone }: { href: string; label: string; value: string; hint: string; tone?: 'up' | 'down' }) {
   return (
-    <Link className={styles.statCard} href={href}>
-      <div>
-        <div className={styles.statTop}>
-          <span className={styles.statIco}>{icon}</span>
-          {delta && (
-            <span
-              className={`${styles.statDelta} ${
-                delta.tone === 'up'
-                  ? styles.deltaUp
-                  : delta.tone === 'needs'
-                  ? styles.deltaNeeds
-                  : styles.deltaNeutral
-              }`}
-            >
-              {delta.icon}
-              {delta.text}
-            </span>
-          )}
-        </div>
-        <div className={styles.statLabel}>{label}</div>
-        <div className={styles.statValue}>{value}</div>
-      </div>
-      <div className={styles.statFoot}>
-        {note ? <span className={styles.statNote}>{note}</span> : <span />}
-        {btnLabel && <span className={styles.statBtn}>{btnLabel}</span>}
-      </div>
+    <Link href={href} className={s.kpi}>
+      <span className={s.statLabel}>{label}</span>
+      <span className={s.statValue}>{value}</span>
+      <span className={`${s.statHint} ${tone === 'up' ? s.kpiUp : tone === 'down' ? s.kpiDown : ''}`}>{hint}</span>
     </Link>
   );
 }
-
-const ICON = {
-  inbox: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="m3 7 9 6 9-6" />
-    </svg>
-  ),
-  clock: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7.5V12l3.2 1.9" />
-    </svg>
-  ),
-  checkSquare: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m9 12 2 2 4-4" />
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-    </svg>
-  ),
-  bookmark: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-    </svg>
-  ),
-  arrowUpRight: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 17 17 7" />
-      <path d="M8 7h9v9" />
-    </svg>
-  ),
-  alertCircle: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 8v4M12 16h.01" />
-    </svg>
-  ),
-  check: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m5 13 4 4L19 7" />
-    </svg>
-  ),
-};
-
