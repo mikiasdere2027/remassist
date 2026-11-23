@@ -141,6 +141,13 @@
       "when": 1788892500000,
       "tag": "0019_lead_source_booking",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1788892600000,
+      "tag": "0020_crm_proposals",
+      "breakpoints": true
     }
   ]
 }

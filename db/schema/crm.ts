@@ -350,3 +350,59 @@ export const attachments = pgTable('attachments', {
   index('attachments_engagement_idx').on(t.engagementId),
   index('attachments_company_idx').on(t.companyId),
 ]);
+
+/* ── Proposals (phase 6, migration 0020) ──────────────────────────────────── */
+
+export const proposalStatus = pgEnum('proposal_status', ['draft', 'sent', 'viewed', 'accepted', 'declined', 'withdrawn']);
+
+/** A priced line, frozen into the proposal (see lib/crm/proposals.ts). */
+export interface ProposalLineRow {
+  kind: 'monthly' | 'one_off';
+  description: string;
+  tier: string | null;
+  coverage: string | null;
+  seats: number | null;
+  hoursPerMonth: number | null;
+  rateCents: number | null;
+  amountCents: number;
+}
+
+/**
+ * A proposal for a deal. Editable only as a draft; once sent, its lines and
+ * totals never change (a revision is a new proposal). The client opens it at
+ * /p/<public_token> and can accept or decline there.
+ */
+export const proposals = pgTable('proposals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  dealId: uuid('deal_id').notNull().references(() => deals.id, { onDelete: 'cascade' }),
+  number: text('number').notNull(),
+  title: text('title').notNull(),
+  status: proposalStatus('status').notNull().default('draft'),
+  intro: text('intro'),
+  terms: text('terms'),
+  lines: jsonb('lines').$type<ProposalLineRow[]>().notNull().default([]),
+  /** Discount on the monthly fees, in basis points (1000 = 10%). */
+  discountBps: integer('discount_bps').notNull().default(0),
+  currency: text('currency').notNull().default('USD'),
+  monthlyCents: integer('monthly_cents').notNull().default(0),
+  oneOffCents: integer('one_off_cents').notNull().default(0),
+  validUntil: date('valid_until', { mode: 'string' }),
+  /** Unguessable link token for the client view. */
+  publicToken: text('public_token').notNull(),
+  recipientName: text('recipient_name'),
+  recipientEmail: text('recipient_email'),
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+  viewedAt: timestamp('viewed_at', { withTimezone: true }),
+  decidedAt: timestamp('decided_at', { withTimezone: true }),
+  decidedByName: text('decided_by_name'),
+  decisionNote: text('decision_note'),
+  createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('proposals_token_uq').on(t.publicToken),
+  uniqueIndex('proposals_number_uq').on(t.workspaceId, t.number),
+  index('proposals_deal_idx').on(t.dealId),
+  index('proposals_workspace_status_idx').on(t.workspaceId, t.status),
+]);

@@ -501,3 +501,27 @@
 .tinyInput { width: 70px; height: 34px; }
 .padNote { margin: 0; padding: 0 22px 18px; }
 .digest { margin: 0; padding: 14px 16px; border-radius: 12px; background: #f5f7fa; font: inherit; font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink-900); }
+
+/* ── proposals ── */
+.lineList { display: grid; gap: 10px; }
+.lineRow { margin: 0; padding: 12px; border: 1px solid var(--hairline); border-radius: 14px; display: grid; gap: 10px; min-width: 0; }
+.srOnlyLegend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.lineTop { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 10px; }
+.lineTotal { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lineFields { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; align-items: end; }
+.miniField { display: grid; gap: 4px; font-size: 12px; color: var(--ink-500); }
+.totalsBox { display: grid; gap: 8px; padding: 14px 16px; border-radius: 14px; background: #f5f8fe; }
+.totalsBox > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; }
+.totalsBox b { font-variant-numeric: tabular-nums; }
+.totalsBox label { flex: 1; font-size: 14px; color: var(--ink-700); }
+.totalsMain { padding-top: 8px; border-top: 1px solid #dde6f5; font-size: 16px !important; }
+.totalsMain b { font-size: 20px; }
+@media (max-width: 640px) { .lineTop { grid-template-columns: minmax(0, 1fr) auto; } .lineTop > :first-child { grid-column: 1 / -1; justify-self: start; } }
+.s_draft { background: #f4f4f5; color: var(--ink-500); }
+.s_sent { background: #eef4fd; color: var(--blue-700); }
+.s_viewed { background: #f1ecfd; color: #5b3cc4; }
+.s_accepted { background: var(--low-50); color: var(--low-700); }
+.s_declined, .s_withdrawn { background: var(--critical-50); color: var(--critical-600); }
+
+.proposalLayout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 1100px) { .proposalLayout { grid-template-columns: minmax(0, 1fr); } }

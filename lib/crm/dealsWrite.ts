@@ -205,7 +205,7 @@ export async function createDeal(
  * reopens it.
  */
 export async function moveDeal(
-  tx: Tx, ws: WorkspaceId, dealId: string, stageId: string, actorId: string,
+  tx: Tx, ws: WorkspaceId, dealId: string, stageId: string, actorId: string | null,
   loss?: { reasonId?: string; note?: string },
 ): Promise<{ ok: true } | { error: string }> {
   const [deal] = await tx.select().from(deals).where(and(eq(deals.workspaceId, ws), eq(deals.id, dealId))).for('update').limit(1);

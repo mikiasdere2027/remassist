@@ -15,6 +15,9 @@ import { addRecordNote, addRecordTask, logRecordCall } from '../../crm-actions';
 import DealForm from '../DealForm';
 import StageControl from '../StageControl';
 import { moveDealStage, setDealOwner, updateDealAction } from '../actions';
+import { proposalsForDeal } from '@/lib/crm/proposalsData';
+import { PROPOSAL_STATUS_LABELS } from '@/lib/crm/proposals';
+import { newProposal } from '../../proposals/actions';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
 
@@ -29,7 +32,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   if (!isDatabaseConfigured() || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const me = await requireUser();
   const ws = currentWorkspaceId();
-  const [detail, stages, reasons, team] = await Promise.all([getDealDetail(ws, id), getStages(ws), getLossReasons(ws), getTeam()]);
+  const [detail, stages, reasons, team, props] = await Promise.all([getDealDetail(ws, id), getStages(ws), getLossReasons(ws), getTeam(), proposalsForDeal(ws, id)]);
   if (!detail) notFound();
   const { deal, stage, company, contact, lead, lossReason, timeline, tasks } = detail;
 
@@ -104,6 +107,30 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
                   stageId: stage.id,
                 }}
               />
+            </section>
+
+            <section className={s.card}>
+              <div className={s.cardHead}>
+                <h2 className={s.cardTitle}>Proposals</h2>
+                <form action={newProposal.bind(null, deal.id)}>
+                  <button type="submit" className={s.doneToggle}>New proposal</button>
+                </form>
+              </div>
+              {props.length === 0 ? (
+                <p className={admin.empty}><strong>No proposal yet</strong>A new proposal starts from this deal&rsquo;s terms and the rate catalogue.</p>
+              ) : (
+                <ul className={s.miniList}>
+                  {props.map((pr) => (
+                    <li key={pr.id}>
+                      <span>
+                        <Link href={`/admin/proposals/${pr.id}`}>{pr.number} · {pr.title}</Link>{' '}
+                        <span className={`${s.badge} ${s[`s_${pr.status}`]}`}>{PROPOSAL_STATUS_LABELS[pr.status]}</span>
+                      </span>
+                      <span className={s.miniMeta}>{formatMoney(pr.monthlyCents, pr.currency)}/mo</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
 
             <Composer

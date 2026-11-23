@@ -1,0 +1,48 @@
+/* The proposal document — public page and admin preview. Self-contained:
+   the public page sits outside the admin, so nothing here relies on admin
+   tokens. Printable: the browser's print / save as PDF gives a clean page. */
+.doc {
+  --ink: #0b1433;
+  --muted: #5d6884;
+  --line: #e3e9f4;
+  --blue: #2f6fd0;
+  --soft: #f4f8ff;
+  display: grid;
+  gap: 28px;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 40px clamp(20px, 5vw, 48px);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 20px;
+  box-shadow: 0 18px 50px -30px rgba(0, 5, 67, 0.45);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.brand { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
+.title { margin: 0; font-size: clamp(24px, 3.4vw, 32px); line-height: 1.2; text-wrap: balance; }
+.meta { margin: 8px 0 0; color: var(--muted); font-size: 13.5px; }
+.headline { display: grid; align-content: start; justify-items: end; gap: 2px; text-align: right; }
+.headline span { color: var(--muted); font-size: 13px; }
+.headline b { font-size: 30px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.intro, .terms { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 68ch; }
+.terms { color: var(--muted); font-size: 14px; }
+.h2 { margin: 0 0 10px; font-size: 16px; }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.table td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+.num { text-align: right !important; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.total td { font-weight: 700; font-size: 15px; border-bottom: 0; }
+.summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.summary > div { display: grid; gap: 2px; padding: 14px 16px; border-radius: 14px; background: var(--soft); }
+.summary span { color: var(--muted); font-size: 13px; }
+.summary b { font-size: 20px; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .doc { padding: 24px 16px; border-radius: 0; box-shadow: none; }
+  .headline { justify-items: start; text-align: left; }
+  .table th:nth-child(2), .table td:nth-child(2), .table th:nth-child(3), .table td:nth-child(3) { display: none; }
+}
+@media print {
+  .doc { box-shadow: none; padding: 0; max-width: none; }
+}

@@ -36,10 +36,16 @@ export const EVENT_TYPES = [
   'engagement.updated',
   'engagement.status_changed',
   'attachment.added',
+  'proposal.created',
+  'proposal.sent',
+  'proposal.viewed',
+  'proposal.accepted',
+  'proposal.declined',
+  'proposal.withdrawn',
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
-export type SubjectType = 'lead' | 'company' | 'contact' | 'task' | 'deal' | 'engagement';
+export type SubjectType = 'lead' | 'company' | 'contact' | 'task' | 'deal' | 'engagement' | 'proposal';
 
 /** The database or an open transaction — anything that can insert. */
 export type Writer = Pick<ReturnType<typeof getDb>, 'insert'>;
