@@ -34,9 +34,9 @@ export default function InvoiceDocument({ inv, parties, credits = [], footer }: 
         <div>
           <h1 className={s.title}>{draft ? 'Invoice (draft)' : inv.status === 'void' ? `Invoice ${inv.number} — VOID` : `Invoice ${inv.number}`}</h1>
           <p className={s.meta}>
-            {inv.issueDate ? `Issued ${inv.issueDate}` : 'Not issued yet'}
-            {inv.dueDate ? ` · Due ${inv.dueDate}` : ''}
-            {inv.periodStart && inv.periodEnd ? ` · Service period ${inv.periodStart} to ${inv.periodEnd}` : ''}
+            <span className={s.nowrap}>{inv.issueDate ? `Issued ${inv.issueDate}` : 'Not issued yet'}</span>
+            {inv.dueDate && <> · <span className={s.nowrap}>Due {inv.dueDate}</span></>}
+            {inv.periodStart && inv.periodEnd && <> · <span className={s.nowrap}>Service period {inv.periodStart} to {inv.periodEnd}</span></>}
           </p>
         </div>
         <div className={s.headline}>

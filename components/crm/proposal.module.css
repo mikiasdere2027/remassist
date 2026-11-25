@@ -46,6 +46,7 @@
 .docKind { font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue); }
 .branded .table thead th { background: var(--soft); color: var(--blue); border-bottom: 2px solid #cfe0f6; }
 .branded .total td { color: var(--ink); border-top: 2px solid var(--ink); }
+.nowrap { white-space: nowrap; }
 .parties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .party { margin: 0; white-space: pre-line; overflow-wrap: anywhere; font-size: 14px; color: var(--muted); }
 .party b { color: var(--ink); }
@@ -57,6 +58,14 @@
 }
 @media print {
   .doc { box-shadow: none; padding: 0; max-width: none; }
+  .doc { border-radius: 0; gap: 18px; font-size: 13.5px; line-height: 1.5; }
+  .head { padding-bottom: 14px; flex-wrap: nowrap; }
+  .head > div:first-child { min-width: 0; }
+  .headline { flex: none; }
+  .logo { width: 140px; }
+  .parties { gap: 12px; }
+  .party { line-height: 1.45; }
+  .table td { padding: 7px 10px; }
   .branded { padding-top: 18px; }
   /* Browsers drop backgrounds when printing unless told to keep the brand colours. */
   .branded, .branded * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

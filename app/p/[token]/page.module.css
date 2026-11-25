@@ -32,4 +32,10 @@
 .honey { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .done h2 { margin: 0 0 6px; font-size: 20px; }
 .done p { margin: 0; color: var(--muted); }
-@media print { .page { background: #fff; padding: 0; } .panel { display: none; } }
+@media print {
+  /* Only the document prints: no site background, no answer / print panel. */
+  :global(html), :global(body) { background: #fff !important; }
+  .page { background: #fff; padding: 0; min-height: 0; display: block; }
+  .panel { display: none; }
+  @page { margin: 14mm; }
+}
