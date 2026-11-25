@@ -523,8 +523,10 @@
 .s_accepted { background: var(--low-50); color: var(--low-700); }
 .s_declined, .s_withdrawn { background: var(--critical-50); color: var(--critical-600); }
 
-.proposalLayout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
-@media (max-width: 1100px) { .proposalLayout { grid-template-columns: minmax(0, 1fr); } }
+/* Document pages (proposal, invoice): editor + preview, status rail. The
+   column classes carry grid-area names, so this grid must define them too. */
+.proposalLayout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; grid-template-areas: 'main rail'; gap: 20px; align-items: start; }
+@media (max-width: 1100px) { .proposalLayout { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'rail' 'main'; } }
 
 /* ── invoices (phase 7) ── */
 .s_issued { background: #eef4fd; color: var(--blue-700); }
