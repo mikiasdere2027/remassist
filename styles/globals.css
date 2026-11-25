@@ -431,3 +431,11 @@ code, kbd, pre, samp {
 /* The wrapper is only a focus target for the skip link; it must not
    draw a ring of its own when focused programmatically. */
 #main-content:focus { outline: none; }
+
+/* Printed pages (invoices, proposals) on plain white paper, not the site background. */
+@media print {
+  html, body { background: #fff !important; }
+}
+@page {
+  margin: 14mm;
+}
