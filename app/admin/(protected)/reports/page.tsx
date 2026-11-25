@@ -7,6 +7,8 @@ import { REPORT_KEYS, reportTable, type ReportTable } from '@/lib/crm/reportTabl
 import { funnelCounts, leadsPerDay } from '@/lib/crm/reportsData';
 import { funnel } from '@/lib/crm/reports';
 import { isoDay } from '@/lib/crm/engagements';
+import { invoicedVsCollected } from '@/lib/crm/invoicesData';
+import { formatMoney } from '@/lib/crm/money';
 import AdminTopbar from '../AdminTopbar';
 import admin from '../../admin.module.css';
 import s from '../crm.module.css';
@@ -35,10 +37,11 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   const from = rangeStart(range.key);
   const today = isoDay(new Date());
   const WEEKS = 12;
-  const [tables, f, perDay] = await Promise.all([
+  const [tables, f, perDay, billing] = await Promise.all([
     Promise.all(REPORT_KEYS.map((k) => reportTable(k, ws, from))),
     funnelCounts(ws, from),
     leadsPerDay(ws, new Date(Date.now() - (WEEKS * 7 + 7) * 86_400_000)),
+    invoicedVsCollected(ws, today, 6),
   ]);
   const steps = funnel([
     { key: 'leads', label: 'Leads', count: f.leads },
@@ -106,6 +109,28 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               </div>
             </section>
           </div>
+
+          <section className={s.card}>
+            <div className={s.cardHead}>
+              <h2 className={s.cardTitle}>Invoiced and collected</h2>
+              <span className={s.cardNote}>Last 6 months, by issue date and by date paid · <Link href="/admin/invoices">Invoices</Link></span>
+            </div>
+            <div className={admin.tableWrap}>
+              <table className={admin.table}>
+                <thead><tr><th scope="col">Month</th><th scope="col" className={s.num}>Invoiced</th><th scope="col" className={s.num}>Collected</th><th scope="col" className={s.num}>Collected ÷ invoiced</th></tr></thead>
+                <tbody>
+                  {billing.map((m) => (
+                    <tr key={m.month}>
+                      <td>{m.label}</td>
+                      <td className={s.num}>{formatMoney(m.invoicedCents)}</td>
+                      <td className={s.num}>{formatMoney(m.collectedCents)}</td>
+                      <td className={s.num}>{m.invoicedCents ? fmtPct(Math.round((m.collectedCents * 100) / m.invoicedCents)) : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
 
           {(['sources', 'response', 'owners', 'services', 'stages', 'losses', 'campaigns'] as const).map((k) => (
             <section key={k} className={s.card}>

@@ -28,7 +28,7 @@ import { usePathname } from 'next/navigation';
  * sign-in code screen. The error page rewrites the same way.
  */
 /* /p/<token>: a client's proposal, shown as a clean document. */
-const BARE_PREFIXES = ['/admin', '/api/auth', '/p/'];
+const BARE_PREFIXES = ['/admin', '/api/auth', '/p/', '/i/'];
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

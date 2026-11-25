@@ -38,11 +38,26 @@
 .summary > div { display: grid; gap: 2px; padding: 14px 16px; border-radius: 14px; background: var(--soft); }
 .summary span { color: var(--muted); font-size: 13px; }
 .summary b { font-size: 20px; font-variant-numeric: tabular-nums; }
+/* Branded documents: brand gradient strip on top, logo, blue table header. */
+.branded { position: relative; overflow: hidden; padding-top: 34px; }
+.branded::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 6px; background: linear-gradient(90deg, #34bdf0, #0e8fd8 55%, #2f6fd0); }
+.brandBar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.logo { display: block; width: 172px; height: auto; }
+.docKind { font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue); }
+.branded .table thead th { background: var(--soft); color: var(--blue); border-bottom: 2px solid #cfe0f6; }
+.branded .total td { color: var(--ink); border-top: 2px solid var(--ink); }
+.parties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.party { margin: 0; white-space: pre-line; overflow-wrap: anywhere; font-size: 14px; color: var(--muted); }
+.party b { color: var(--ink); }
 @media (max-width: 640px) {
+  .parties { grid-template-columns: minmax(0, 1fr); }
   .doc { padding: 24px 16px; border-radius: 0; box-shadow: none; }
   .headline { justify-items: start; text-align: left; }
   .table th:nth-child(2), .table td:nth-child(2), .table th:nth-child(3), .table td:nth-child(3) { display: none; }
 }
 @media print {
   .doc { box-shadow: none; padding: 0; max-width: none; }
+  .branded { padding-top: 18px; }
+  /* Browsers drop backgrounds when printing unless told to keep the brand colours. */
+  .branded, .branded * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

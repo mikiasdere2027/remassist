@@ -22,10 +22,14 @@ export default function ProposalDocument({ p, companyName }: {
   const date = (p.sentAt ?? new Date()).toISOString().slice(0, 10);
 
   return (
-    <article className={s.doc}>
+    <article className={`${s.doc} ${s.branded}`}>
+      <div className={s.brandBar}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- an SVG that must also print; next/image adds nothing here */}
+        <img className={s.logo} src="/images/rem-logo.svg" alt="Rem Assist" width={172} height={71} />
+        <span className={s.docKind}>Proposal</span>
+      </div>
       <header className={s.head}>
         <div>
-          <p className={s.brand}>Rem Assist</p>
           <h1 className={s.title}>{p.title}</h1>
           <p className={s.meta}>
             Proposal {p.number} · {date}

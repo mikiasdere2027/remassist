@@ -148,6 +148,13 @@
       "when": 1788892600000,
       "tag": "0020_crm_proposals",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788892700000,
+      "tag": "0021_crm_invoicing",
+      "breakpoints": true
     }
   ]
 }

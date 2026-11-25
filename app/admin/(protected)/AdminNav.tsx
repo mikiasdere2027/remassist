@@ -90,6 +90,13 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
           </svg>
           <span>Customers</span>
         </Link>
+        <Link {...link('/admin/invoices')} href="/admin/invoices">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" />
+            <path d="M9 8h6M9 12h6M9 16h3" />
+          </svg>
+          <span>Invoices</span>
+        </Link>
         <Link {...link('/admin/companies')} href="/admin/companies">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18" />

@@ -21,12 +21,14 @@ import { Checklist, ContractForm, RemoveFile, RolesForm, StatusControl, TermsFor
 import {
   archiveFile, setEngagementOwner, setEngagementStatus, setStepDone, updateContract, updateRoles, updateTerms, uploadEngagementFile,
 } from '../actions';
+import BillingSection from '../../invoices/BillingSection';
+import { canEditLeads } from '@/lib/auth/roles';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
 
 /**
  * Customer — one engagement. Engagement (what they buy and who delivers it),
- * Contract (dates, renewal, files) and Delivery (onboarding) tabs; the company
+ * Contract (dates, renewal, files), Delivery (onboarding) and Billing (invoices) tabs; the company
  * and its people on the left; status, revenue and renewal on the right.
  */
 export const dynamic = 'force-dynamic';
@@ -35,6 +37,7 @@ const TABS = [
   { key: 'engagement', label: 'Engagement' },
   { key: 'contract', label: 'Contract' },
   { key: 'delivery', label: 'Delivery' },
+  { key: 'billing', label: 'Billing' },
 ] as const;
 type Tab = (typeof TABS)[number]['key'];
 
@@ -203,6 +206,12 @@ export default async function CustomerPage({ params, searchParams }: {
                 </div>
               </section>
             )}
+
+            {tab === 'billing' && (company ? (
+              <BillingSection ws={ws} companyId={company.id} engagementId={e.id} canEdit={canEditLeads(me.role)} />
+            ) : (
+              <section className={s.card}><p className={admin.empty}><strong>No company</strong>Link this customer to a company to invoice it.</p></section>
+            ))}
 
             <Composer
               note={addRecordNote.bind(null, 'engagement', e.id)}

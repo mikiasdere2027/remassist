@@ -7,6 +7,9 @@ import { addBusinessHours, readAutomation, type CalendlyBooking, type DigestInpu
 import { companyDomainFromEmail, normalizeEmail } from './dedupe';
 import { daysBetween, isoDay, renewalState } from './engagements';
 import { logActivity, recordEvent } from './events';
+import { overdueInvoices } from './invoicesData';
+import { balance } from './invoices';
+import { formatMoney } from './money';
 import { createTeamLead } from './intake';
 import { workspaceSettings } from './engagementsData';
 import type { WorkspaceId } from './workspace';
@@ -153,7 +156,7 @@ export async function digestData(ws: WorkspaceId, siteUrl: string, now = new Dat
   const dayAgo = new Date(now.getTime() - 24 * 3_600_000);
   const endOfDay = new Date(now); endOfDay.setUTCHours(23, 59, 59, 999);
   const today = isoDay(now);
-  const [waiting, open, renew] = await Promise.all([
+  const [waiting, open, renew, unpaid] = await Promise.all([
     db.select({ id: leads.id, name: leads.name, email: leads.email, createdAt: leads.createdAt, ownerName: owner.name, ownerEmail: owner.email })
       .from(leads).leftJoin(owner, eq(owner.id, leads.ownerId))
       .where(and(eq(leads.workspaceId, ws), eq(leads.status, 'new'), isNull(leads.firstContactedAt), lte(leads.createdAt, dayAgo)))
@@ -167,6 +170,7 @@ export async function digestData(ws: WorkspaceId, siteUrl: string, now = new Dat
       .where(and(eq(engagements.workspaceId, ws), ne(engagements.status, 'churned'), isNull(engagements.archivedAt),
         sql`${engagements.renewalDate} <= (${today}::date + 30)`, gte(engagements.renewalDate, today)))
       .orderBy(asc(engagements.renewalDate)),
+    overdueInvoices(ws, today, 25),
   ]);
   const who = (n: string | null, e: string | null) => n?.trim() || e || 'Unassigned';
   return {
@@ -179,6 +183,10 @@ export async function digestData(ws: WorkspaceId, siteUrl: string, now = new Dat
       const st = renewalState(r.renewalDate, r.noticeDays, today);
       return { id: r.id, name: r.companyName ?? r.title, renewalDate: r.renewalDate!, days: daysBetween(today, r.renewalDate!), noticeBy: st?.noticeBy ?? null };
     }),
+    unpaid: unpaid.map((i) => ({
+      id: i.id, number: i.number ?? '', company: i.companyName,
+      owed: formatMoney(balance(i.totalCents, i.paidCents, i.creditedCents), i.currency), daysLate: daysBetween(i.dueDate!, today),
+    })),
   };
 }
 

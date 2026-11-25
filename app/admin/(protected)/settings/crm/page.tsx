@@ -17,6 +17,9 @@ import { getDb } from '@/db';
 import { SITE_URL } from '@/lib/site';
 import { AutomationForm, SendDigest } from './AutomationClient';
 import { saveAutomation, sendDigestNow } from './automationActions';
+import { readBilling } from '@/lib/crm/invoices';
+import { BillingSettingsForm } from '../../invoices/InvoiceClient';
+import { saveBillingSettings } from '../../invoices/actions';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
 
@@ -32,6 +35,7 @@ export default async function CrmSettingsPage() {
     getStages(ws), getLossReasons(ws), getTeam(), workspaceSettings(getDb(), ws), digestData(ws, SITE_URL),
   ]);
   const auto = readAutomation(settings);
+  const billing = readBilling(settings);
   const emailOf = new Map(team.map((m) => [m.id, m.email]));
   const digestText = formatDigest(digest);
   const slack = Boolean(process.env.LEAD_WEBHOOK_URL);
@@ -40,7 +44,7 @@ export default async function CrmSettingsPage() {
 
   return (
     <>
-      <AdminTopbar title="CRM settings" subtitle="Pipeline stages and loss reasons" />
+      <AdminTopbar title="CRM settings" subtitle="Pipeline, lead assignment, invoicing and integrations" />
       <div className={admin.view}>
         <div className={`${s.listStack} ${s.narrowWide}`}>
           <section className={s.card}>
@@ -63,6 +67,14 @@ export default async function CrmSettingsPage() {
             <p className={`${s.cardNote} ${s.padNote}`}>
               New enquiries are also linked automatically to a contact with the same email, or a company with the same website domain.
             </p>
+          </section>
+
+          <section className={s.card}>
+            <div className={s.cardHead}>
+              <h2 className={s.cardTitle}>Invoicing</h2>
+              <span className={s.cardNote}>Your details as printed on every invoice</span>
+            </div>
+            <BillingSettingsForm action={saveBillingSettings} values={billing} />
           </section>
 
           <section className={s.card}>

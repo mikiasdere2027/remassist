@@ -15,6 +15,8 @@ import { Composer, InlineSelect, LocalTime } from '../../leads/[id]/LeadClient';
 import { addRecordNote, addRecordTask, logRecordCall } from '../../crm-actions';
 import { AddContactForm, CompanyDetailsForm, RemoveContact } from '../CompanyClient';
 import { addContact, archiveContact, setCompanyOwner, updateCompany } from '../actions';
+import BillingSection from '../../invoices/BillingSection';
+import { canEditLeads } from '@/lib/auth/roles';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
 
@@ -113,6 +115,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
                 </div>
               </section>
             )}
+            {customerOf.length > 0 && <BillingSection ws={ws} companyId={company.id} engagementId={customerOf.length === 1 ? customerOf[0].id : null} canEdit={canEditLeads(me.role)} />}
             <section className={s.card}>
               <div className={s.cardHead}>
                 <h2 className={s.cardTitle}>Deals</h2>

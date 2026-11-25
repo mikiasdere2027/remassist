@@ -63,6 +63,14 @@ describe('daily digest', () => {
   it('says nothing when there is nothing to say', () => {
     expect(formatDigest({ date: '2026-11-23', siteUrl: 'https://x', waiting: [], overdue: [], dueToday: [], renewals: [] })).toBeNull();
   });
+  it('lists overdue invoices', () => {
+    const text = formatDigest({
+      date: '2026-11-23', siteUrl: 'https://x', waiting: [], overdue: [], dueToday: [], renewals: [],
+      unpaid: [{ id: 'I1', number: 'INV-2026-0003', company: 'Northwind', owed: '$1,200.00', daysLate: 12 }],
+    })!;
+    expect(text).toContain('*Overdue invoices (1)*');
+    expect(text).toContain('• INV-2026-0003 · Northwind · $1,200.00 · 12 d late · https://x/admin/invoices/I1');
+  });
   it('lists each section with links', () => {
     const text = formatDigest({
       date: '2026-11-23', siteUrl: 'https://remassistance.com',

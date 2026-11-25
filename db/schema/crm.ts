@@ -406,3 +406,104 @@ export const proposals = pgTable('proposals', {
   index('proposals_deal_idx').on(t.dealId),
   index('proposals_workspace_status_idx').on(t.workspaceId, t.status),
 ]);
+
+/* ── Invoicing (phase 7, migration 0021) ──────────────────────────────────── */
+
+/** How a customer is billed. One per company. */
+export const billingProfiles = pgTable('billing_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  legalName: text('legal_name'),
+  billingEmail: text('billing_email'),
+  address: text('address'),
+  taxId: text('tax_id'),
+  currency: text('currency').notNull().default('USD'),
+  paymentTermsDays: integer('payment_terms_days').notNull().default(15),
+  /** Tax on this customer's invoices, in basis points (1500 = 15%). */
+  taxBps: integer('tax_bps').notNull().default(0),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [uniqueIndex('billing_profiles_company_uq').on(t.companyId)]);
+
+export const invoiceStatus = pgEnum('invoice_status', ['draft', 'issued', 'partially_paid', 'paid', 'void']);
+
+export interface InvoiceLineRow { description: string; quantity: number; unitCents: number }
+
+/** Seller and buyer details copied onto the invoice when it is issued, so it never changes afterwards. */
+export interface InvoiceParties {
+  seller: { name: string; address: string | null; taxId: string | null; email: string | null; bankDetails: string | null };
+  buyer: { name: string; address: string | null; taxId: string | null; email: string | null };
+}
+
+/**
+ * An invoice. Drafts have no number and can change; issuing assigns the next
+ * number and freezes the lines, totals and both parties' details. Changes after
+ * that are payments, credit notes or a void.
+ */
+export const invoices = pgTable('invoices', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  number: text('number'),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'restrict' }),
+  engagementId: uuid('engagement_id').references(() => engagements.id, { onDelete: 'set null' }),
+  status: invoiceStatus('status').notNull().default('draft'),
+  periodStart: date('period_start', { mode: 'string' }),
+  periodEnd: date('period_end', { mode: 'string' }),
+  issueDate: date('issue_date', { mode: 'string' }),
+  dueDate: date('due_date', { mode: 'string' }),
+  currency: text('currency').notNull().default('USD'),
+  lines: jsonb('lines').$type<InvoiceLineRow[]>().notNull().default([]),
+  discountBps: integer('discount_bps').notNull().default(0),
+  taxBps: integer('tax_bps').notNull().default(0),
+  subtotalCents: integer('subtotal_cents').notNull().default(0),
+  discountCents: integer('discount_cents').notNull().default(0),
+  taxCents: integer('tax_cents').notNull().default(0),
+  totalCents: integer('total_cents').notNull().default(0),
+  paidCents: integer('paid_cents').notNull().default(0),
+  creditedCents: integer('credited_cents').notNull().default(0),
+  parties: jsonb('parties').$type<InvoiceParties | null>(),
+  notes: text('notes'),
+  publicToken: text('public_token').notNull(),
+  viewedAt: timestamp('viewed_at', { withTimezone: true }),
+  issuedAt: timestamp('issued_at', { withTimezone: true }),
+  issuedBy: text('issued_by').references(() => users.id, { onDelete: 'set null' }),
+  voidedAt: timestamp('voided_at', { withTimezone: true }),
+  voidReason: text('void_reason'),
+  createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('invoices_number_uq').on(t.workspaceId, t.number).where(sql`${t.number} is not null`),
+  uniqueIndex('invoices_token_uq').on(t.publicToken),
+  /* One invoice per engagement per month (ignoring voided ones). */
+  uniqueIndex('invoices_engagement_period_uq').on(t.engagementId, t.periodStart).where(sql`${t.engagementId} is not null and ${t.status} <> 'void'`),
+  index('invoices_workspace_status_idx').on(t.workspaceId, t.status, t.dueDate),
+  index('invoices_company_idx').on(t.companyId),
+]);
+
+export const paymentMethod = pgEnum('payment_method', ['bank_transfer', 'card', 'cash', 'other']);
+
+export const payments = pgTable('payments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  invoiceId: uuid('invoice_id').notNull().references(() => invoices.id, { onDelete: 'restrict' }),
+  amountCents: integer('amount_cents').notNull(),
+  receivedOn: date('received_on', { mode: 'string' }).notNull(),
+  method: paymentMethod('method').notNull().default('bank_transfer'),
+  reference: text('reference'),
+  recordedBy: text('recorded_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('payments_invoice_idx').on(t.invoiceId), index('payments_received_idx').on(t.workspaceId, t.receivedOn)]);
+
+export const creditNotes = pgTable('credit_notes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workspaceId: workspaceRef(),
+  number: text('number').notNull(),
+  invoiceId: uuid('invoice_id').notNull().references(() => invoices.id, { onDelete: 'restrict' }),
+  amountCents: integer('amount_cents').notNull(),
+  reason: text('reason').notNull(),
+  issuedBy: text('issued_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [uniqueIndex('credit_notes_number_uq').on(t.workspaceId, t.number), index('credit_notes_invoice_idx').on(t.invoiceId)]);

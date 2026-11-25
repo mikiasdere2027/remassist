@@ -119,6 +119,8 @@ export interface DigestInput {
   overdue: Array<{ title: string; owner: string; dueAt: Date }>;
   dueToday: Array<{ title: string; owner: string }>;
   renewals: Array<{ id: string; name: string; renewalDate: string; days: number; noticeBy: string | null }>;
+  /** Unpaid invoices past their due date. Optional so older callers still type-check. */
+  unpaid?: Array<{ id: string; number: string; company: string; owed: string; daysLate: number }>;
 }
 
 /** One Slack message for the team. Empty sections are left out; null when there is nothing to say. */
@@ -144,6 +146,10 @@ export function formatDigest(d: DigestInput): string | null {
     for (const r of d.renewals.slice(0, 10)) {
       lines.push(`• ${r.name} renews ${r.renewalDate} (${r.days} d)${r.noticeBy ? ` · notice by ${r.noticeBy}` : ''} · ${d.siteUrl}/admin/customers/${r.id}`);
     }
+  }
+  if (d.unpaid?.length) {
+    lines.push(`*Overdue invoices (${d.unpaid.length})*`);
+    for (const i of d.unpaid.slice(0, 10)) lines.push(`• ${i.number} · ${i.company} · ${i.owed} · ${i.daysLate} d late · ${d.siteUrl}/admin/invoices/${i.id}`);
   }
   if (lines.length === 0) return null;
   return [`CRM digest for ${d.date}`, ...lines].join('\n');
