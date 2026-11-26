@@ -78,7 +78,7 @@ await p.waitForTimeout(1500);
 await p.reload();
 
 const html = await p.content();
-ok(html.includes('unassigned the lead'), 'timeline: owner change');
+ok((await p.locator('body').innerText()).includes('unassigned the lead'), 'timeline: owner change');
 ok(html.includes('Priority set to high'), 'timeline: priority change');
 ok(/changed status: .*New.* → .*Contacted/s.test(await p.locator('body').innerText()) || html.includes('Contacted'), 'timeline: status change');
 ok(html.includes('Needs two SDRs from January'), 'timeline: note');

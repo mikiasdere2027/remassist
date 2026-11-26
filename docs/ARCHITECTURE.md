@@ -117,10 +117,29 @@ data now comes from the backend (`/v1/admin/leads/*`, `/v1/admin/tasks`):
   refuses requests without a same-site Origin; `lib/voice/rate-limit.ts`
   limits sessions per visitor.
 
+### CRM phases 2–6 (merged 2026-11-26, in progress)
+
+Mikias's phases 2–6 (deals, customers, reports, automation, proposals) were
+merged on branch `crm-phases-2-6`. The backend builds them slice by slice
+(`remassist-backend/docs/CRM-PHASES-2-6.md`); his screens are wired as each
+slice lands:
+
+- **Wired (slices 1–3):** Deals (board, list, new, deal page with stage
+  control and loss reasons), Convert on a lead, Companies, Contacts, CRM
+  settings (stages, loss reasons). Data: `lib/api/crm.ts`; actions keep his
+  names but call the API (`crm-actions.ts`, `deals/actions.ts`,
+  `companies/actions.ts`, `settings/crm/actions.ts`). Pages pass record ids,
+  not functions; `Composer` and `InlineSelect` take a `record`
+  (`{ kind: 'lead' | 'deal' | 'company', id }`).
+- **Not on this branch yet** (restored from `mikias/crm-phases-2-6` with their
+  slice): Customers, Proposals and the client link `/p/…`, Reports and his
+  dashboard numbers, lead automation and the daily digest, the Calendly
+  webhook, contract files.
+
 ### Browser tests
 
-`tests/e2e/` has four scripts — public pages, sign-in/users, every admin page
-and flow, the CRM screens — run against a local stack (README there). All
+`tests/e2e/` has five scripts — public pages, sign-in/users, every admin page
+and flow, the lead CRM screens, deals/companies/settings — run against a local stack (README there). All
 pass as of 2026-11-14.
 
 ## 4. Hardcoded content that should come from the CMS

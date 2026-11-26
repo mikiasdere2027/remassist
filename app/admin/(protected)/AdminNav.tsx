@@ -79,6 +79,29 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
           </svg>
           <span>Tasks</span>
         </Link>
+        <Link {...link('/admin/deals')} href="/admin/deals">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="4" width="5" height="16" rx="1.5" />
+            <rect x="10" y="4" width="5" height="11" rx="1.5" />
+            <rect x="17" y="4" width="4" height="7" rx="1.5" />
+          </svg>
+          <span>Deals</span>
+        </Link>
+        <Link {...link('/admin/companies')} href="/admin/companies">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18" />
+            <path d="M8 8h3M8 12h3M8 16h3" />
+          </svg>
+          <span>Companies</span>
+        </Link>
+        <Link {...link('/admin/contacts')} href="/admin/contacts">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="3" width="16" height="18" rx="2" />
+            <circle cx="12" cy="10" r="3" />
+            <path d="M7.5 17a4.5 4.5 0 0 1 9 0" />
+          </svg>
+          <span>Contacts</span>
+        </Link>
         <Link {...link('/admin/quizzes')} href="/admin/quizzes">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M9 11l3 3 7-7" />
@@ -150,6 +173,15 @@ export default function AdminNav({ showTeam }: { showTeam: boolean }) {
               <path d="M16.5 4.6a3.4 3.4 0 0 1 0 6.6M21 20v-1.4a4.6 4.6 0 0 0-3.2-4.4" />
             </svg>
             <span>Users</span>
+          </Link>
+        )}
+        {showTeam && (
+          <Link {...link('/admin/settings/crm')} href="/admin/settings/crm">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" />
+              <circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" />
+            </svg>
+            <span>CRM settings</span>
           </Link>
         )}
       </div>

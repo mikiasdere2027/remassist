@@ -127,3 +127,8 @@ export function canDeletePost(role: Role): boolean {
 export function canDeleteFaqItem(role: Role): boolean {
   return canEditContent(role);
 }
+
+/** Pipeline stages, loss reasons and other CRM configuration. */
+export function canManageCrmSettings(role: Role): boolean {
+  return role === 'admin';
+}

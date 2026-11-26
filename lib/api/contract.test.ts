@@ -134,7 +134,7 @@ describe.skipIf(!existsSync(SRC))('frontend ↔ backend contract', () => {
     const views = list('lib/api/leads.ts', 'LEAD_VIEWS').filter((v) => v !== '');
     expect(views.filter((v) => /^[a-z]+$/.test(v))).toEqual(list(dto, 'LEAD_VIEWS'));
     expect(list('lib/crm/display.ts', 'CALL_OUTCOME_LABELS')).toEqual(list(dto, 'CALL_OUTCOMES'));
-    expect(union('lib/api/leads.ts', 'TimelineType')).toEqual(list(crm, 'LEAD_ACTIVITY_TYPES'));
+    expect(union('lib/api/leads.ts', 'TimelineType')).toEqual(list(crm, 'TIMELINE_TYPES'));
     expect(list('lib/crm/fields.ts', 'FIELD_TYPES')).toEqual(list(crm, 'CUSTOM_FIELD_TYPES'));
     const roles = /pgEnum\('user_role',\s*\[([^\]]*)\]/.exec(readFileSync(B('src/database/schema/auth.ts'), 'utf8'));
     expect(list('lib/auth/roles.ts', 'ROLES')).toEqual([...(roles?.[1] ?? '').matchAll(/'([^']+)'/g)].map((x) => x[1]));

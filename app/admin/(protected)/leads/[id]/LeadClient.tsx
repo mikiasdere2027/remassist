@@ -2,16 +2,17 @@
 
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
+import { saveQualification, setLeadOwner, setLeadPriority } from './crm-actions';
 import {
-  addLeadNote,
-  addLeadTask,
-  logLeadCall,
-  saveQualification,
-  setLeadOwner,
-  setLeadPriority,
+  addRecordNote,
+  addRecordTask,
+  logRecordCall,
+  run,
   setTaskDone,
   type ActionResult,
-} from './crm-actions';
+  type RecordRef,
+} from '../../crm-actions';
+import { crmApi } from '@/lib/api/crm';
 import type { FieldDef } from '@/lib/crm/fields';
 import { CALL_OUTCOMES, CALL_OUTCOME_LABELS, PRIORITIES, PRIORITY_LABELS } from '@/lib/crm/display';
 import admin from '../../../admin.module.css';
@@ -27,6 +28,17 @@ function useRefreshOnOk(state: ActionResult | null) {
   useEffect(() => {
     if (state?.ok) router.refresh();
   }, [state, router]);
+}
+
+/** Owner of a lead, deal or company; priority of a lead. */
+function saveInline(record: RecordRef, field: 'owner' | 'priority', v: string): Promise<ActionResult> {
+  if (record.kind === 'lead') {
+    return field === 'owner' ? setLeadOwner(record.id, v) : setLeadPriority(record.id, v);
+  }
+  if (record.kind === 'deal') {
+    return run('Could not change the owner.', () => crmApi.setDealOwner(record.id, v || null));
+  }
+  return run('Could not change the owner.', () => crmApi.updateCompany(record.id, { ownerId: v || null }));
 }
 
 /** A date in the viewer's own time zone. Server render shows UTC until hydration. */
@@ -45,18 +57,20 @@ export function LocalTime({ iso, mode = 'datetime' }: { iso: string; mode?: 'dat
 
 /** A select that saves on change (owner, priority). */
 export function InlineSelect({
-  id, label, value, options, leadId, field, placeholder,
+  id, label, value, options, record, field, placeholder,
 }: {
   id: string;
   label: string;
   value: string;
   options: Array<{ value: string; label: string }>;
-  leadId: string;
+  /** The lead, deal or company whose field this sets. */
+  record: RecordRef;
+  /** Priority applies to leads only. */
   field: 'owner' | 'priority';
   placeholder?: string;
 }) {
   const router = useRouter();
-  const action = (v: string) => (field === 'owner' ? setLeadOwner(leadId, v) : setLeadPriority(leadId, v));
+  const action = (v: string) => saveInline(record, field, v);
   const [current, setCurrent] = useState(value);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -131,19 +145,20 @@ export function AddTaskButton() {
 }
 
 export function Composer({
-  leadId, team, me,
+  record, team, me,
 }: {
-  leadId: string;
+  /** The lead, deal or company the note, call or task goes on. */
+  record: RecordRef;
   team: Array<{ id: string; name: string }>;
   me: string;
 }) {
   const [mode, setMode] = useState<'note' | 'call' | 'task'>('note');
   const [noteState, noteAction, notePending] = useActionState(
-    (_prev: ActionResult | null, fd: FormData) => addLeadNote(leadId, fd), null);
+    (_prev: ActionResult | null, fd: FormData) => addRecordNote(record, fd), null);
   const [callState, callAction, callPending] = useActionState(
-    (_prev: ActionResult | null, fd: FormData) => logLeadCall(leadId, fd), null);
+    (_prev: ActionResult | null, fd: FormData) => logRecordCall(record, fd), null);
   const [taskState, taskAction, taskPending] = useActionState(
-    (_prev: ActionResult | null, fd: FormData) => addLeadTask(leadId, fd), null);
+    (_prev: ActionResult | null, fd: FormData) => addRecordTask(record, fd), null);
   useRefreshOnOk(noteState);
   useRefreshOnOk(callState);
   useRefreshOnOk(taskState);

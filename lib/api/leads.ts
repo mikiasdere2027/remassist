@@ -4,6 +4,7 @@
  * make. Kept by hand, like lib/api/types.ts.
  */
 import { api } from './client';
+import type { DealSummary } from './crm';
 import type { QuizResult } from '@/lib/quiz/quiz';
 
 /** Sources the website's forms (and Maya) may send. */
@@ -134,6 +135,11 @@ export interface LeadDetail {
   score: number | null;
   /** The score recomputed from the current data, with the reasons for it. */
   scoreBreakdown: { score: number; priority: Priority; reasons: string[] };
+  /** The known contact and company behind the enquiry, when matched. */
+  contactId: string | null;
+  companyId: string | null;
+  /** Deals this lead was converted into. */
+  deals: DealSummary[];
   tags: string[];
   nextFollowUpAt: string | null;
   firstContactedAt: string | null;

@@ -3,17 +3,21 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isApiError } from '@/lib/api/errors';
 import { apiServer } from '@/lib/api/server';
-import type { Assignee, LeadDetail as LeadDetailData, TimelineItem } from '@/lib/api/leads';
+import type { Assignee, LeadDetail as LeadDetailData } from '@/lib/api/leads';
+import type { CrmSettings } from '@/lib/api/crm';
+import type { QuizResult } from '@/lib/quiz/quiz';
+import { SERVICES } from '@/lib/services';
 import {
   SOURCE_LABELS, answerFor, formatDate, formatUtm, orderedAnswers, questionFor, unknownRawKeys,
 } from '@/lib/leads/display';
 import { requireUser } from '@/lib/auth/require';
 import {
-  CALL_OUTCOME_LABELS, PRIORITIES, PRIORITY_LABELS, STATUS_LABELS, formatDuration, initials, responseClock,
-  type CallOutcome,
+  PRIORITIES, PRIORITY_LABELS, STATUS_LABELS, formatDuration, initials, responseClock,
 } from '@/lib/crm/display';
 import StatusForm from './StatusForm';
-import { AddTaskButton, Composer, InlineSelect, LocalTime, QualificationForm, TaskCheck } from './LeadClient';
+import { Composer, InlineSelect, LocalTime, QualificationForm } from './LeadClient';
+import { KV, TasksCard, TimelineCard } from '../../CrmParts';
+import DealForm from '../../deals/DealForm';
 import AdminTopbar from '../../AdminTopbar';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
@@ -52,16 +56,20 @@ export default async function LeadDetail({
   const me = await requireUser();
   let lead: LeadDetailData;
   let team: Assignee[];
+  let settings: CrmSettings;
   try {
-    [lead, team] = await Promise.all([
+    [lead, team, settings] = await Promise.all([
       apiServer<LeadDetailData>(`/admin/leads/${id}`),
       apiServer<Assignee[]>('/admin/leads/assignees'),
+      apiServer<CrmSettings>('/admin/crm/settings'),
     ]);
   } catch (err) {
     if (isApiError(err, 404) || isApiError(err, 400)) notFound();
     throw err;
   }
-  const { quizSubmissions: quizzes, timeline, tasks, fieldDefs: defs } = lead;
+  const { quizSubmissions: quizzes, timeline, tasks, fieldDefs: defs, deals: leadDeals } = lead;
+  const { stages } = settings;
+  const quote = quizzes[0]?.result as Partial<QuizResult> | undefined;
 
   const tab: Tab = TABS.some((t) => t.key === sp.tab) ? (sp.tab as Tab) : 'inquiry';
   const custom = (lead.custom ?? {}) as Record<string, unknown>;
@@ -72,8 +80,6 @@ export default async function LeadDetail({
     new Date(),
     lead.status,
   );
-  const openTasks = tasks.filter((t) => !t.doneAt);
-  const doneTasks = tasks.filter((t) => t.doneAt);
   const displayName = lead.name || lead.email;
   const ownerOptions = team.map((m) => ({ value: m.id, label: m.id === me.id ? `${m.name} (me)` : m.name }));
   const raw = lead.rawFields ?? null;
@@ -113,7 +119,7 @@ export default async function LeadDetail({
                   value={lead.ownerId ?? ''}
                   placeholder="Unassigned"
                   options={ownerOptions}
-                  leadId={lead.id}
+                  record={{ kind: 'lead', id: lead.id }}
                   field="owner"
                 />
               </div>
@@ -264,36 +270,49 @@ export default async function LeadDetail({
                     <Check ok={Boolean(custom.budget) && custom.budget !== 'Not shared'}>Budget is known</Check>
                     <Check ok={Boolean(custom.decision_maker)}>Decision maker is identified</Check>
                   </ul>
-                  <p className={s.cardNote}>
-                    Converting a lead into a deal arrives with the Deals pipeline (phase 2). Until then, use this list
-                    to see what is still missing.
-                  </p>
                 </div>
+                {leadDeals.length > 0 ? (
+                  <div className={s.cardBody}>
+                    <p className={s.cardNote}>This lead has been converted. Its deal{leadDeals.length > 1 ? 's' : ''}:</p>
+                    <ul className={s.checklist}>
+                      {leadDeals.map((d) => (
+                        <li key={d.id}><Link href={`/admin/deals/${d.id}`}>{d.title}</Link> · {d.stageName}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <DealForm
+                    mode="convert"
+                    leadId={lead.id}
+                    submitLabel="Convert to deal"
+                    stages={stages.filter((st) => st.kind === 'open').map((st) => ({ id: st.id, name: st.name }))}
+                    stageProbabilities={Object.fromEntries(stages.map((st) => [st.id, st.probability]))}
+                    team={team}
+                    services={SERVICES.map((x) => x.name).filter((n) => n !== 'All Services')}
+                    values={{
+                      title: [lead.company || displayName, quote?.service || lead.serviceInterest].filter(Boolean).join(' — '),
+                      companyName: lead.company ?? '',
+                      contactName: displayName,
+                      contactEmail: lead.email,
+                      service: quote?.service || lead.serviceInterest,
+                      tier: quote?.tier ?? null,
+                      seats: Number(quote?.seats) || (typeof custom.seats_needed === 'number' ? custom.seats_needed : null),
+                      hoursPerMonth: Number(quote?.hours) || null,
+                      rate: quote?.rate ? String(quote.rate) : '',
+                      ownerId: lead.ownerId,
+                    }}
+                  />
+                )}
               </section>
             )}
 
             <Composer
-              leadId={lead.id}
+              record={{ kind: 'lead', id: lead.id }}
               team={team}
               me={me.id}
             />
 
-            <section className={s.card}>
-              <div className={s.cardHead}>
-                <h2 className={s.cardTitle}>Activity</h2>
-                <span className={s.cardNote}>{timeline.length} {timeline.length === 1 ? 'entry' : 'entries'}</span>
-              </div>
-              {timeline.length === 0 ? (
-                <p className={admin.empty}>
-                  <strong>No activity yet</strong>
-                  Notes, calls, tasks and status changes will appear here.
-                </p>
-              ) : (
-                <ol className={s.timeline}>
-                  {timeline.map((a) => <TimelineEntry key={a.id} a={a} />)}
-                </ol>
-              )}
-            </section>
+            <TimelineCard items={timeline} subject="lead" />
           </div>
 
           {/* ── rail ── */}
@@ -316,7 +335,7 @@ export default async function LeadDetail({
                   label="Priority"
                   value={lead.priority}
                   options={PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
-                  leadId={lead.id}
+                  record={{ kind: 'lead', id: lead.id }}
                   field="priority"
                 />
               </div>
@@ -344,40 +363,11 @@ export default async function LeadDetail({
               </div>
             </section>
 
-            <section className={s.card}>
-              <div className={s.cardHead}>
-                <h2 className={s.cardTitle}>Tasks</h2>
-                <span className={s.cardNote}>{openTasks.length} open</span>
-              </div>
-              <div className={s.cardBody}>
-                {openTasks.length === 0 ? (
-                  <p className={s.cardNote}>No open tasks. Add one to schedule the next follow-up.</p>
-                ) : (
-                  <TaskItems items={openTasks} />
-                )}
-                <AddTaskButton />
-                {doneTasks.length > 0 && (
-                  <details>
-                    <summary className={s.doneToggle}>{doneTasks.length} completed</summary>
-                    <TaskItems items={doneTasks} />
-                  </details>
-                )}
-              </div>
-            </section>
+            <TasksCard tasks={tasks} emptyHint="No open tasks. Add one to schedule the next follow-up." />
           </aside>
         </div>
       </div>
     </>
-  );
-}
-
-function KV({ label, children }: { label: string; children: React.ReactNode }) {
-  const empty = children === null || children === undefined || children === '';
-  return (
-    <div className={s.kv}>
-      <span className={s.kvLabel}>{label}</span>
-      <span className={s.kvValue}>{empty ? <span className={s.muted}>Not provided</span> : children}</span>
-    </div>
   );
 }
 
@@ -400,92 +390,3 @@ function Quote({ label, value }: { label: string; value?: string | number }) {
     </div>
   );
 }
-
-function TaskItems({ items }: { items: Array<{ id: string; title: string; dueAt: string | null; doneAt: string | null; priority: string; assigneeName: string | null }> }) {
-  const now = Date.now();
-  return (
-    <ul className={s.taskList}>
-      {items.map((t) => {
-        const overdue = !t.doneAt && t.dueAt && new Date(t.dueAt).getTime() < now;
-        return (
-          <li key={t.id} className={`${s.task} ${t.doneAt ? s.taskDone : ''}`}>
-            <TaskCheck id={t.id} title={t.title} done={Boolean(t.doneAt)} />
-            <div>
-              <div className={s.taskTitle}>{t.title}</div>
-              <div className={s.taskMeta}>
-                {t.dueAt && (
-                  <span className={overdue ? s.overdue : undefined}>
-                    {overdue ? 'Overdue · ' : 'Due '}<LocalTime iso={t.dueAt} />
-                  </span>
-                )}
-                <span>{t.assigneeName || 'Unassigned'}</span>
-                {t.priority === 'high' && <span className={s.overdue}>High</span>}
-              </div>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-const ICONS: Record<string, React.ReactNode> = {
-  note: <path d="M4 4h12l4 4v12H4zM8 10h8M8 14h8M8 18h5" />,
-  call: <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />,
-  status_change: <path d="M4 12h12M12 6l6 6-6 6" />,
-  owner_change: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
-  system: <><circle cx="12" cy="12" r="9" /><path d="M12 8v4l3 2" /></>,
-  meeting: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></>,
-};
-
-function TimelineEntry({ a }: { a: TimelineItem }) {
-  const who = a.actorName?.trim() || 'System';
-  const meta = (a.meta ?? {}) as Record<string, unknown>;
-  let head: React.ReactNode;
-  let body: string | null = a.body;
-
-  switch (a.type) {
-    case 'note':
-      head = <><b>{who}</b> added a note</>;
-      break;
-    case 'call': {
-      const outcome = CALL_OUTCOME_LABELS[meta.outcome as CallOutcome] ?? 'Call';
-      const mins = Math.round(Number(meta.durationSec ?? 0) / 60);
-      head = <><b>{who}</b> logged a call · {outcome}{mins > 0 ? ` · ${mins} min` : ''}</>;
-      break;
-    }
-    case 'status_change':
-      head = <><b>{who}</b> changed status: {STATUS_LABELS[String(meta.from)] ?? String(meta.from)} → <b>{STATUS_LABELS[String(meta.to)] ?? String(meta.to)}</b></>;
-      body = null;
-      break;
-    case 'owner_change':
-      head = meta.to
-        ? <><b>{who}</b> assigned the lead to <b>{String(meta.toName ?? 'someone')}</b></>
-        : <><b>{who}</b> unassigned the lead</>;
-      body = null;
-      break;
-    default:
-      head = a.actorName ? <><b>{who}</b> · {a.body}</> : <>{a.body}</>;
-      body = null;
-  }
-
-  const reasons = Array.isArray(meta.reasons) ? (meta.reasons as string[]) : null;
-  return (
-    <li className={s.event}>
-      <span className={`${s.eventIcon} ${s[`ev_${a.type}`] ?? ''}`} aria-hidden="true">
-        <svg viewBox="0 0 24 24">{ICONS[a.type] ?? ICONS.system}</svg>
-      </span>
-      <div>
-        <div className={s.eventHead}>
-          <span>{head}</span>
-          <span className={s.eventTime}><LocalTime iso={a.occurredAt} /></span>
-        </div>
-        {body && <p className={s.eventBody}>{body}</p>}
-        {reasons && reasons.length > 0 && (
-          <ul className={s.reasons} aria-label="Score reasons">{reasons.map((r) => <li key={r}>{r}</li>)}</ul>
-        )}
-      </div>
-    </li>
-  );
-}
-
