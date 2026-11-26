@@ -1,0 +1,35 @@
+.page {
+  --ink: #0b1433;
+  --muted: #5d6884;
+  --blue: #2f6fd0;
+  min-height: 100vh;
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: #eef3fb;
+  color: var(--ink);
+}
+.panel { max-width: 860px; width: 100%; margin: 0 auto; padding: 24px clamp(20px, 5vw, 48px); background: #fff; border-radius: 20px; box-shadow: 0 18px 50px -30px rgba(0, 5, 67, 0.45); }
+.state { margin: 0; font-size: 15px; color: var(--muted); }
+.answer { display: grid; gap: 14px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+.primary, .ghost { font: inherit; font-size: 15px; font-weight: 600; height: 44px; padding: 0 22px; border-radius: 12px; cursor: pointer; }
+.primary { background: var(--blue); color: #fff; border: 1px solid var(--blue); }
+.primary:hover { background: #255ab0; }
+.ghost { background: #fff; color: var(--ink); border: 1px solid #d5dced; }
+.ghost:hover { border-color: var(--blue); color: var(--blue); }
+.primary:disabled, .ghost:disabled { opacity: 0.6; cursor: not-allowed; }
+.primary:focus-visible, .ghost:focus-visible, .form input:focus-visible, .form textarea:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.form { display: grid; gap: 8px; max-width: 520px; }
+.form label { font-size: 14px; font-weight: 600; }
+.form input[type='text'], .form input:not([type]), .form textarea { font: inherit; font-size: 15px; padding: 10px 12px; border: 1px solid #d5dced; border-radius: 10px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400 !important; margin: 6px 0; }
+.check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--blue); }
+.error { margin: 0; color: #b42318; font-size: 14px; }
+.honey { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.done h2 { margin: 0 0 6px; font-size: 20px; }
+.done p { margin: 0; color: var(--muted); }
+@media print { .page { background: #fff; padding: 0; } .panel { display: none; } }

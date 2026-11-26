@@ -13,6 +13,8 @@ import { BackLink, KV, TasksCard, TimelineCard } from '../../CrmParts';
 import { Composer, InlineSelect, LocalTime } from '../../leads/[id]/LeadClient';
 import DealForm from '../DealForm';
 import StageControl from '../StageControl';
+import { NewProposalButton } from '../../proposals/ProposalClient';
+import { PROPOSAL_STATUS_LABELS } from '@/lib/crm/proposals';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
 
@@ -114,6 +116,28 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
                   stageId: stage.id,
                 }}
               />
+            </section>
+
+            <section className={s.card}>
+              <div className={s.cardHead}>
+                <h2 className={s.cardTitle}>Proposals</h2>
+                <NewProposalButton dealId={deal.id} className={s.doneToggle} />
+              </div>
+              {deal.proposals.length === 0 ? (
+                <p className={admin.empty}><strong>No proposal yet</strong>A new proposal starts from this deal&rsquo;s terms and the rate catalogue.</p>
+              ) : (
+                <ul className={s.miniList}>
+                  {deal.proposals.map((pr) => (
+                    <li key={pr.id}>
+                      <span>
+                        <Link href={`/admin/proposals/${pr.id}`}>{pr.number} · {pr.title}</Link>{' '}
+                        <span className={`${s.badge} ${s[`s_${pr.status}`]}`}>{PROPOSAL_STATUS_LABELS[pr.status]}</span>
+                      </span>
+                      <span className={s.miniMeta}>{formatMoney(pr.monthlyCents, pr.currency)}/mo</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
 
             <Composer

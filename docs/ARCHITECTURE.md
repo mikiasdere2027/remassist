@@ -131,15 +131,21 @@ slice lands:
   `companies/actions.ts`, `settings/crm/actions.ts`). Pages pass record ids,
   not functions; `Composer` and `InlineSelect` take a `record`
   (`{ kind: 'lead' | 'deal' | 'company', id }`).
+- **Wired (slice 4):** Proposals list and page (editor priced from the rate
+  catalogue, send, withdraw, revise), the Proposals card on a deal, and the
+  client's page `/p/<token>` (outside the `(site)` group, never indexed). The
+  client link is built from the address the team is using, so it works on
+  staging and locally. Totals shown are the backend's; `lib/crm/proposals.ts`
+  only drives the editor's live preview. "Email to client" stays off until a
+  sending address is decided.
 - **Not on this branch yet** (restored from `mikias/crm-phases-2-6` with their
-  slice): Customers, Proposals and the client link `/p/…`, Reports and his
-  dashboard numbers, lead automation and the daily digest, the Calendly
-  webhook, contract files.
+  slice): Customers, Reports and his dashboard numbers, lead automation and
+  the daily digest, the Calendly webhook, contract files.
 
 ### Browser tests
 
-`tests/e2e/` has five scripts — public pages, sign-in/users, every admin page
-and flow, the lead CRM screens, deals/companies/settings — run against a local stack (README there). All
+`tests/e2e/` has six scripts — public pages, sign-in/users, every admin page
+and flow, the lead CRM screens, deals/companies/settings, proposals — run against a local stack (README there). All
 pass as of 2026-11-14.
 
 ## 4. Hardcoded content that should come from the CMS

@@ -189,6 +189,96 @@ export interface DealPage {
   lossReason: string | null;
   timeline: TimelineItem[];
   tasks: LeadTask[];
+  proposals: ProposalSummary[];
+}
+
+/* ── proposals ──────────────────────────────────────────────────────── */
+
+export const PROPOSAL_STATUSES = ['draft', 'sent', 'viewed', 'accepted', 'declined', 'withdrawn'] as const;
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
+
+/** A priced line, frozen into the proposal once sent. Money in cents. */
+export interface ProposalLineRow {
+  kind: 'monthly' | 'one_off';
+  description: string;
+  tier: string | null;
+  coverage: string | null;
+  seats: number | null;
+  hoursPerMonth: number | null;
+  rateCents: number | null;
+  amountCents: number;
+}
+
+export interface ProposalTotals {
+  monthlySubtotal: number;
+  discount: number;
+  monthly: number;
+  oneOff: number;
+  firstMonth: number;
+  annual: number;
+}
+
+/** A deal's proposal, as listed on the deal page. */
+export interface ProposalSummary {
+  id: string;
+  number: string;
+  title: string;
+  status: ProposalStatus;
+  monthlyCents: number;
+  currency: string;
+  sentAt: string | null;
+  updatedAt: string;
+}
+
+/** One row of GET /v1/admin/proposals. */
+export interface ProposalListItem extends ProposalSummary {
+  oneOffCents: number;
+  viewedAt: string | null;
+  decidedAt: string | null;
+  validUntil: string | null;
+  dealId: string;
+  companyName: string | null;
+}
+
+/** What the client sees (GET /v1/public/proposals/:token) — also what the document renders. */
+export interface ProposalDocumentData {
+  number: string;
+  title: string;
+  status: ProposalStatus;
+  intro: string | null;
+  terms: string | null;
+  lines: ProposalLineRow[];
+  discountBps: number;
+  currency: string;
+  monthlyCents: number;
+  oneOffCents: number;
+  validUntil: string | null;
+  recipientName: string | null;
+  sentAt: string | null;
+  decidedAt: string | null;
+  decidedByName: string | null;
+  companyName: string | null;
+  totals: ProposalTotals;
+}
+
+/** GET /v1/admin/proposals/:id */
+export interface ProposalPage extends ProposalDocumentData {
+  id: string;
+  dealId: string;
+  publicToken: string;
+  recipientEmail: string | null;
+  viewedAt: string | null;
+  decisionNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+  dealTitle: string;
+  dealStageKind: StageKind;
+}
+
+/** GET /v1/admin/proposals/catalogue — the rate list lines are priced from. */
+export interface RateCatalogue {
+  tiers: Array<{ key: string; label: string; note: string | null; rateCents: number }>;
+  coverage: Array<{ key: string; label: string; longLabel: string; seats: number; hours: number }>;
 }
 
 /** What the New deal / Convert / Edit forms send (strings as typed). */
@@ -223,6 +313,16 @@ export const crmApi = {
     api.patch(`/admin/deals/${id}/owner`, { ownerId }),
   moveDeal: (id: string, move: { stageId: string; lossReasonId?: string; lossNote?: string }) =>
     api.post(`/admin/deals/${id}/move`, move),
+
+  /* proposals */
+  draftProposal: (dealId: string) => api.post<{ id: string }>(`/admin/deals/${dealId}/proposals`),
+  reviseProposal: (id: string) => api.post<{ id: string }>(`/admin/proposals/${id}/revise`),
+  saveProposal: (id: string, proposal: Record<string, unknown>) => api.patch(`/admin/proposals/${id}`, proposal),
+  sendProposal: (id: string) => api.post(`/admin/proposals/${id}/send`),
+  withdrawProposal: (id: string) => api.post(`/admin/proposals/${id}/withdraw`),
+  /** The client's answer, from /p/<token> (public). */
+  answerProposal: (token: string, answer: { accept: boolean; name: string; note?: string | null }) =>
+    api.post<{ ok: true; number: string }>(`/public/proposals/${encodeURIComponent(token)}/decision`, answer),
 
   /* companies and contacts */
   updateCompany: (id: string, company: Record<string, string | null>) =>

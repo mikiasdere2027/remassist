@@ -42,7 +42,7 @@ await p.locator('text=already exists').first().waitFor({ timeout: 10000 }).catch
 ok(await p.locator('text=already exists').count() > 0, 'duplicate email is refused with a link to the existing lead');
 
 // 2. Work the lead: owner, priority, status, note, call, task
-await p.goto(leadUrl);
+await p.goto(leadUrl, { waitUntil: 'networkidle' });
 await p.selectOption('#lead-owner', '');  // unassign, a real change from the creator
 await p.locator('text=Saving…').first().waitFor({ state: 'detached', timeout: 10000 }).catch(() => {});
 await p.waitForTimeout(800);
@@ -75,7 +75,9 @@ await p.fill('#task-due', local);
 await p.click('button:has-text("Add task")');
 await p.locator('text=Task added').waitFor({ timeout: 10000 }).catch(() => {});
 await p.waitForTimeout(1500);
-await p.reload();
+await p.reload({ waitUntil: 'networkidle' });
+await p.locator('text=Loading…').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
+await p.locator('#lead-owner').waitFor({ timeout: 15000 });
 
 const html = await p.content();
 ok((await p.locator('body').innerText()).includes('unassigned the lead'), 'timeline: owner change');

@@ -10,6 +10,7 @@ node tests/e2e/auth.mjs     # sign-in, invites, resets, roles, sign-out
 node tests/e2e/admin.mjs    # every admin page + FAQ/rates/leads/quiz flows
 node tests/e2e/crm.mjs      # the CRM screens: add, work, qualify, tasks, import
 node tests/e2e/deals.mjs    # deals, conversion, companies, contacts, pipeline settings
+node tests/e2e/proposals.mjs # proposals: draft, edit, send, the client's link, accept/decline, revise
 ```
 
 They create test data in the database they run against (leads, users,

@@ -24,7 +24,7 @@ const settle = () => p.waitForTimeout(1200);
 // 1. Pipeline settings (admins)
 const stageName = `Pilot ${stamp}`;
 const reason = `E2E reason ${stamp}`;
-await p.goto(`${BASE}/admin/settings/crm`);
+await p.goto(`${BASE}/admin/settings/crm`, { waitUntil: 'networkidle' });
 await p.fill('input[aria-label="New stage name"]', stageName);
 await p.fill('input[aria-label="Win probability for the new stage"]', '60');
 await p.click('button:has-text("Add stage")');
@@ -143,7 +143,7 @@ await p.goto(`${BASE}/admin/contacts?q=${encodeURIComponent(company)}`);
 c.ok((await body()).includes('Sara Bekele'), 'contacts list finds people by company name');
 
 // 9. Clean up the settings this run added
-await p.goto(`${BASE}/admin/settings/crm`);
+await p.goto(`${BASE}/admin/settings/crm`, { waitUntil: 'networkidle' });
 await p.locator(`form:has(input[aria-label="Stage name"][value="${stageName}"]) button:has-text("Archive")`).click();
 await settle();
 await p.locator(`form:has(input[aria-label="Loss reason"][value="${reason}"]) button:has-text("Archive")`).click();
