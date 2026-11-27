@@ -33,7 +33,7 @@ export default function ChangePasswordForm({ username }: { username: string }) {
   }
 
   return (
-    <form className={styles.signinForm} onSubmit={onSubmit}>
+    <form method="post" className={styles.signinForm} onSubmit={onSubmit}>
       {msg && (
         <p
           className={`${styles.signinMsg} ${msg.tone === 'ok' ? styles.msgOk : styles.msgErr}`}

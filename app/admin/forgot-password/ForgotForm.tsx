@@ -49,7 +49,7 @@ export default function ForgotForm() {
           {error}
         </p>
       )}
-      <form className={styles.signinForm} onSubmit={onSubmit}>
+      <form method="post" className={styles.signinForm} onSubmit={onSubmit}>
         <label className={styles.fieldLabel} htmlFor="forgot-identifier">
           Username or email
         </label>

@@ -39,7 +39,7 @@ export default function ResetForm({ token, username }: { token: string; username
           {error}
         </p>
       )}
-      <form className={styles.signinForm} onSubmit={onSubmit}>
+      <form method="post" className={styles.signinForm} onSubmit={onSubmit}>
         {/* Lets password managers file the new password under the right account. */}
         <input type="hidden" name="username" autoComplete="username" value={username} readOnly />
         <PasswordFields />

@@ -45,7 +45,7 @@ export default function SignInForm({ next }: { next?: string }) {
           {error}
         </p>
       )}
-      <form className={styles.signinForm} onSubmit={onSubmit}>
+      <form method="post" className={styles.signinForm} onSubmit={onSubmit}>
         <label className={styles.fieldLabel} htmlFor="admin-username">
           Username
         </label>

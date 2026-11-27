@@ -41,7 +41,7 @@ export default function AcceptForm({ token, name }: { token: string; name: strin
           {error}
         </p>
       )}
-      <form className={styles.signinForm} onSubmit={onSubmit}>
+      <form method="post" className={styles.signinForm} onSubmit={onSubmit}>
         <label className={styles.fieldLabel} htmlFor="inv-name">
           Your name
         </label>

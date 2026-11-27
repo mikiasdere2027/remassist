@@ -105,7 +105,7 @@ await f.locator('[role=status]').waitFor({ timeout: 10000 }).catch(() => {});
 await new Promise((res) => setTimeout(res, 1500));
 let link = null;
 try {
-  const logs = execSync(`docker compose -f ${BACKEND_DIR}/docker-compose.yml logs api --since 30s`, { encoding: 'utf8' });
+  const logs = execSync(`docker compose --project-directory ${BACKEND_DIR} logs api --since 30s`, { encoding: 'utf8' });
   link = [...logs.matchAll(/https?:\/\/[^\s]+\/admin\/reset-password\/[\w-]{43}/g)].pop()?.[0] ?? null;
 } catch {
   /* not running under docker compose */
@@ -127,6 +127,29 @@ await so.waitForURL(/\/admin\/signin/);
 await so.goto(`${BASE}/admin`);
 c.ok(so.url().startsWith(`${BASE}/admin/signin`), 'signing out ends the session');
 await admin.screenshot({ path: `${SHOTS}/auth-users.png`, fullPage: true });
+
+// 9. A form submitted before the page is interactive (same as with JavaScript off) must never
+// put what was typed in the address bar: browsers send a form without method="post" as GET.
+{
+  const SECRET = `typed-secret-${stamp}`;
+  const noJs = await browser.newContext({ javaScriptEnabled: false, storageState: await admin.context().storageState() });
+  const q = await noJs.newPage();
+  const leaked = async (path, fill) => {
+    await q.goto(BASE + path, { waitUntil: 'load' });
+    await fill();
+    await q.click('button[type=submit]').catch(() => {});
+    await q.waitForLoadState('load').catch(() => {});
+    return q.url().includes(SECRET) || (await q.evaluate(() => location.href)).includes(SECRET);
+  };
+  c.ok(!(await leaked('/admin/signin', async () => { await q.fill('#admin-username', 'someone'); await q.fill('#admin-password', SECRET); })),
+    'sign-in: a submit without the page ready does not put the password in the URL');
+  c.ok(!(await leaked('/admin/forgot-password', async () => { await q.fill('#forgot-identifier', `${SECRET}@example.com`); })),
+    'forgot password: the username or email is not put in the URL either');
+  c.ok(!(await leaked('/admin/settings', async () => {
+    for (const el of await q.locator('input[type=password]').all()) await el.fill(SECRET);
+  })), 'change password: nothing typed is put in the URL');
+  await noJs.close();
+}
 
 await browser.close();
 c.done();
