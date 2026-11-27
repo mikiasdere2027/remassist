@@ -1,6 +1,6 @@
 import { isDatabaseConfigured } from '@/db';
 import { currentUser } from '@/lib/auth/require';
-import { canViewLeads } from '@/lib/auth/roles';
+import { canExportData } from '@/lib/auth/roles';
 import { currentWorkspaceId } from '@/lib/crm/workspace';
 import { isoDay } from '@/lib/crm/engagements';
 import { toCsv } from '@/lib/crm/reports';
@@ -17,7 +17,8 @@ const FILTERS: InvoiceFilter[] = ['all', 'draft', 'open', 'overdue', 'paid', 'vo
 
 export async function GET(req: Request) {
   const user = await currentUser();
-  if (!user || !canViewLeads(user.role)) return new Response('Not found', { status: 404 });
+  if (!user) return new Response('Not found', { status: 404 });
+  if (!canExportData(user.role)) return new Response('Forbidden', { status: 403 });
   if (!isDatabaseConfigured()) return new Response('Database not configured', { status: 503 });
   const url = new URL(req.url);
   const filter = (FILTERS.find((f) => f === url.searchParams.get('filter')) ?? 'all') as InvoiceFilter;

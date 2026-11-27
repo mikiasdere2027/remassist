@@ -6,6 +6,7 @@ import { mergeAttribution } from '@/lib/analytics/attribution';
 import { rateLimit } from '@/lib/rate-limit';
 import { notifyNewLead } from '@/lib/notify';
 import { scoreLead } from '@/lib/crm/scoring';
+import { classifyLeadSla } from '@/lib/crm/sla';
 import { logActivity, recordEvent } from '@/lib/crm/events';
 import { currentWorkspaceId } from '@/lib/crm/workspace';
 import { applyInboundAutomation } from '@/lib/crm/automationData';
@@ -69,6 +70,9 @@ export async function POST(req: Request) {
       : null,
   });
   const workspaceId = currentWorkspaceId();
+  const now = new Date();
+  const hasValidPhone = Boolean(cols.phone && cols.phone.replace(/\D/g, '').length >= 10);
+  const slaExclusionReason = classifyLeadSla({ createdAt: now, hasValidPhone });
 
   try {
     const db = getDb();
@@ -83,6 +87,8 @@ export async function POST(req: Request) {
           workspaceId,
           score: scored.score,
           priority: scored.priority,
+          tcpaConsentVerified: Boolean(cols.consentAt),
+          slaExclusionReason,
           pageUrl: page,
           referrer: req.headers.get('referer'),
           /* Last touch wins over the submitting page's query, and first touch
@@ -106,7 +112,7 @@ export async function POST(req: Request) {
         type: 'lead.created',
         subjectType: 'lead',
         subjectId: row.id,
-        payload: { source: cols.source, score: scored.score, priority: scored.priority },
+        payload: { source: cols.source, score: scored.score, priority: scored.priority, slaExclusionReason },
       });
       await logActivity(tx, {
         workspaceId,

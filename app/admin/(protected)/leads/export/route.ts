@@ -3,7 +3,7 @@ import { getDb, isDatabaseConfigured } from '@/db';
 import { leads } from '@/db/schema';
 import { currentUser } from '@/lib/auth/require';
 import { currentWorkspaceId } from '@/lib/crm/workspace';
-import { canViewLeads } from '@/lib/auth/roles';
+import { canExportData } from '@/lib/auth/roles';
 import { csvRow, formatDate } from '@/lib/leads/display';
 import { buildLeadFilters, type LeadSearch } from '@/lib/leads/query';
 
@@ -31,10 +31,13 @@ const HEADERS = [
 
 export async function GET(req: Request) {
   const user = await currentUser();
-  if (!user || !canViewLeads(user.role)) {
+  if (!user) {
     /* 404, not 403: an authenticated-only URL that answers 403 confirms it
        exists and is worth attacking. */
     return new Response('Not found', { status: 404 });
+  }
+  if (!canExportData(user.role)) {
+    return new Response('Forbidden', { status: 403 });
   }
 
   if (!isDatabaseConfigured()) {

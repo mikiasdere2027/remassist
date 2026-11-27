@@ -279,7 +279,7 @@ async function lockIssued(tx: Tx, ws: WorkspaceId, id: string) {
   return inv;
 }
 
-export async function recordPayment(tx: Tx, ws: WorkspaceId, id: string, p: { amountCents: number; receivedOn: string; method: PaymentMethod; reference: string | null }, actorId: string) {
+export async function recordPayment(tx: Tx, ws: WorkspaceId, id: string, p: { amountCents: number; receivedOn: string; method: PaymentMethod; reference: string | null }, actorId: string | null) {
   const inv = await lockIssued(tx, ws, id);
   if (!canSettle(inv.status)) fail('Only an issued, unpaid invoice can take a payment.');
   const open = balance(inv.totalCents, inv.paidCents, inv.creditedCents);
@@ -295,6 +295,37 @@ export async function recordPayment(tx: Tx, ws: WorkspaceId, id: string, p: { am
     meta: { invoiceId: id },
   });
   return inv;
+}
+
+/**
+ * Idempotent Stripe webhook payment recorder. Looks up the invoice's workspace
+ * and skips if a payment with the same Stripe reference was already recorded.
+ */
+export async function recordStripePayment(
+  tx: Tx,
+  invoiceId: string,
+  p: { amountCents: number; receivedOn: string; reference: string },
+): Promise<{ recorded: boolean; duplicate?: boolean; reason?: string }> {
+  const [inv] = await tx.select({ id: invoices.id, workspaceId: invoices.workspaceId, status: invoices.status })
+    .from(invoices).where(eq(invoices.id, invoiceId)).for('update');
+  if (!inv) return { recorded: false, reason: 'invoice_not_found' };
+
+  const [existing] = await tx.select({ id: payments.id })
+    .from(payments)
+    .where(and(eq(payments.invoiceId, invoiceId), eq(payments.reference, p.reference)))
+    .limit(1);
+  if (existing) return { recorded: false, duplicate: true };
+
+  if (!canSettle(inv.status) || p.amountCents <= 0) {
+    return { recorded: false, reason: 'not_settleable' };
+  }
+  await recordPayment(tx, inv.workspaceId, invoiceId, {
+    amountCents: p.amountCents,
+    receivedOn: p.receivedOn,
+    method: 'card',
+    reference: p.reference,
+  }, null);
+  return { recorded: true };
 }
 
 export async function issueCreditNote(tx: Tx, ws: WorkspaceId, id: string, c: { amountCents: number; reason: string }, actorId: string) {

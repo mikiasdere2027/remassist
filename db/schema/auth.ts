@@ -19,7 +19,7 @@ import {
  * Exactly two roles, and exactly one admin — the latter enforced by a partial
  * unique index in migration 0004, not by application logic that can be raced.
  */
-export const userRole = pgEnum('user_role', ['admin', 'manager']);
+export const userRole = pgEnum('user_role', ['admin', 'manager', 'agent']);
 
 export const users = pgTable('users', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),

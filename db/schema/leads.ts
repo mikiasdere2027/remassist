@@ -74,6 +74,14 @@ export const leads = pgTable('leads', {
   nextFollowUpAt: timestamp('next_follow_up_at', { withTimezone: true }),
   /** First outbound touch — the response-time clock stops here. */
   firstContactedAt: timestamp('first_contacted_at', { withTimezone: true }),
+  /** First logged outbound dial (Speed-to-Lead SLA clock). */
+  firstDialAt: timestamp('first_dial_at', { withTimezone: true }),
+  /** SLA exclusion tag ('none' | 'after_hours' | 'invalid_phone' | 'burst_gt_2' | 'system_outage' | 'maintenance'). */
+  slaExclusionReason: text('sla_exclusion_reason').notNull().default('none'),
+  /** Explicit consent-to-call (TCPA) verification flag. */
+  tcpaConsentVerified: boolean('tcpa_consent_verified').notNull().default(false),
+  /** Do-Not-Call flag; blocks all outbound dials and follow-up cadences. */
+  dncFlag: boolean('dnc_flag').notNull().default(false),
   convertedAt: timestamp('converted_at', { withTimezone: true }),
   disqualifyReason: text('disqualify_reason'),
   custom: jsonb('custom').$type<Record<string, unknown>>().notNull().default({}),

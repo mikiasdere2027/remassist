@@ -1,6 +1,6 @@
 import { isDatabaseConfigured } from '@/db';
 import { currentUser } from '@/lib/auth/require';
-import { canViewLeads } from '@/lib/auth/roles';
+import { canExportData } from '@/lib/auth/roles';
 import { currentWorkspaceId } from '@/lib/crm/workspace';
 import { rangeFor, rangeStart, toCsv } from '@/lib/crm/reports';
 import { isReportKey, reportTable } from '@/lib/crm/reportTables';
@@ -14,7 +14,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   const user = await currentUser();
-  if (!user || !canViewLeads(user.role)) return new Response('Not found', { status: 404 });
+  if (!user) return new Response('Not found', { status: 404 });
+  if (!canExportData(user.role)) return new Response('Forbidden', { status: 403 });
   if (!isDatabaseConfigured()) return new Response('Database not configured', { status: 503 });
   const url = new URL(req.url);
   const key = url.searchParams.get('report') ?? '';

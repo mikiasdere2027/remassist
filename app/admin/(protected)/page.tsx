@@ -17,6 +17,7 @@ import styles from '../admin.module.css';
 import AdminTopbar from './AdminTopbar';
 import { currentWorkspaceId } from '@/lib/crm/workspace';
 import { activityStream, comingUp, dashboardNumbers, topOpenDeals } from '@/lib/crm/reportsData';
+import { listOnlineAgents } from '@/lib/crm/slaData';
 import { change } from '@/lib/crm/reports';
 import { effectiveProbability, formatMoney, formatMoneyShort } from '@/lib/crm/money';
 import { initials } from '@/lib/crm/display';
@@ -158,8 +159,8 @@ export default async function DashboardPage() {
     year: 'numeric',
   }).format(today);
   const ws = currentWorkspaceId();
-  const [crm, topDeals, upcoming, stream] = await Promise.all([
-    dashboardNumbers(ws, user.id), topOpenDeals(ws), comingUp(ws, user.id), activityStream(ws),
+  const [crm, topDeals, upcoming, stream, onlineAgents] = await Promise.all([
+    dashboardNumbers(ws, user.id), topOpenDeals(ws), comingUp(ws, user.id), activityStream(ws), listOnlineAgents(ws),
   ]);
   const leadsChange = change(crm.leads30, crm.leadsPrev30);
   const waitingMsg = untouched === 0 ? 'every lead has had a first response' : `${untouched} ${untouched === 1 ? 'lead is' : 'leads are'} waiting for a first response`;
@@ -260,6 +261,32 @@ export default async function DashboardPage() {
             )}
           </section>
         </div>
+
+        <section className={`${s.card} ${styles.section}`}>
+          <div className={s.cardHead}>
+            <h2 className={s.cardTitle}>Agents online ({onlineAgents.length})</h2>
+            <span className={s.cardNote}>Active shift heartbeats in the last 5 minutes</span>
+          </div>
+          {onlineAgents.length === 0 ? (
+            <p className={styles.empty}><strong>No agents online</strong>Active shift sessions appear here once an agent checks in.</p>
+          ) : (
+            <ul className={s.miniList}>
+              {onlineAgents.map((a) => {
+                const who = a.name?.trim() || a.email;
+                return (
+                  <li key={a.sessionId}>
+                    <span>
+                      <span className={`${s.avatar} ${s.avatarXs} ${s.inlineAvatar}`} aria-hidden="true">{initials(who)}</span>
+                      <b>{who}</b>
+                      <span className={s.cardNote}> · {a.shiftType.replace('_', ' ')}</span>
+                    </span>
+                    <span className={s.miniMeta}><LocalTime iso={a.lastHeartbeatAt.toISOString()} /></span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         <section className={`${s.card} ${styles.section}`}>
           <div className={s.cardHead}>

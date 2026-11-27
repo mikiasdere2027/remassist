@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   ROLES, canDelete, canDeleteFaqItem, canEditContent, canEditLeads, canEditRates,
-  canInvite, canManageUsers, canUnpublishContent, canViewLeads, isRole,
+  canExportData, canInvite, canManageUsers, canUnpublishContent, canViewLeads, isRole,
 } from './roles';
 
 describe('isRole', () => {
-  it('accepts the two real roles', () => {
+  it('accepts the real roles', () => {
     expect(isRole('admin')).toBe(true);
     expect(isRole('manager')).toBe(true);
+    expect(isRole('agent')).toBe(true);
   });
 
   it('rejects anything else, including near-misses and non-strings', () => {
@@ -45,6 +46,18 @@ describe('manager capabilities', () => {
   });
 });
 
+describe('agent capabilities (Section 6 zero-export)', () => {
+  it('may view and work leads inside the CRM but may NOT export data or edit site content', () => {
+    expect(canViewLeads('agent')).toBe(true);
+    expect(canEditLeads('agent')).toBe(true);
+    expect(canExportData('agent')).toBe(false);
+    expect(canExportData('manager')).toBe(true);
+    expect(canExportData('admin')).toBe(true);
+    expect(canEditContent('agent')).toBe(false);
+    expect(canInvite('agent')).toBe(false);
+  });
+});
+
 describe('canDelete', () => {
   it('is false for every role, including admin', () => {
     // Access is revoked by disabling, never by deleting — a deleted row loses
@@ -70,32 +83,37 @@ describe('rate capabilities', () => {
 });
 
 describe('content capabilities', () => {
-  it('lets both roles edit content', () => {
+  const editors = ['admin', 'manager'] as const;
+
+  it('lets admin and manager edit content, but not agent', () => {
     // A manager who cannot fix a typo in the FAQ is no use for the job the CMS
     // exists to do, and a wrong word is visible and reversible in a way a
     // wrong role grant is not.
-    for (const role of ROLES) expect(canEditContent(role), role).toBe(true);
+    for (const role of editors) expect(canEditContent(role), role).toBe(true);
+    expect(canEditContent('agent')).toBe(false);
   });
 
-  it('lets both roles unpublish, and still lets nobody delete', () => {
+  it('lets admin and manager unpublish, and still lets nobody delete', () => {
     // Content is taken off the site by unpublishing, never by deleting — the
     // same rule as accounts, one level down. A deleted answer destroys the
     // record of what the site once claimed.
-    for (const role of ROLES) {
+    for (const role of editors) {
       expect(canUnpublishContent(role), role).toBe(true);
       expect(canDelete(role), role).toBe(false);
     }
+    expect(canUnpublishContent('agent')).toBe(false);
   });
 
-  it('lets both roles remove a FAQ draft, without widening canDelete', () => {
+  it('lets admin and manager remove a FAQ draft, without widening canDelete', () => {
     // The narrow exception: an unpublished question is not a record of
     // anything the site told anybody, and the Add question screen writes each
     // one to the database as you go. The published check that keeps this
     // narrow lives in deleteFaqItem, not here — this only says who may reach
     // it, and it must not leak back into the account rule above.
-    for (const role of ROLES) {
+    for (const role of editors) {
       expect(canDeleteFaqItem(role), role).toBe(true);
       expect(canDelete(role), role).toBe(false);
     }
+    expect(canDeleteFaqItem('agent')).toBe(false);
   });
 });

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDb, isDatabaseConfigured } from '@/db';
-import { leads, tasks, users } from '@/db/schema';
+import { activities, leads, tasks, users } from '@/db/schema';
 import { assertUser } from '@/lib/auth/require';
 import { canEditLeads } from '@/lib/auth/roles';
 import { SELECTABLE_STATUSES, type LeadStatus } from '@/lib/leads/display';
@@ -13,6 +13,7 @@ import { currentWorkspaceId, scoped } from '@/lib/crm/workspace';
 import { CALL_OUTCOMES, CALL_OUTCOME_LABELS, PRIORITIES, fromLocalInput, type Priority } from '@/lib/crm/display';
 import { customFromFormData, validateCustomFields } from '@/lib/crm/fields';
 import { getLeadFieldDefs } from '@/lib/crm/leads';
+import { nextCadenceDueAt, SLA_DISPOSITION_CODES } from '@/lib/crm/sla';
 
 /**
  * Every write on the lead page.
@@ -46,6 +47,7 @@ async function lockLead(tx: Pick<ReturnType<typeof getDb>, 'select'>, ws: string
       priority: leads.priority,
       nextFollowUpAt: leads.nextFollowUpAt,
       firstContactedAt: leads.firstContactedAt,
+      dncFlag: leads.dncFlag,
       custom: leads.custom,
     })
     .from(leads)
@@ -153,38 +155,131 @@ export async function addLeadNote(id: string, _prev: ActionResult | null, fd: Fo
 
 const CallInput = z.object({
   outcome: z.enum(CALL_OUTCOMES),
+  dispositionCode: z.enum(SLA_DISPOSITION_CODES).optional(),
   minutes: z.coerce.number().int().min(0).max(600).default(0),
   body: z.string().trim().max(10_000).optional(),
+  dnc: z.boolean().optional(),
 });
 
 export async function logLeadCall(id: string, _prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
   const user = await editor();
   const parsed = CallInput.safeParse({
     outcome: fd.get('outcome'),
+    dispositionCode: fd.get('dispositionCode') || undefined,
     minutes: fd.get('minutes') || 0,
     body: fd.get('body') || undefined,
+    dnc: fd.get('dnc') === 'true',
   });
   if (!parsed.success) return { ok: false, error: 'Choose how the call went.' };
-  const { outcome, minutes, body } = parsed.data;
+  const { outcome, dispositionCode, minutes, body, dnc } = parsed.data;
   const ws = currentWorkspaceId();
-  await getDb().transaction(async (tx) => {
-    await lockLead(tx, ws, id);
-    await logActivity(tx, {
-      workspaceId: ws, type: 'call', leadId: id, actorId: user.id, body: body || null,
-      meta: { direction: 'outbound', outcome, outcomeLabel: CALL_OUTCOME_LABELS[outcome], durationSec: minutes * 60 },
+  const markDnc = Boolean(dnc || dispositionCode === 'dnc');
+
+  try {
+    await getDb().transaction(async (tx) => {
+      const before = await lockLead(tx, ws, id);
+      if (before.dncFlag) {
+        throw new Error('Lead is marked Do-Not-Call (DNC) and cannot be dialed.');
+      }
+
+      const now = new Date();
+      await logActivity(tx, {
+        workspaceId: ws, type: 'call', leadId: id, actorId: user.id, body: body || null,
+        meta: {
+          direction: 'outbound',
+          outcome,
+          dispositionCode: dispositionCode ?? outcome,
+          outcomeLabel: CALL_OUTCOME_LABELS[outcome],
+          durationSec: minutes * 60,
+        },
+      });
+      /* A call attempt on a new lead is its first touch: the response clock
+         and the speed-to-lead firstDialAt clock both stop here. */
+      await tx
+        .update(leads)
+        .set({
+          firstContactedAt: sql`coalesce(${leads.firstContactedAt}, case when ${leads.status} = 'new' then now() end)`,
+          firstDialAt: sql`coalesce(${leads.firstDialAt}, now())`,
+          ...(markDnc ? { dncFlag: true, nextFollowUpAt: null } : {}),
+          updatedAt: now,
+        })
+        .where(eq(leads.id, id));
+      await recordEvent(tx, {
+        workspaceId: ws,
+        type: 'activity.logged',
+        subjectType: 'lead',
+        subjectId: id,
+        actorId: user.id,
+        payload: { kind: 'call', outcome, dispositionCode: dispositionCode ?? outcome, minutes, dnc: markDnc },
+      });
+
+      if (markDnc) {
+        await tx.update(tasks).set({ doneAt: now }).where(and(eq(tasks.leadId, id), isNull(tasks.doneAt)));
+        await logActivity(tx, {
+          workspaceId: ws,
+          type: 'system',
+          leadId: id,
+          actorId: user.id,
+          body: 'Lead marked Do-Not-Call (DNC); open follow-up tasks cancelled.',
+        });
+        return;
+      }
+
+      /* Auto-schedule next Section 7.3 follow-up cadence task on unanswered calls. */
+      if (outcome === 'no_answer' || outcome === 'voicemail' || outcome === 'busy') {
+        const [{ n }] = await tx
+          .select({ n: sql<number>`count(*)::int` })
+          .from(activities)
+          .where(and(eq(activities.workspaceId, ws), eq(activities.leadId, id), eq(activities.type, 'call')));
+        const next = nextCadenceDueAt(Math.max(0, n - 1), now);
+        if (next) {
+          const [t] = await tx
+            .insert(tasks)
+            .values({
+              workspaceId: ws,
+              title: `Follow-up callback (${next.step})`,
+              priority: 'high',
+              dueAt: next.dueAt,
+              assigneeId: before.ownerId ?? user.id,
+              createdBy: user.id,
+              leadId: id,
+            })
+            .returning({ id: tasks.id });
+          await recordEvent(tx, {
+            workspaceId: ws,
+            type: 'task.created',
+            subjectType: 'task',
+            subjectId: t.id,
+            actorId: user.id,
+            payload: { leadId: id, cadenceStep: next.step, dueAt: next.dueAt.toISOString(), auto: true },
+          });
+          await syncFollowUp(tx, id);
+        }
+      }
     });
-    /* A call attempt on a new lead is its first touch: the response clock
-       stops. Leads already past "new" without a time predate the CRM, so their
-       real first contact is unknown and is left unrecorded rather than faked. */
-    await tx
-      .update(leads)
-      .set({
-        firstContactedAt: sql`coalesce(${leads.firstContactedAt}, case when ${leads.status} = 'new' then now() end)`,
-        updatedAt: new Date(),
-      })
-      .where(eq(leads.id, id));
-    await recordEvent(tx, { workspaceId: ws, type: 'activity.logged', subjectType: 'lead', subjectId: id, actorId: user.id, payload: { kind: 'call', outcome, minutes } });
-  });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Could not log the call.' };
+  }
+  return done(id);
+}
+
+/** Marks a lead Do-Not-Call (DNC) and cancels all open follow-up tasks (Section 7.4). */
+export async function markLeadDnc(id: string): Promise<ActionResult> {
+  const user = await editor();
+  const ws = currentWorkspaceId();
+  try {
+    await getDb().transaction(async (tx) => {
+      const before = await lockLead(tx, ws, id);
+      if (before.dncFlag) return;
+      const now = new Date();
+      await tx.update(leads).set({ dncFlag: true, nextFollowUpAt: null, updatedAt: now }).where(eq(leads.id, id));
+      await tx.update(tasks).set({ doneAt: now }).where(and(eq(tasks.leadId, id), isNull(tasks.doneAt)));
+      await recordEvent(tx, { workspaceId: ws, type: 'lead.updated', subjectType: 'lead', subjectId: id, actorId: user.id, payload: { field: 'dncFlag', from: false, to: true } });
+      await logActivity(tx, { workspaceId: ws, type: 'system', leadId: id, actorId: user.id, body: 'Lead marked Do-Not-Call (DNC); open follow-up tasks cancelled.' });
+    });
+  } catch {
+    return { ok: false, error: 'Could not mark lead as DNC.' };
+  }
   return done(id);
 }
 

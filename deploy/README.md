@@ -65,6 +65,9 @@ convenience.
 | `nginx.conf` | same, after certbot | HTTPS, `www` → apex, HTTP → HTTPS. |
 | `remote-deploy.sh` | shipped per deploy | The server half of `tools/deploy.sh`. |
 | `backup.sh` | `/srv/remassist/shared/` | Nightly `pg_dump`, 14 local dailies, optional rclone offsite. |
+| `run-sla-watchdog.sh` | crontab (`*/5 * * * *`) | 5-min speed-to-lead breach & 15-min coverage-gap watchdog. |
+| `run-sla-weekly.sh` | crontab (`30 11 * * 1` ET) | Weekly Monday 11:30 AM ET SLA performance summary. |
+| `run-sla-monthly.sh` | crontab (`0 9 1 * *` ET) | Monthly `$10`/appointment commission & uptime-credit summary. |
 
 ## Departures from MIGRATION-PLAN §4.5
 

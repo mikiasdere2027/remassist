@@ -155,6 +155,13 @@
       "when": 1788892700000,
       "tag": "0021_crm_invoicing",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1788892800000,
+      "tag": "0022_crm_sla",
+      "breakpoints": true
     }
   ]
 }

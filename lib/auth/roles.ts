@@ -9,7 +9,7 @@
  * users table. Everyone else is a manager, invited by that admin.
  */
 
-export const ROLES = ['admin', 'manager'] as const;
+export const ROLES = ['admin', 'manager', 'agent'] as const;
 export type Role = (typeof ROLES)[number];
 
 export function isRole(v: unknown): v is Role {
@@ -39,13 +39,21 @@ export function canDelete(_role: Role): boolean {
   return false;
 }
 
-/** Both roles work the pipeline — that is what a manager is for. */
+/** All active CRM roles work the pipeline inside the CRM. */
 export function canEditLeads(role: Role): boolean {
-  return role === 'admin' || role === 'manager';
+  return role === 'admin' || role === 'manager' || role === 'agent';
 }
 
-/** Both roles may read leads and export them. */
+/** All active CRM roles may read leads inside the CRM. */
 export function canViewLeads(role: Role): boolean {
+  return role === 'admin' || role === 'manager' || role === 'agent';
+}
+
+/**
+ * Exporting CSVs/reports outside the CRM (Section 6 data security).
+ * REM agents work strictly inside the CRM with zero export permissions.
+ */
+export function canExportData(role: Role): boolean {
   return role === 'admin' || role === 'manager';
 }
 
