@@ -1,6 +1,9 @@
 import 'server-only';
 import { cookies, headers as requestHeaders } from 'next/headers';
+import { API_URL } from './base-url';
 import { ApiError, readApiResponse } from './errors';
+
+export { API_URL };
 
 /**
  * Calling the backend from server components, route handlers and server
@@ -10,8 +13,6 @@ import { ApiError, readApiResponse } from './errors';
  * Browser code uses lib/api/client.ts instead (same paths, via the /api/v1
  * proxy in next.config.ts).
  */
-export const API_URL = (process.env.API_URL || 'http://localhost:4000').replace(/\/$/, '');
-
 type Init = Omit<RequestInit, 'body'> & {
   /** JSON-serialised for you. */
   body?: unknown;

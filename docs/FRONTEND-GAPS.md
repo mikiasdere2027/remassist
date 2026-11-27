@@ -119,3 +119,13 @@ JSON-LD coverage, `poweredByHeader: false`, no secrets committed.
   the backend). Browser checks added under `tests/e2e/`. Still open:
   `deploy/` (incl. `set-admin-password.mjs`) belongs to the old single-app
   deploy and must be replaced when the VPS moves to the frontend + API setup.
+- **2026-11-27, deploy tooling for two apps:** `deploy/` no longer assumes this
+  app owns a database. `remote-deploy.sh` has no migrations/seeds, requires
+  `API_URL`, refuses to build while the backend is down, and smoke-tests
+  `/api/health?deep=1` (new: the site is up and reaches the backend); the
+  provisioning scripts write `API_URL` + `REVALIDATE_SECRET` instead of Postgres
+  and Auth.js settings, and the old Auth.js/Postgres helpers
+  (`ensure-auth-env.sh`, `preflight-auth.sh`, `set-admin-password.mjs`,
+  `backup.sh`) are gone (backups: `remassist-backend/scripts`). **Not run on a
+  real server**: only syntax-checked, with the new `.env` block exercised in a
+  temp folder; the first real deploy should be watched.

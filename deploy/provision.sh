@@ -46,7 +46,7 @@ log "Base packages"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq curl ca-certificates gnupg ufw fail2ban unattended-upgrades \
-                       postgresql postgresql-contrib certbot acl >/dev/null
+                       certbot acl >/dev/null
 dpkg-reconfigure -f noninteractive unattended-upgrades
 
 # ── Node 22 LTS ─────────────────────────────────────────────────────────────
@@ -72,38 +72,11 @@ install -d -o deploy -g deploy -m 2775 "$SHARED/uploads"
 install -d -o deploy -g deploy -m 2775 "$SHARED/isr-cache"
 install -d -o root   -g root   -m 755  /var/www/certbot
 
-# ── Postgres (§4.3) ─────────────────────────────────────────────────────────
-log "Postgres"
-if sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='remassist'" | grep -q 1; then
-  skip "role remassist already exists — leaving it and its password alone"
-  DB_PASS=""
-else
-  DB_PASS="$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)"
-  sudo -u postgres psql -v ON_ERROR_STOP=1 >/dev/null <<SQL
-CREATE ROLE remassist WITH LOGIN PASSWORD '$DB_PASS';
-CREATE DATABASE remassist OWNER remassist;
-SQL
-  sudo -u postgres psql -v ON_ERROR_STOP=1 -d remassist >/dev/null <<'SQL'
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-GRANT ALL ON SCHEMA public TO remassist;
-SQL
-fi
-
-# Never listen on anything but loopback. ufw also blocks 5432, but defence in
-# depth costs nothing here.
-PG_CONF="$(sudo -u postgres psql -tAc 'SHOW config_file')"
-if ! grep -qE "^listen_addresses *= *'localhost'" "$PG_CONF"; then
-  sed -i "s/^#\?listen_addresses.*/listen_addresses = 'localhost'/" "$PG_CONF"
-  systemctl restart postgresql
-fi
-echo "  listening on: $(ss -lntH 'sport = :5432' | awk '{print $4}' | paste -sd' ')"
-
 # ── shared/.env ─────────────────────────────────────────────────────────────
 log "Environment file"
 if [ -f "$SHARED/.env" ]; then
   skip "$SHARED/.env exists — not touching it"
 else
-  [ -n "$DB_PASS" ] || { echo "the postgres role predates this .env; set DATABASE_URL by hand" >&2; DB_PASS="SET_ME"; }
   cat > "$SHARED/.env" <<ENV
 # Rem Assist production environment. Read by systemd (EnvironmentFile) and by
 # deploy/remote-deploy.sh at build time. NEVER commit this file.
@@ -111,7 +84,13 @@ NODE_ENV=production
 PORT=3000
 HOSTNAME=127.0.0.1
 
-DATABASE_URL=postgres://remassist:$DB_PASS@localhost:5432/remassist
+# The backend (remassist-backend, Docker) owns the database, sign-in, email and
+# lead alerts; this app only talks to its API. Backend address, as seen from
+# THIS server (it listens on loopback only):
+API_URL=http://127.0.0.1:4000
+# Shared secret that lets the backend refresh pages when content is edited.
+# The SAME value must be REVALIDATE_SECRET in the backend's .env.
+REVALIDATE_SECRET=$(openssl rand -hex 32)
 
 NEXT_PUBLIC_SITE_URL=$SITE_URL
 NEXT_PUBLIC_CONSENT_MODE=opt-in
@@ -125,21 +104,6 @@ NEXT_PUBLIC_GA_ID=
 # The tag and the events both stay off unless this says exactly 'production',
 # and it is read at BUILD time — see the ordering note in remote-deploy.sh.
 NEXT_PUBLIC_ANALYTICS_ENV=production
-# Unset = lead notifications are skipped silently (lib/notify.ts).
-LEAD_WEBHOOK_URL=
-
-# ── Admin sign-in (Auth.js) ────────────────────────────────────────────────
-# Without AUTH_SECRET the admin is unreachable rather than unprotected, which
-# is the right way round to fail. Generate with: openssl rand -base64 32
-AUTH_SECRET=
-AUTH_URL=$SITE_URL
-
-# Resend sends the sign-in link and code. The sending domain MUST be a
-# subdomain (auth.<domain>) verified in Resend — never the apex, whose MX/SPF/
-# DKIM belong to Microsoft 365 and will break mail flow if touched.
-# Unset = nobody can sign in to /admin.
-AUTH_RESEND_KEY=
-AUTH_EMAIL_FROM=Rem Assist <signin@auth.remconnect.io>
 ENV
   # 0640, not 0600: deploy/remote-deploy.sh runs as $ADMIN_USER and has to
   # source this file to get NEXT_PUBLIC_* into the build. The deploy group is

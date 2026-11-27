@@ -9,9 +9,10 @@
 # does is `sudo systemctl restart remassist`, which /etc/sudoers.d/remassist
 # grants explicitly and passwordlessly.
 #
-# MIGRATION-PLAN.md §12. The ordering matters and is not arbitrary:
-# tests and migrations both run BEFORE the symlink swap, so a failure of either
-# leaves the previous release serving untouched.
+# MIGRATION-PLAN.md §12. The ordering matters and is not arbitrary: the backend
+# check, tests and build all run BEFORE the symlink swap, so a failure of any of
+# them leaves the previous release serving untouched. (Database migrations are
+# the backend's: remassist-backend/scripts/deploy.sh, run first.)
 
 set -euo pipefail
 
@@ -107,43 +108,28 @@ set -a
 . "$SHARED/.env"
 set +a
 
-# ── Migrate and seed, BEFORE the build ─────────────────────────────────────
-# This has to precede `next build`, not follow it. /faq, /reviews and
-# /blog/[slug] read these tables while prerendering — generateStaticParams
-# queries `posts` — so building against an unmigrated database fails with
-# `relation "posts" does not exist`. It did exactly that once; the build step
-# aborts before the symlink swap, so the live site stayed on the previous
-# release, which is the one thing that went right about it.
-#
-# The order this creates is worth being explicit about: the schema is changed
-# while the OLD code is still serving. That is safe only because every
-# migration here is additive — new tables, new nullable or defaulted columns —
-# so code that predates them ignores them. A migration that drops or narrows
-# anything would break the running release the moment it applied, and would
-# need the change split into an expand step and a later contract step instead.
-#
-# The seed runs here too, for the same reason and one more: a build that
-# prerenders /faq against empty tables produces pages with no content and
-# reports success.
-if [ -n "${DATABASE_URL:-}" ]; then
-  log "drizzle-kit migrate"
-  npx drizzle-kit migrate
-
-  # Safe on every deploy by construction, not by care: both seeds are
-  # insert-only and match on natural keys, so they add what is missing and
-  # cannot overwrite anything edited in the admin.
-  log "content seed"
-  node db/seed-content.mjs
-
-  # The rate tables were never seeded on the server, which is why the Rates
-  # screen read as empty there while the local database had figures in it. The
-  # quote calculator does not read these yet — §6.3 — but the admin does, and
-  # an empty price list on the box that serves the site is indistinguishable
-  # from a broken one.
-  log "rate seed"
-  node db/seed-rates.mjs
+# ── The backend must be up BEFORE the build ─────────────────────────────────
+# This app no longer owns a database: migrations, seeds and every admin write
+# live in the backend (remassist-backend, Docker; its scripts/deploy.sh). It has
+# to be deployed FIRST, for two reasons:
+#   1. `next build` prerenders /faq, /reviews, /blog/[slug] and /pricing from the
+#      API. With the API down they would be built from the bundled seed content
+#      and the deploy would report success on stale pages.
+#   2. A release that needs a new endpoint must find it already there.
+# API_URL and REVALIDATE_SECRET come from shared/.env (the secret is shared with
+# the backend so its content edits can refresh pages without a rebuild).
+[ -n "${API_URL:-}" ] || fail "API_URL is not set in $SHARED/.env (e.g. http://127.0.0.1:4000)"
+[ -n "${REVALIDATE_SECRET:-}" ] || warn "REVALIDATE_SECRET is not set in $SHARED/.env — content edits will only reach the site on its hourly refresh"
+if [ "${SKIP_API_CHECK:-0}" = "1" ]; then
+  warn "skipping the backend check (SKIP_API_CHECK=1)"
 else
-  warn "DATABASE_URL unset — skipping migrations and seeds"
+  log "Backend ready? ($API_URL)"
+  api_ok=0
+  for _ in $(seq 1 15); do
+    if curl -fsS -o /dev/null -m 5 "${API_URL%/}/v1/health/ready"; then api_ok=1; break; fi
+    sleep 2
+  done
+  [ "$api_ok" = 1 ] || fail "the backend does not answer at $API_URL/v1/health/ready — deploy it first (remassist-backend: scripts/deploy.sh)"
 fi
 
 log "next build"
@@ -191,19 +177,20 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
-# The admin sign-in page, checked separately and only once the app is up.
-#
-# `/` renders fine with a broken admin: it touches no session and no Auth.js
-# config. So a missing or empty AUTH_SECRET made Auth.js refuse to initialise,
-# /admin answered 500, and this script still reported a successful deploy — the
-# worst kind of green. AUTH_SECRET is written empty by provision.sh and has to
-# be filled in by hand, so this is the likely failure, not a hypothetical one.
-#
-# A public page by design (signed-out visitors must reach it), so a 200 here
-# discloses nothing that a browser could not already see.
+# The deep health check: the site is up AND it can reach the backend and its
+# database. `/` renders fine with the API down (public pages fall back to the
+# bundled seed content), so a plain page fetch would call a broken release good.
+if [ "$ok" = 1 ]; then
+  if ! curl -fsS -o /dev/null -m 8 "${HEALTH_URL%/}/api/health?deep=1"; then
+    warn "the site is up but cannot reach the backend — check API_URL in shared/.env and that the backend is running"
+    ok=0
+  fi
+fi
+# The admin sign-in page too: a public page by design, and the first thing a
+# signed-out team member opens.
 if [ "$ok" = 1 ]; then
   if ! curl -fsS -o /dev/null -m 5 "${HEALTH_URL%/}/admin/signin"; then
-    warn "/ is up but /admin/signin is not — check AUTH_SECRET in shared/.env"
+    warn "/ is up but /admin/signin is not"
     ok=0
   fi
 fi
@@ -221,8 +208,8 @@ if [ "$ok" != 1 ]; then
 fi
 
 # ── Prune ───────────────────────────────────────────────────────────────────
-# node_modules is ~600 MB per release and is only needed for a future
-# drizzle-kit run, which only ever happens against the newest release.
+# node_modules is ~600 MB per release and is only needed to build and test that
+# release, so older ones can drop it.
 for old in $(ls -1dt "$RELEASES"/*/ 2>/dev/null | tail -n +2); do
   rm -rf "${old}node_modules"
 done

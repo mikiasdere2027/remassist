@@ -72,23 +72,11 @@ install -d -o "$APP_USER" -g "$APP_USER" -m 2775 "$SHARED/uploads"
 install -d -o "$APP_USER" -g "$APP_USER" -m 2775 "$SHARED/isr-cache"
 install -d -o root    -g root    -m 755         /var/www/certbot
 
-# ── Postgres: own role + database ────────────────────────────────────────────
-log "Postgres role/db $APP_USER"
-DB_PASS=""
-if sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='$APP_USER'" | grep -q 1; then
-  skip "role exists — leaving it alone"
-else
-  DB_PASS="$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)"
-  sudo -u postgres psql -qc "CREATE ROLE $APP_USER LOGIN PASSWORD '$DB_PASS'"
-fi
-sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$APP_USER'" | grep -q 1 \
-  || sudo -u postgres createdb -O "$APP_USER" "$APP_USER"
 # ── shared/.env ──────────────────────────────────────────────────────────────
 log "Environment file ($SHARED/.env)"
 if [ -f "$SHARED/.env" ]; then
   skip "exists — not touching it"
 else
-  [ -n "$DB_PASS" ] || { echo "the role predates this .env; set DATABASE_URL by hand" >&2; DB_PASS="SET_ME"; }
   cat > "$SHARED/.env" <<ENV
 # Rem Assist production environment (ISOLATED variant — shared box).
 # Read by systemd (EnvironmentFile) and by deploy/remote-deploy.sh at build
@@ -97,7 +85,13 @@ NODE_ENV=production
 PORT=$APP_PORT
 HOSTNAME=127.0.0.1
 
-DATABASE_URL=postgres://$APP_USER:$DB_PASS@localhost:5432/$APP_USER
+# The backend (remassist-backend, Docker) owns the database, sign-in, email and
+# lead alerts; this app only talks to its API. Backend address, as seen from
+# THIS server (it listens on loopback only):
+API_URL=http://127.0.0.1:4000
+# Shared secret that lets the backend refresh pages when content is edited.
+# The SAME value must be REVALIDATE_SECRET in the backend's .env.
+REVALIDATE_SECRET=$(openssl rand -hex 32)
 
 NEXT_PUBLIC_SITE_URL=$SITE_URL
 NEXT_PUBLIC_CONSENT_MODE=opt-in
@@ -111,21 +105,6 @@ NEXT_PUBLIC_GA_ID=
 # The tag and the events both stay off unless this says exactly 'production',
 # and it is read at BUILD time — see the ordering note in remote-deploy.sh.
 NEXT_PUBLIC_ANALYTICS_ENV=production
-# Unset = lead notifications are skipped silently (lib/notify.ts).
-LEAD_WEBHOOK_URL=
-
-# ── Admin sign-in (Auth.js) ────────────────────────────────────────────────
-# Without AUTH_SECRET the admin is unreachable rather than unprotected, which
-# is the right way round to fail. Generate with: openssl rand -base64 32
-AUTH_SECRET=
-AUTH_URL=$SITE_URL
-
-# Resend sends the sign-in link and code. The sending domain MUST be a
-# subdomain (auth.<domain>) verified in Resend — never the apex, whose MX/SPF/
-# DKIM belong to Microsoft 365 and will break mail flow if touched.
-# Unset = nobody can sign in to /admin.
-AUTH_RESEND_KEY=
-AUTH_EMAIL_FROM=Rem Assist <signin@auth.remconnect.io>
 ENV
   chown "$APP_USER:$APP_USER" "$SHARED/.env"
   chmod 640 "$SHARED/.env"     # 0640, not 0600: remote-deploy.sh ($ADMIN_USER) must read it
@@ -138,8 +117,7 @@ cat > /etc/systemd/system/remassist.service <<UNIT
 # Single instance, deliberately; self-hosted ISR writes the cache locally.
 [Unit]
 Description=Rem Assist Next.js
-After=network.target postgresql.service
-Wants=postgresql.service
+After=network.target
 
 [Service]
 Type=simple
@@ -210,7 +188,7 @@ nginx -t && systemctl reload nginx
 
 log "Verify"
 echo "  app port      : $APP_PORT (upstream remassist_app)"
-echo "  DATABASE_URL  : postgres://$APP_USER:****@localhost:5432/$APP_USER"
+echo "  API_URL       : set in $SHARED/.env (the backend must be running there)"
 echo
 cat <<'NEXT'
   Next:

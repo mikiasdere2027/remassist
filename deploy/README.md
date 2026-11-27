@@ -5,6 +5,21 @@ live in `MIGRATION-PLAN.md` §4 (server setup) and §12 (release pipeline); this
 file is the operational summary and the parts that differ from the plan because
 of what the real box turned out to be.
 
+## Two apps: deploy the backend first
+
+Rem Assist is two apps. This folder deploys the **site** (Next.js). The
+**backend** (NestJS API, PostgreSQL, private contract files) runs in Docker from
+`remassist-backend` and has its own runbook, `remassist-backend/docs/DEPLOY.md`,
+with `scripts/deploy.sh`, `scripts/db-backup.sh` and `scripts/db-restore.sh`.
+
+Order on every release that touches both: **backend, then site.** The site's
+build reads the API and `remote-deploy.sh` refuses to build if the backend is
+not answering. Nothing in this folder talks to a database any more.
+
+The site needs two lines in `shared/.env` (provisioning writes them):
+`API_URL=http://127.0.0.1:4000` and `REVALIDATE_SECRET=` (the same value as in
+the backend's `.env`, so content edits refresh pages without a rebuild).
+
 ## The short version
 
 ```bash
@@ -12,8 +27,9 @@ of what the real box turned out to be.
 ```
 
 That is the whole thing once the box is provisioned. It packs the working tree,
-ships it, builds on the server, runs lint + typecheck + the 460-case suite,
-applies migrations, swaps the release symlink, restarts, smoke-tests, and rolls
+ships it, builds on the server, runs lint + typecheck + the unit suite, checks
+the backend answers, swaps the release symlink, restarts, smoke-tests (including
+the site reaching its backend), and rolls
 back on its own if the smoke test fails.
 
 ## Access
@@ -39,7 +55,6 @@ way in. **If you lose the key, recovery is Hostinger's console, not SSH.**
     .env            secrets; 0640 deploy:deploy; never committed
     uploads/        the 142 MB of interview video, outside every release
     isr-cache/      survives deploys, so a release does not start cold
-    backup.sh
 ```
 
 `current` points at the **standalone bundle**, not the release root — the
@@ -64,7 +79,7 @@ convenience.
 | `nginx-bootstrap.conf` | `/etc/nginx/sites-available/remassist` | HTTP only. Used before a certificate exists. |
 | `nginx.conf` | same, after certbot | HTTPS, `www` → apex, HTTP → HTTPS. |
 | `remote-deploy.sh` | shipped per deploy | The server half of `tools/deploy.sh`. |
-| `backup.sh` | `/srv/remassist/shared/` | Nightly `pg_dump`, 14 local dailies, optional rclone offsite. |
+| (backups) | | Moved to the backend: `remassist-backend/scripts/db-backup.sh` covers the database **and** the private contract files. |
 
 ## Departures from MIGRATION-PLAN §4.5
 
