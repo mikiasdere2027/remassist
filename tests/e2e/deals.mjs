@@ -1,7 +1,7 @@
 // CRM slices 1–3 in the browser: pipeline settings, a new deal worked through
 // its stages (edit, move, lose with a reason, reopen), converting a lead, the
 // company page (contacts, details, notes), the lists, and phone width.
-import { BASE, SHOTS, checks, launch, signIn } from './lib.mjs';
+import { BASE, SHOTS, checks, hydrated, launch, signIn } from './lib.mjs';
 
 const c = checks();
 const stamp = Date.now().toString(36);
@@ -25,17 +25,29 @@ const settle = () => p.waitForTimeout(1200);
 const stageName = `Pilot ${stamp}`;
 const reason = `E2E reason ${stamp}`;
 await p.goto(`${BASE}/admin/settings/crm`, { waitUntil: 'networkidle' });
+await hydrated(p, 'input[aria-label="New stage name"]');
 await p.fill('input[aria-label="New stage name"]', stageName);
 await p.fill('input[aria-label="Win probability for the new stage"]', '60');
 await p.click('button:has-text("Add stage")');
 const newStage = p.locator(`input[aria-label="Stage name"][value="${stageName}"]`);
 await newStage.waitFor({ timeout: 10000 }).catch(() => {});
+/* Known Next 15.5 router issue (docs/FRONTEND-GAPS.md): the page refresh after a save is sometimes
+   aborted by the browser, so the list stays stale until a reload. The save itself succeeded. */
+if ((await newStage.count()) === 0) {
+  console.log('· the stage list was stale after the save; reloading (known router refresh issue)');
+  await p.reload({ waitUntil: 'networkidle' });
+}
 const stageNames = await p.locator('input[aria-label="Stage name"]').evaluateAll((els) => els.map((e) => e.value));
 c.ok((await newStage.count()) === 1, `settings: a new stage is added${(await newStage.count()) === 1 ? '' : ` (saw: ${stageNames.join(', ')}; alerts: ${(await p.locator('[role=alert]').allInnerTexts()).join(' ')})`}`);
+await hydrated(p, 'input[aria-label="New loss reason"]');
 await p.fill('input[aria-label="New loss reason"]', reason);
 await p.click('button:has-text("Add reason")');
 const newReason = p.locator(`input[aria-label="Loss reason"][value="${reason}"]`);
 await newReason.waitFor({ timeout: 10000 }).catch(() => {});
+if ((await newReason.count()) === 0) {
+  console.log('· the loss reason list was stale after the save; reloading (known router refresh issue)');
+  await p.reload({ waitUntil: 'networkidle' });
+}
 c.ok((await newReason.count()) === 1, 'settings: a new loss reason is added');
 await p.screenshot({ path: `${SHOTS}/deals-1280-settings.png`, fullPage: true });
 

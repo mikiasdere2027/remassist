@@ -45,9 +45,26 @@ export function checks() {
   };
 }
 
+/**
+ * Waits until React has attached to the element, i.e. its handlers work. A click
+ * or submit before that does nothing (or, on a form, submits natively as a GET),
+ * which is what made slow runs flaky. networkidle alone does not guarantee it.
+ */
+export async function hydrated(page, selector, timeout = 20000) {
+  await page.waitForFunction(
+    (sel) => {
+      const el = document.querySelector(sel);
+      return !!el && Object.keys(el).some((k) => k.startsWith('__reactProps$') || k.startsWith('__reactFiber$'));
+    },
+    selector,
+    { timeout },
+  );
+}
+
 export async function signIn(page, who = ADMIN) {
   if (!who.password) throw new Error('Set E2E_PASS (and E2E_USER) to a dev admin account.');
-  await page.goto(`${BASE}/admin/signin`);
+  await page.goto(`${BASE}/admin/signin`, { waitUntil: 'networkidle' });
+  await hydrated(page, '#admin-password');
   await page.fill('#admin-username', who.username);
   await page.fill('#admin-password', who.password);
   await Promise.all([
