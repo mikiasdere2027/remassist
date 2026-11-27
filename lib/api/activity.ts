@@ -26,6 +26,15 @@ export interface ActivityPage {
  */
 export const ACTIVITY_ENTITIES: Array<{ value: string; label: string; adminOnly?: boolean }> = [
   { value: 'lead', label: 'Leads' },
+  { value: 'deal', label: 'Deals' },
+  { value: 'proposal', label: 'Proposals' },
+  { value: 'engagement', label: 'Customers' },
+  { value: 'company', label: 'Companies' },
+  { value: 'contact', label: 'Contacts' },
+  { value: 'task', label: 'Tasks' },
+  { value: 'pipeline_stage', label: 'Pipeline stages' },
+  { value: 'loss_reason', label: 'Loss reasons' },
+  { value: 'crm_settings', label: 'CRM settings' },
   { value: 'post', label: 'Posts' },
   { value: 'faq_item', label: 'FAQ items' },
   { value: 'faq_group', label: 'FAQ groups' },
@@ -47,6 +56,14 @@ export function activityHref(e: Pick<ActivityEntry, 'entity' | 'entityId'>): str
   switch (e.entity) {
     case 'lead':
       return `/admin/leads/${e.entityId}`;
+    case 'deal':
+      return `/admin/deals/${e.entityId}`;
+    case 'proposal':
+      return `/admin/proposals/${e.entityId}`;
+    case 'engagement':
+      return `/admin/customers/${e.entityId}`;
+    case 'company':
+      return `/admin/companies/${e.entityId}`;
     case 'post':
       return `/admin/content/posts/${e.entityId}`;
     case 'faq_item':

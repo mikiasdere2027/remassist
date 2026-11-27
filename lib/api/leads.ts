@@ -194,6 +194,13 @@ export interface TaskListItem extends LeadTask {
   leadName: string | null;
   leadEmail: string | null;
   leadCompany: string | null;
+  /** A task belongs to one lead, deal, customer or company. */
+  dealId: string | null;
+  dealTitle: string | null;
+  companyId: string | null;
+  companyName: string | null;
+  engagementId: string | null;
+  engagementTitle: string | null;
 }
 
 export interface TaskPage {

@@ -129,6 +129,19 @@ describe.skipIf(!existsSync(SRC))('frontend ↔ backend contract', () => {
     );
   });
 
+  it('offers every entity the backend writes to the activity log as a filter', () => {
+    const recorded = new Set<string>();
+    for (const file of walk(SRC)) {
+      if (/\.spec\.ts$/.test(file)) continue;
+      for (const m of readFileSync(file, 'utf8').matchAll(/entity:\s*'([a-z_]+)'/g)) recorded.add(m[1]);
+    }
+    const offered = new Set(
+      [...readFileSync(join(ROOT, 'lib/api/activity.ts'), 'utf8').matchAll(/value: '([a-z_]+)'/g)].map((m) => m[1]),
+    );
+    expect([...recorded].filter((e) => !offered.has(e)).sort()).toEqual([]);
+    expect(recorded.size).toBeGreaterThan(15);
+  });
+
   it('shares the CRM lists with the backend', () => {
     const dto = B('src/modules/leads/dto/lead.dto.ts');
     const crm = B('src/database/schema/crm.ts');

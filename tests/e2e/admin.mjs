@@ -90,5 +90,21 @@ for (const path of PAGES) {
   c.ok(h1 && !bad && over <= 1, `390px ${path} → "${h1.slice(0, 30)}" (overflow ${over}px)`);
 }
 
+/* On a phone the sidebar shows icons only: every link must still have a name for screen readers
+   (the label is hidden visually, not removed), and the sign-out and "View site" controls too. */
+await m.goto(BASE + '/admin', { waitUntil: 'networkidle' });
+const unnamed = await m.evaluate(() => [...document.querySelectorAll('nav[aria-label="Admin sections"] a, [class*="viewSite"], [class*="signoutRow"] button')]
+  .filter((el) => {
+    const span = el.querySelector('span');
+    const named = (el.getAttribute('aria-label') || '').trim() || (span && span.textContent.trim() && getComputedStyle(span).display !== 'none');
+    return !named;
+  }).map((el) => (el.getAttribute('href') || el.textContent || el.className).toString().slice(0, 40)));
+c.ok(unnamed.length === 0, `390px: every sidebar link has an accessible name${unnamed.length ? ` (missing on: ${unnamed.join(', ')})` : ''}`);
+
+/* An unknown record shows the admin's own "Not found", not the public site's 404. */
+await m.goto(`${BASE}/admin/deals/00000000-0000-4000-8000-000000000000`, { waitUntil: 'networkidle' });
+const nf = await m.locator('body').innerText();
+c.ok(/Not found/.test(nf) && !/Get an estimate|That page has moved/.test(nf), 'an unknown deal shows the admin "Not found", with no public site header');
+
 await browser.close();
 c.done();

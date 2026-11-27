@@ -3,6 +3,7 @@ import { apiServer } from '@/lib/api/server';
 import type { TaskPage } from '@/lib/api/leads';
 import { requireUser } from '@/lib/auth/require';
 import { PRIORITY_LABELS, type Priority } from '@/lib/crm/display';
+import { taskTarget } from '@/lib/crm/tasks';
 import { LocalTime, TaskCheck } from '../leads/[id]/LeadClient';
 import AdminTopbar from '../AdminTopbar';
 import admin from '../../admin.module.css';
@@ -64,22 +65,19 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
             {rows.length === 0 ? (
               <p className={admin.empty}>
                 <strong>{view === 'done' ? 'Nothing completed yet' : view === 'overdue' ? 'Nothing overdue' : 'No open tasks'}</strong>
-                Tasks are added from a lead&rsquo;s page, under the tabs.
+                Tasks are added from the page of a lead, deal, customer or company, under its tabs.
               </p>
             ) : (
               <ul className={s.leadList}>
                 {rows.map((t) => {
                   const overdue = !t.doneAt && t.dueAt && new Date(t.dueAt).getTime() < now;
+                  const target = taskTarget(t);
                   return (
                     <li key={t.id} className={`${s.taskRow} ${t.doneAt ? s.taskDone : ''}`}>
                       <TaskCheck id={t.id} title={t.title} done={Boolean(t.doneAt)} />
                       <div className={s.leadWhoText}>
                         <span className={s.taskTitle}>{t.title}</span>
-                        {t.leadId && (
-                          <Link className={s.leadSub} href={`/admin/leads/${t.leadId}`}>
-                            {t.leadName || t.leadEmail}{t.leadCompany ? ` · ${t.leadCompany}` : ''}
-                          </Link>
-                        )}
+                        {target && <Link className={s.leadSub} href={target.href}>{target.label}</Link>}
                       </div>
                       <span className={`${s.leadCellValue} ${overdue ? s.overdue : ''}`}>
                         {t.doneAt ? <>Done <LocalTime iso={t.doneAt} /></>

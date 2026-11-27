@@ -1729,7 +1729,10 @@ select.control { padding-right: 36px; }
   .sidebar { width: 76px; padding: 16px 10px; }
   .sidebarBrand { justify-content: center; padding: 2px 0 16px; }
   .sidebarBrand img { height: 26px; }
-  .brandLabel, .navGroupTitle, .navLink span, .navBadge, .who { display: none; }
+  .brandLabel, .navGroupTitle, .navBadge, .who { display: none; }
+  /* Icon-only sidebar: the label stays for screen readers (not display:none). */
+  .navLink, .viewSite, .signoutRow { position: relative; }
+  .navLink span, .viewSite span, .signoutRow span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   .navGroup { margin-top: 14px; }
   .navLink { justify-content: center; padding: 12px 0; border-left: 0; }
   .navLink.active { border-left: 0; }
@@ -3278,8 +3281,9 @@ a.glanceRow:hover { color: var(--blue-700); }
   .sidebar { width: 76px; padding: 16px 10px; }
   .sidebarBrand { justify-content: center; padding: 2px 0 16px; }
   .sidebarBrand img { height: 26px; }
-  .brandLabel, .navGroupTitle, .navLink span, .navBadge,
-  .viewSite span, .signoutRow span { display: none; }
+  .brandLabel, .navGroupTitle, .navBadge { display: none; }
+  .navLink, .viewSite, .signoutRow { position: relative; }
+  .navLink span, .viewSite span, .signoutRow span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   .navGroup { margin-top: 14px; }
   .navLink { justify-content: center; padding: 12px 0; border-left: 0; }
   .navLink.active { border-left: 0; border-radius: var(--r-sm); }
