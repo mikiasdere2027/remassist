@@ -47,14 +47,14 @@ function backendRoutes(): Set<string> {
 function frontendCalls(): Map<string, string> {
   const out = new Map<string, string>();
   const re =
-    /\b(apiServer|apiPublic|api\.(?:get|post|patch|put|delete))(?:<[^>]*>)?\(\s*(?:`([^`]*)`|'([^']*)')/g;
+    /\b(apiServer|apiPublic|api\.(?:get|post|patch|put|delete|upload))(?:<[^>]*>)?\(\s*(?:`([^`]*)`|'([^']*)')/g;
   for (const file of walk(ROOT)) {
     if (file.includes('/tests/') || /\.test\.tsx?$/.test(file)) continue;
     const src = readFileSync(file, 'utf8');
     for (const m of src.matchAll(re)) {
       const fn = m[1];
       const raw = m[2] ?? m[3];
-      const method = fn.startsWith('api.') ? fn.slice(4).toUpperCase() : 'GET';
+      const method = fn === 'api.upload' ? 'POST' : fn.startsWith('api.') ? fn.slice(4).toUpperCase() : 'GET';
       let path = raw
         .replace(/\$\{[^}]*$/, '') // a nested template (`${q ? `?q=…` : ''}`) cut at its inner backtick
         .replace(/\$\{(?:q|qs|query|search)\}$/, '') // a trailing query-string variable
@@ -136,6 +136,7 @@ describe.skipIf(!existsSync(SRC))('frontend ↔ backend contract', () => {
     expect(list('lib/crm/display.ts', 'CALL_OUTCOME_LABELS')).toEqual(list(dto, 'CALL_OUTCOMES'));
     expect(union('lib/api/leads.ts', 'TimelineType')).toEqual(list(crm, 'TIMELINE_TYPES'));
     expect(list('lib/crm/fields.ts', 'FIELD_TYPES')).toEqual(list(crm, 'CUSTOM_FIELD_TYPES'));
+    expect(list('lib/api/crm.ts', 'FILE_KINDS')).toEqual(list(B('src/database/schema/files.ts'), 'ATTACHMENT_KINDS'));
     const roles = /pgEnum\('user_role',\s*\[([^\]]*)\]/.exec(readFileSync(B('src/database/schema/auth.ts'), 'utf8'));
     expect(list('lib/auth/roles.ts', 'ROLES')).toEqual([...(roles?.[1] ?? '').matchAll(/'([^']+)'/g)].map((x) => x[1]));
   });

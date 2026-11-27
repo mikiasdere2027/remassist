@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, fromLocalInput, initials, responseClock } from './display';
+import { formatBytes, formatDuration, fromLocalInput, initials, responseClock } from './display';
 
 describe('crm display helpers', () => {
   it('formats durations compactly', () => {
@@ -29,5 +29,11 @@ describe('crm display helpers', () => {
     expect(fromLocalInput('2026-11-14T09:30', 300)?.toISOString()).toBe('2026-11-14T14:30:00.000Z');
     expect(fromLocalInput('tomorrow', 0)).toBeNull();
     expect(fromLocalInput('', 0)).toBeNull();
+  });
+
+  it('formats file sizes', () => {
+    expect(formatBytes(900)).toBe('900 B');
+    expect(formatBytes(2048)).toBe('2 KB');
+    expect(formatBytes(3.5 * 1024 * 1024)).toBe('3.5 MB');
   });
 });

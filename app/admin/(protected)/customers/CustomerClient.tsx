@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
 import type { ActionResult } from '../crm-actions';
-import { setEngagementStatus, setStepDone, updateContract, updateRoles, updateTerms } from './actions';
+import { archiveFile, setEngagementStatus, setStepDone, updateContract, updateRoles, updateTerms, uploadEngagementFile } from './actions';
 import admin from '../../admin.module.css';
 import s from '../crm.module.css';
 
@@ -206,5 +206,58 @@ export function ContractForm({ engagementId, values }: {
         <Msg state={state} pending={pending} />
       </div>
     </form>
+  );
+}
+
+/** Add a private file (a contract) to the customer. */
+export function UploadForm({ engagementId }: { engagementId: string }) {
+  const [state, formAction, pending] = useActionState(
+    (prev: ActionResult | null, fd: FormData) => uploadEngagementFile(engagementId, prev, fd),
+    null,
+  );
+  useRefreshOnOk(state);
+  const ref = useRef<HTMLFormElement>(null);
+  useEffect(() => { if (state?.ok) ref.current?.reset(); }, [state]);
+  return (
+    <form ref={ref} action={formAction} className={s.uploadRow}>
+      <label className={s.label} htmlFor="up-file">Add a file</label>
+      <input id="up-file" name="file" type="file" required accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg" />
+      <select name="kind" aria-label="What kind of file" className={s.select} defaultValue="contract">
+        <option value="contract">Contract</option>
+        <option value="proposal">Proposal</option>
+        <option value="invoice">Invoice</option>
+        <option value="other">Other</option>
+      </select>
+      <button type="submit" className={`${admin.btn} ${admin.btnPrimary}`} disabled={pending}>{pending ? 'Uploading…' : 'Upload'}</button>
+      <Msg state={state} pending={false} ok="Uploaded" />
+      <span className={s.cardNote}>PDF, Word, Excel, PNG or JPEG, up to 5 MB. Only signed-in staff can open them.</span>
+    </form>
+  );
+}
+
+/** Remove a file (archived, so it can be recovered). Asks once before removing. */
+export function RemoveFile({ fileId, name }: { fileId: string; name: string }) {
+  const router = useRouter();
+  const [armed, setArmed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  if (!armed) return <button type="button" className={s.doneToggle} onClick={() => setArmed(true)} aria-label={`Remove ${name}`}>Remove</button>;
+  return (
+    <span className={s.headerActions}>
+      <button
+        type="button"
+        className={s.doneToggle}
+        disabled={pending}
+        onClick={() => start(async () => {
+          const r = await archiveFile(fileId);
+          if (r.ok) router.refresh();
+          else setError(r.error);
+        })}
+      >
+        {pending ? 'Removing…' : 'Confirm remove'}
+      </button>
+      <button type="button" className={s.doneToggle} onClick={() => { setArmed(false); setError(null); }}>Keep</button>
+      {error && <span className={s.error} role="alert">{error}</span>}
+    </span>
   );
 }

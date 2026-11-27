@@ -152,7 +152,7 @@ export interface LeadDetail {
 }
 
 export type TimelineType =
-  | 'note' | 'call' | 'email' | 'meeting' | 'status_change' | 'owner_change' | 'stage_change' | 'system';
+  | 'note' | 'call' | 'email' | 'meeting' | 'status_change' | 'owner_change' | 'stage_change' | 'file' | 'system';
 
 /** One entry on a lead's timeline, newest first. */
 export interface TimelineItem {

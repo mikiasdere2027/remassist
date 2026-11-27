@@ -386,9 +386,37 @@ export interface EngagementPage {
   contacts: Contact[];
   timeline: TimelineItem[];
   tasks: LeadTask[];
+  files: CustomerFile[];
   progress: OnboardingProgress;
   renewal: RenewalState | null;
 }
+
+/** Kinds of private file on a customer (contracts first). */
+export const FILE_KINDS = ['contract', 'proposal', 'invoice', 'other'] as const;
+export type FileKind = (typeof FILE_KINDS)[number];
+export const FILE_KIND_LABELS: Record<FileKind, string> = {
+  contract: 'Contract',
+  proposal: 'Proposal',
+  invoice: 'Invoice',
+  other: 'File',
+};
+
+/** A private file on a customer. Opened only through fileUrl() by signed-in staff. */
+export interface CustomerFile {
+  id: string;
+  kind: FileKind;
+  name: string;
+  mime: string;
+  sizeBytes: number;
+  createdAt: string;
+  uploaderName: string | null;
+}
+
+/** Same limit the backend enforces (it answers 413 above it). */
+export const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
+/** Where the browser opens a private file: through the signed-in API proxy. */
+export const fileUrl = (id: string) => `/api/v1/admin/files/${id}`;
 
 /** A company's engagement, as listed on its page. */
 export interface EngagementSummary {
@@ -454,6 +482,9 @@ export const crmApi = {
     api.put(`/admin/customers/${id}/contract`, contract),
   setEngagementStatus: (id: string, status: string, reason?: string) =>
     api.post(`/admin/customers/${id}/status`, { status, ...(reason ? { reason } : {}) }),
+  uploadCustomerFile: (id: string, form: FormData) =>
+    api.upload<CustomerFile>(`/admin/customers/${id}/files`, form),
+  archiveFile: (fileId: string) => api.delete(`/admin/files/${fileId}`),
   setEngagementOwner: (id: string, ownerId: string | null) =>
     api.patch(`/admin/customers/${id}/owner`, { ownerId }),
 

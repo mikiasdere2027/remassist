@@ -447,6 +447,7 @@
 .uploadRow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 16px 22px; border-top: 1px solid var(--hairline); }
 .uploadRow .select { width: auto; min-width: 130px; }
 .uploadRow .label { margin: 0; }
+.uploadRow input[type="file"] { max-width: 100%; min-width: 0; }
 .fileList { list-style: none; margin: 0; padding: 0 22px; }
 .fileItem { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline); }
 .fileItem a { color: var(--blue-700); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }

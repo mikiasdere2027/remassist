@@ -3,22 +3,22 @@ import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth/require';
 import { isApiError } from '@/lib/api/errors';
 import { apiServer } from '@/lib/api/server';
-import { ENGAGEMENT_STATUSES, type EngagementPage } from '@/lib/api/crm';
+import { ENGAGEMENT_STATUSES, FILE_KIND_LABELS, fileUrl, type EngagementPage } from '@/lib/api/crm';
 import type { Assignee } from '@/lib/api/leads';
 import { ENGAGEMENT_STATUS_LABELS, rolesToText, seatCount } from '@/lib/crm/engagements';
 import { formatMoney } from '@/lib/crm/money';
-import { initials } from '@/lib/crm/display';
+import { formatBytes, initials } from '@/lib/crm/display';
 import { SERVICES } from '@/lib/services';
 import AdminTopbar from '../../AdminTopbar';
 import { BackLink, KV, TasksCard, TimelineCard } from '../../CrmParts';
 import { Composer, InlineSelect, LocalTime } from '../../leads/[id]/LeadClient';
-import { Checklist, ContractForm, RolesForm, StatusControl, TermsForm } from '../CustomerClient';
+import { Checklist, ContractForm, RemoveFile, RolesForm, StatusControl, TermsForm, UploadForm } from '../CustomerClient';
 import admin from '../../../admin.module.css';
 import s from '../../crm.module.css';
 
 /**
  * Customer — one engagement. Engagement (what they buy and who delivers it),
- * Contract (dates and renewal; files with CRM slice 6) and Delivery
+ * Contract (dates, renewal and private files) and Delivery
  * (onboarding) tabs; the company
  * and its people on the left; status, revenue and renewal on the right.
  */
@@ -168,6 +168,24 @@ export default async function CustomerPage({ params, searchParams }: {
                   engagementId={e.id}
                   values={{ startDate: e.startDate, contractEnd: e.contractEnd, renewalDate: e.renewalDate, noticeDays: e.noticeDays }}
                 />
+                <div className={s.cardHead} style={{ borderTop: '1px solid var(--hairline)' }}>
+                  <h3 className={s.cardTitle}>Files</h3>
+                  <span className={s.cardNote}>{e.files.length} {e.files.length === 1 ? 'file' : 'files'}</span>
+                </div>
+                {e.files.length > 0 && (
+                  <ul className={s.fileList}>
+                    {e.files.map((f) => (
+                      <li key={f.id} className={s.fileItem}>
+                        <a href={fileUrl(f.id)} target="_blank" rel="noopener">{f.name}</a>
+                        <RemoveFile fileId={f.id} name={f.name} />
+                        <span className={s.cardNote}>
+                          {FILE_KIND_LABELS[f.kind]} · {formatBytes(f.sizeBytes)} · {f.uploaderName?.trim() || 'Unknown'} · <LocalTime iso={f.createdAt} mode="date" />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <UploadForm engagementId={e.id} />
               </section>
             )}
 

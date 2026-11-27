@@ -1,6 +1,7 @@
-// CRM slice 5 in the browser: a won deal becomes a customer; its roles, terms,
+// CRM slices 5–6 in the browser: a won deal becomes a customer; its roles, terms,
 // contract and renewal, onboarding (the last step makes it Active), churn with
-// a reason (the company becomes a former customer), notes, the Customers
+// a reason (the company becomes a former customer), contract files (upload,
+// signed-in download, refused fakes, removal), notes, the Customers
 // list's views and counts, and phone width.
 import { BASE, SHOTS, checks, launch, signIn } from './lib.mjs';
 
@@ -69,6 +70,36 @@ await ok('text=Saved');
 await open(`${customerUrl.replace(BASE, '')}?tab=contract`);
 page = await text();
 c.ok(page.includes('30 days') && page.includes(`notice by ${day(-15)} (passed)`), 'renewal shows days left and the passed notice deadline');
+
+// 3b. Contract files: upload, open (signed in only), refuse a fake, remove
+const errorsBefore = errors.length;
+const pdf = Buffer.from('%PDF-1.4\n% e2e contract\n');
+await p.setInputFiles('#up-file', { name: `Acme MSA ${stamp}.pdf`, mimeType: 'application/pdf', buffer: pdf });
+await p.selectOption('select[name="kind"]', 'contract');
+await p.click('button:has-text("Upload")');
+await ok('text=Uploaded');
+await open(`${customerUrl.replace(BASE, '')}?tab=contract`);
+const link = p.locator(`a:has-text("Acme MSA ${stamp}.pdf")`);
+c.ok((await link.count()) === 1 && (await text()).includes('Contract · 24 B'), 'uploaded contract is listed with its kind and size');
+const href = await link.getAttribute('href');
+const got = await p.evaluate(async (u) => { const r = await fetch(u); return { status: r.status, type: r.headers.get('content-type'), body: await r.text() }; }, href);
+c.ok(got.status === 200 && got.type === 'application/pdf' && got.body.startsWith('%PDF'), 'the file opens for a signed-in user');
+const anonStatus = await (await browser.newContext()).request.get(BASE + href, { maxRedirects: 0 }).then((r) => r.status());
+c.ok(anonStatus === 401, `the file is refused when signed out (${anonStatus})`);
+await p.setInputFiles('#up-file', { name: 'contract.pdf', mimeType: 'application/pdf', buffer: Buffer.from([0x4d, 0x5a, 0x90, 0, 1, 2]) });
+await p.click('button:has-text("Upload")');
+await ok('[role=alert]');
+c.ok((await p.locator('[role=alert]').allInnerTexts()).join(' ').includes('Upload a PDF, Word, Excel, PNG or JPEG file.'), 'a renamed program is refused by its content');
+await p.click(`button[aria-label="Remove Acme MSA ${stamp}.pdf"]`);
+await p.click('button:has-text("Confirm remove")');
+await p.waitForTimeout(1500);
+await open(customerUrl.replace(BASE, ''));
+page = await text();
+c.ok(!(await p.locator(`a:has-text("Acme MSA ${stamp}.pdf")`).count()) && page.includes(`Uploaded Acme MSA ${stamp}.pdf`) && page.includes(`Removed Acme MSA ${stamp}.pdf`), 'removed file is gone; upload and removal are on the timeline');
+const after = await p.evaluate(async (u) => (await fetch(u)).status, href);
+c.ok(after === 404, 'a removed file no longer opens');
+/* The refused fake (400) and the removed file (404) were asked for on purpose. */
+errors.splice(errorsBefore, errors.length, ...errors.slice(errorsBefore).filter((e) => !/status of (400|404)/.test(e)));
 
 // 4. Onboarding: the last step makes the customer Active
 await open(`${customerUrl.replace(BASE, '')}?tab=delivery`);

@@ -80,3 +80,10 @@ export function fromLocalInput(value: string | null | undefined, offsetMin: numb
   const off = Number.isFinite(offsetMin) && Math.abs(offsetMin) <= 14 * 60 ? offsetMin : 0;
   return new Date(asUtc + off * 60_000);
 }
+
+/** A file size for people: 900 B, 2 KB, 3.5 MB. */
+export function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}

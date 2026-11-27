@@ -143,9 +143,15 @@ slice lands:
   pages' "Customer engagements" and derived Customer / Former customer /
   Prospect. Progress and renewal state come from the backend;
   `lib/crm/engagements.ts` only labels and formats.
+- **Wired (slice 6):** contract files on the customer's Contract tab (upload,
+  open, remove). Files are private: the backend checks the type from the
+  bytes, stores them in its private folder (Docker volume), and they open only
+  through the signed-in `/api/v1/admin/files/<id>`. Removing archives the row;
+  the bytes are kept. His `app/admin/(protected)/files/[id]` route and
+  `lib/crm/files.ts` are not needed (the backend does both).
 - **Not on this branch yet** (restored from `mikias/crm-phases-2-6` with their
-  slice): contract files, Reports and his dashboard numbers, lead automation
-  and the daily digest, the Calendly webhook.
+  slice): Reports and his dashboard numbers, lead automation and the daily
+  digest, the Calendly webhook.
 
 ### Browser tests
 

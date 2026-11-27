@@ -10,6 +10,8 @@ import { ApiError, readApiResponse } from './errors';
  * Throws ApiError (with `.issues` / `.fieldErrors()` for validation failures).
  */
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  /* FormData (a file upload) goes as multipart: the browser sets its boundary. */
+  const form = body instanceof FormData;
   let res: Response;
   try {
     res = await fetch(`/api/v1${path}`, {
@@ -17,9 +19,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       credentials: 'same-origin',
       headers: {
         accept: 'application/json',
-        ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+        ...(body === undefined || form ? {} : { 'content-type': 'application/json' }),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : form ? body : JSON.stringify(body),
     });
   } catch {
     throw new ApiError(0, null);
@@ -33,4 +35,6 @@ export const api = {
   patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
   delete: <T = void>(path: string) => request<T>('DELETE', path),
+  /** POST a multipart form (a file upload). */
+  upload: <T>(path: string, form: FormData) => request<T>('POST', path, form),
 };
