@@ -117,7 +117,7 @@ data now comes from the backend (`/v1/admin/leads/*`, `/v1/admin/tasks`):
   refuses requests without a same-site Origin; `lib/voice/rate-limit.ts`
   limits sessions per visitor.
 
-### CRM phases 2–6 (merged 2026-11-26, in progress)
+### CRM phases 2–6 (merged 2026-11-26, all wired 2026-11-27)
 
 Mikias's phases 2–6 (deals, customers, reports, automation, proposals) were
 merged on branch `crm-phases-2-6`. The backend builds them slice by slice
@@ -164,7 +164,11 @@ slice lands:
   The backend builds each table once for both the page and its CSV; his
   `lib/crm/reports*`, `reportTables` and export route are not needed. The
   range tabs are plain links (see FRONTEND-GAPS: in-app navigation stall).
-- **Not on this branch yet:** his legacy-status migration tool (slice 9).
+- **Slice 9:** his `tools/crm-migrate-legacy-statuses.mts` is now a backend
+  command (`npm run crm:migrate-legacy-statuses` in `remassist-backend`; dry
+  run by default). Nothing in this app talks to the database any more.
+
+All of Mikias's CRM phases 2–6 now run on the backend.
 
 ### Browser tests
 
