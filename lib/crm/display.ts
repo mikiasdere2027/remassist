@@ -87,3 +87,14 @@ export function formatBytes(n: number): string {
   if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
+
+/** Change between two periods, as a signed whole percentage; null when the earlier one is 0. */
+export function change(current: number, previous: number): number | null {
+  if (!previous) return null;
+  return Math.round(((current - previous) / previous) * 100);
+}
+
+/** A percentage from the reports (null = nothing to divide by). */
+export function fmtPct(p: number | null): string {
+  return p === null ? '—' : `${p}%`;
+}

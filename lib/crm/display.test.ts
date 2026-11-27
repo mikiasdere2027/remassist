@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatBytes, formatDuration, fromLocalInput, initials, responseClock } from './display';
+import { change, fmtPct, formatBytes, formatDuration, fromLocalInput, initials, responseClock } from './display';
 
 describe('crm display helpers', () => {
   it('formats durations compactly', () => {
@@ -35,5 +35,13 @@ describe('crm display helpers', () => {
     expect(formatBytes(900)).toBe('900 B');
     expect(formatBytes(2048)).toBe('2 KB');
     expect(formatBytes(3.5 * 1024 * 1024)).toBe('3.5 MB');
+  });
+
+  it('change between periods and percentages', () => {
+    expect(change(15, 10)).toBe(50);
+    expect(change(5, 10)).toBe(-50);
+    expect(change(5, 0)).toBeNull();
+    expect(fmtPct(66.7)).toBe('66.7%');
+    expect(fmtPct(null)).toBe('—');
   });
 });

@@ -524,3 +524,96 @@ export const crmApi = {
   saveAutomation: (settings: AutomationSettings) => api.put('/admin/crm/automation', settings),
   sendDigest: () => api.post('/admin/crm/digest/send'),
 };
+
+/* ── Reports and the CRM dashboard (slice 8) ─────────────────────────── */
+
+/** One report: the page renders it and its CSV holds the very same rows. */
+export interface ReportTable {
+  key: string;
+  title: string;
+  note: string;
+  header: string[];
+  rows: Array<Array<string | number>>;
+  /** Columns that hold numbers (right-aligned). */
+  numeric: number[];
+}
+
+/** GET /v1/admin/reports?range= */
+export interface ReportsPage {
+  range: string;
+  ranges: Array<{ key: string; label: string }>;
+  funnel: Array<{ key: string; label: string; count: number; ofTop: number | null; ofPrev: number | null }>;
+  heatmap: {
+    weeks: number;
+    cells: Array<{ day: string; n: number; level: number; future: boolean }>;
+    max: number;
+    busiest: { day: string; n: number } | null;
+  };
+  tables: ReportTable[];
+}
+
+/** Where a report's CSV downloads from (signed in, through the proxy). */
+export const reportCsvUrl = (key: string, range: string) =>
+  `/api/v1/admin/reports/export?report=${encodeURIComponent(key)}&range=${encodeURIComponent(range)}`;
+
+/** GET /v1/admin/dashboard/crm */
+export interface CrmDashboard {
+  numbers: {
+    leads30: number;
+    leadsPrev30: number;
+    awaiting: number;
+    converted30: number;
+    openDeals: number;
+    pipeline: number;
+    weighted: number;
+    mrr: number;
+    customers: number;
+    overdueMine: number;
+    overdueAll: number;
+  };
+  topDeals: Array<{
+    id: string;
+    title: string;
+    valueCents: number;
+    currency: string;
+    expectedClose: string | null;
+    stage: string;
+    probability: number;
+    companyName: string | null;
+  }>;
+  comingUp: {
+    tasks: Array<{
+      id: string;
+      title: string;
+      dueAt: string | null;
+      priority: string;
+      leadId: string | null;
+      dealId: string | null;
+      companyId: string | null;
+      engagementId: string | null;
+    }>;
+    renewals: Array<{
+      id: string;
+      title: string;
+      renewalDate: string | null;
+      companyName: string | null;
+      valueCents: number;
+      currency: string;
+    }>;
+  };
+  activity: Array<{
+    id: string;
+    type: string;
+    body: string | null;
+    occurredAt: string;
+    actorName: string;
+    leadId: string | null;
+    dealId: string | null;
+    companyId: string | null;
+    engagementId: string | null;
+    leadName: string | null;
+    dealTitle: string | null;
+    companyName: string | null;
+    engagementTitle: string | null;
+  }>;
+}

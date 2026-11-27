@@ -157,14 +157,20 @@ slice lands:
   `/api/v1/public/webhooks/calendly`, the digest on its own schedule — his
   `app/api/cron`, `app/api/webhooks/calendly`, `deploy/run-digest.sh` and
   `tools/calendly-webhook.mts` are not needed. New lead source `booking`.
-- **Not on this branch yet** (restored from `mikias/crm-phases-2-6` with their
-  slice): Reports and his dashboard numbers.
+- **Wired (slice 8):** Reports (`/admin/reports`: date ranges, funnel,
+  12-week leads calendar, and eight tables, each with "Download CSV" through
+  `/api/v1/admin/reports/export`) and the dashboard's CRM row (five headline
+  numbers, top open deals, coming up, activity) from `/admin/dashboard/crm`.
+  The backend builds each table once for both the page and its CSV; his
+  `lib/crm/reports*`, `reportTables` and export route are not needed. The
+  range tabs are plain links (see FRONTEND-GAPS: in-app navigation stall).
+- **Not on this branch yet:** his legacy-status migration tool (slice 9).
 
 ### Browser tests
 
-`tests/e2e/` has eight scripts — public pages, sign-in/users, every admin page
+`tests/e2e/` has nine scripts — public pages, sign-in/users, every admin page
 and flow, the lead CRM screens, deals/companies/settings, proposals, customers,
-lead automation — run against a local stack (README there). All
+lead automation, reports and the dashboard — run against a local stack (README there). All
 pass as of 2026-11-14.
 
 ## 4. Hardcoded content that should come from the CMS
