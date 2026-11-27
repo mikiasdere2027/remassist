@@ -24,6 +24,7 @@
     "db:seed:content": "node db/seed-content.mjs",
     "content:extract": "tsx tools/extract-content.mjs",
     "admin:create": "tsx tools/create-admin.mts",
+    "admin:create-agent": "tsx tools/create-agent.mts",
     "admin:hash": "tsx tools/hash-password.mjs",
     "admin:verify": "tsx tools/verify-email.mts"
   },
