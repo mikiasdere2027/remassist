@@ -138,14 +138,19 @@ slice lands:
   staging and locally. Totals shown are the backend's; `lib/crm/proposals.ts`
   only drives the editor's live preview. "Email to client" stays off until a
   sending address is decided.
+- **Wired (slice 5):** Customers list and page (onboarding checklist, roles,
+  terms, contract and renewal, status with the churn reason), the company
+  pages' "Customer engagements" and derived Customer / Former customer /
+  Prospect. Progress and renewal state come from the backend;
+  `lib/crm/engagements.ts` only labels and formats.
 - **Not on this branch yet** (restored from `mikias/crm-phases-2-6` with their
-  slice): Customers, Reports and his dashboard numbers, lead automation and
-  the daily digest, the Calendly webhook, contract files.
+  slice): contract files, Reports and his dashboard numbers, lead automation
+  and the daily digest, the Calendly webhook.
 
 ### Browser tests
 
-`tests/e2e/` has six scripts — public pages, sign-in/users, every admin page
-and flow, the lead CRM screens, deals/companies/settings, proposals — run against a local stack (README there). All
+`tests/e2e/` has seven scripts — public pages, sign-in/users, every admin page
+and flow, the lead CRM screens, deals/companies/settings, proposals, customers — run against a local stack (README there). All
 pass as of 2026-11-14.
 
 ## 4. Hardcoded content that should come from the CMS

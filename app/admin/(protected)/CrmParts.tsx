@@ -1,5 +1,6 @@
 import type { LeadTask, TimelineItem } from '@/lib/api/leads';
 import { CALL_OUTCOME_LABELS, STATUS_LABELS, type CallOutcome } from '@/lib/crm/display';
+import { ENGAGEMENT_STATUS_LABELS } from '@/lib/crm/engagements';
 import { formatMoney } from '@/lib/crm/money';
 import { AddTaskButton, LocalTime, TaskCheck } from './leads/[id]/LeadClient';
 import admin from '../admin.module.css';
@@ -118,10 +119,14 @@ function TimelineEntry({ a, subject }: { a: TimelineItem; subject: string }) {
       head = <><b>{who}</b> logged a call · {outcome}{mins > 0 ? ` · ${mins} min` : ''}</>;
       break;
     }
-    case 'status_change':
-      head = <><b>{who}</b> changed status: {STATUS_LABELS[String(meta.from)] ?? String(meta.from)} → <b>{STATUS_LABELS[String(meta.to)] ?? String(meta.to)}</b></>;
-      body = null;
+    case 'status_change': {
+      /* Leads and customers have different statuses; meta.kind says which. */
+      const labels: Record<string, string> = meta.kind === 'engagement' ? ENGAGEMENT_STATUS_LABELS : STATUS_LABELS;
+      head = <><b>{who}</b> changed status: {labels[String(meta.from)] ?? String(meta.from)} → <b>{labels[String(meta.to)] ?? String(meta.to)}</b></>;
+      /* A customer's status change keeps its note (the churn reason, "Onboarding complete"). */
+      if (meta.kind !== 'engagement') body = null;
       break;
+    }
     case 'stage_change':
       head = <><b>{who}</b> moved the deal {meta.fromName ? <>from {String(meta.fromName)} </> : null}to <b>{String(meta.toName ?? 'another stage')}</b></>;
       break;

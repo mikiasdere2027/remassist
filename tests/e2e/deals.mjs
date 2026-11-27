@@ -30,7 +30,8 @@ await p.fill('input[aria-label="Win probability for the new stage"]', '60');
 await p.click('button:has-text("Add stage")');
 const newStage = p.locator(`input[aria-label="Stage name"][value="${stageName}"]`);
 await newStage.waitFor({ timeout: 10000 }).catch(() => {});
-c.ok((await newStage.count()) === 1, 'settings: a new stage is added');
+const stageNames = await p.locator('input[aria-label="Stage name"]').evaluateAll((els) => els.map((e) => e.value));
+c.ok((await newStage.count()) === 1, `settings: a new stage is added${(await newStage.count()) === 1 ? '' : ` (saw: ${stageNames.join(', ')}; alerts: ${(await p.locator('[role=alert]').allInnerTexts()).join(' ')})`}`);
 await p.fill('input[aria-label="New loss reason"]', reason);
 await p.click('button:has-text("Add reason")');
 const newReason = p.locator(`input[aria-label="Loss reason"][value="${reason}"]`);
@@ -139,6 +140,11 @@ await p.screenshot({ path: `${SHOTS}/deals-1280-company.png`, fullPage: true });
 // 8. Lists
 await p.goto(`${BASE}/admin/companies?q=${encodeURIComponent(stamp)}`);
 c.ok((await body()).includes(company), 'companies list finds the company');
+const coRow = p.locator(`li:has(a:has-text("${company}"))`).first();
+/* His layout keeps Contacts and Owner for wider screens. */
+c.ok((await coRow.locator('text="Open deals"').first().isVisible().catch(() => false))
+  && (await coRow.locator('text="Won"').first().isVisible().catch(() => false)),
+  'at 1280px a company row shows its open deals and won value');
 await p.goto(`${BASE}/admin/contacts?q=${encodeURIComponent(company)}`);
 c.ok((await body()).includes('Sara Bekele'), 'contacts list finds people by company name');
 

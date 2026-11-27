@@ -54,6 +54,7 @@ export interface CompanyListItem {
   country: string | null;
   ownerId: string | null;
   ownerName: string | null;
+  lifecycle: CompanyLifecycle;
   contacts: number;
   openDeals: number;
   openValueCents: number;
@@ -113,8 +114,10 @@ export interface CompanyPage {
   ownerId: string | null;
   createdAt: string;
   updatedAt: string;
+  lifecycle: CompanyLifecycle;
   contacts: Contact[];
   deals: DealSummary[];
+  engagements: EngagementSummary[];
   leads: Array<{ id: string; name: string | null; email: string; status: string; createdAt: string }>;
   tasks: LeadTask[];
   timeline: TimelineItem[];
@@ -281,15 +284,132 @@ export interface RateCatalogue {
   coverage: Array<{ key: string; label: string; longLabel: string; seats: number; hours: number }>;
 }
 
+/* ── customers (engagements) ───────────────────────────────────────── */
+
+export const ENGAGEMENT_STATUSES = ['onboarding', 'active', 'paused', 'churned'] as const;
+export type EngagementStatus = (typeof ENGAGEMENT_STATUSES)[number];
+
+/** A company's standing, derived from its engagements (GLOSSARY.md: Customer). */
+export type CompanyLifecycle = 'customer' | 'former' | 'prospect';
+
+export interface EngagementRole {
+  role: string;
+  seats: number;
+  hoursPerMonth?: number | null;
+  staff?: string[];
+}
+
+export interface OnboardingStep {
+  key: string;
+  label: string;
+  doneAt?: string | null;
+  /** The team member who ticked it. */
+  doneBy?: string | null;
+}
+
+export interface OnboardingProgress {
+  done: number;
+  total: number;
+  pct: number;
+  complete: boolean;
+}
+
+/** Worked out by the backend from the renewal date and notice period. */
+export interface RenewalState {
+  daysLeft: number;
+  due: boolean;
+  overdue: boolean;
+  noticeBy: string | null;
+  noticePassed: boolean;
+}
+
+/** One row of GET /v1/admin/customers. */
+export interface EngagementListItem {
+  id: string;
+  title: string;
+  service: string | null;
+  status: EngagementStatus;
+  monthlyValueCents: number;
+  currency: string;
+  roles: EngagementRole[];
+  onboarding: OnboardingStep[];
+  startDate: string | null;
+  renewalDate: string | null;
+  noticeDays: number | null;
+  dealId: string | null;
+  companyId: string | null;
+  companyName: string | null;
+  ownerId: string | null;
+  ownerName: string | null;
+  progress: OnboardingProgress;
+  renewal: RenewalState | null;
+}
+
+export interface CustomersData {
+  items: EngagementListItem[];
+  summary: {
+    all: number;
+    onboarding: number;
+    active: number;
+    paused: number;
+    churned: number;
+    renewal: number;
+    /** Monthly recurring revenue: active and onboarding customers. */
+    mrrCents: number;
+  };
+}
+
+/** GET /v1/admin/customers/:id */
+export interface EngagementPage {
+  id: string;
+  title: string;
+  service: string | null;
+  status: EngagementStatus;
+  ownerId: string | null;
+  ownerName: string | null;
+  monthlyValueCents: number;
+  currency: string;
+  roles: EngagementRole[];
+  onboarding: OnboardingStep[];
+  startDate: string | null;
+  contractEnd: string | null;
+  renewalDate: string | null;
+  noticeDays: number | null;
+  churnedAt: string | null;
+  churnReason: string | null;
+  dealId: string | null;
+  companyId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  company: { id: string; name: string; domain: string | null } | null;
+  deal: { id: string; title: string } | null;
+  contacts: Contact[];
+  timeline: TimelineItem[];
+  tasks: LeadTask[];
+  progress: OnboardingProgress;
+  renewal: RenewalState | null;
+}
+
+/** A company's engagement, as listed on its page. */
+export interface EngagementSummary {
+  id: string;
+  title: string;
+  status: EngagementStatus;
+  monthlyValueCents: number;
+  currency: string;
+  renewalDate: string | null;
+}
+
 /** What the New deal / Convert / Edit forms send (strings as typed). */
 export type DealInput = Record<string, string | number | null | undefined>;
 
 /** A record that has a timeline and tasks. */
-export type RecordKind = 'lead' | 'deal' | 'company';
+export type RecordKind = 'lead' | 'deal' | 'company' | 'engagement';
 const BASE: Record<RecordKind, string> = {
   lead: '/admin/leads',
   deal: '/admin/deals',
   company: '/admin/companies',
+  engagement: '/admin/customers',
 };
 
 export const crmApi = {
@@ -323,6 +443,19 @@ export const crmApi = {
   /** The client's answer, from /p/<token> (public). */
   answerProposal: (token: string, answer: { accept: boolean; name: string; note?: string | null }) =>
     api.post<{ ok: true; number: string }>(`/public/proposals/${encodeURIComponent(token)}/decision`, answer),
+
+  /* customers (engagements) */
+  setOnboardingStep: (id: string, key: string, done: boolean) =>
+    api.patch(`/admin/customers/${id}/onboarding/${encodeURIComponent(key)}`, { done }),
+  updateTerms: (id: string, terms: { title: string; service: string | null; monthlyValue: string | null }) =>
+    api.patch(`/admin/customers/${id}/terms`, terms),
+  updateRoles: (id: string, roles: string) => api.put(`/admin/customers/${id}/roles`, { roles }),
+  updateContract: (id: string, contract: Record<string, string | null>) =>
+    api.put(`/admin/customers/${id}/contract`, contract),
+  setEngagementStatus: (id: string, status: string, reason?: string) =>
+    api.post(`/admin/customers/${id}/status`, { status, ...(reason ? { reason } : {}) }),
+  setEngagementOwner: (id: string, ownerId: string | null) =>
+    api.patch(`/admin/customers/${id}/owner`, { ownerId }),
 
   /* companies and contacts */
   updateCompany: (id: string, company: Record<string, string | null>) =>

@@ -7,6 +7,7 @@ import type { CompanyPage as CompanyPageData } from '@/lib/api/crm';
 import type { Assignee } from '@/lib/api/leads';
 import { formatMoney } from '@/lib/crm/money';
 import { STATUS_LABELS, initials } from '@/lib/crm/display';
+import { ENGAGEMENT_STATUS_LABELS } from '@/lib/crm/engagements';
 import AdminTopbar from '../../AdminTopbar';
 import { BackLink, KV, TasksCard, TimelineCard } from '../../CrmParts';
 import { Composer, InlineSelect, LocalTime } from '../../leads/[id]/LeadClient';
@@ -19,6 +20,8 @@ import s from '../../crm.module.css';
  * and everything that has happened with it.
  */
 export const dynamic = 'force-dynamic';
+
+const LIFECYCLE: Record<string, string> = { prospect: 'Prospect', customer: 'Customer', former: 'Former customer' };
 
 
 export default async function CompanyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -42,9 +45,9 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   const won = deals.filter((d) => d.stageKind === 'won');
   const openValue = open.reduce((n, d) => n + d.monthlyValueCents, 0);
   const wonValue = won.reduce((n, d) => n + d.monthlyValueCents, 0);
-  /* A Customer is a company with something won (GLOSSARY.md); from slice 5
-     on, a non-churned engagement. */
-  const lifecycle = won.length > 0 ? 'Customer' : 'Prospect';
+  /* Derived by the backend from the company's engagements (GLOSSARY.md). */
+  const lifecycle = LIFECYCLE[company.lifecycle];
+  const customerOf = company.engagements;
 
   return (
     <>
@@ -97,6 +100,29 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
           </aside>
 
           <div className={s.mainCol}>
+            {customerOf.length > 0 && (
+              <section className={s.card}>
+                <div className={s.cardHead}>
+                  <h2 className={s.cardTitle}>Customer engagements</h2>
+                  <Link className={s.doneToggle} href="/admin/customers">All customers</Link>
+                </div>
+                <div className={admin.tableWrap}>
+                  <table className={admin.table}>
+                    <thead><tr><th scope="col">Engagement</th><th scope="col">Status</th><th scope="col">Monthly</th><th scope="col">Renews</th></tr></thead>
+                    <tbody>
+                      {customerOf.map((c) => (
+                        <tr key={c.id}>
+                          <td><Link className={admin.rowLink} href={`/admin/customers/${c.id}`}><span className={admin.cellPrimary}>{c.title}</span></Link></td>
+                          <td><span className={`${s.badge} ${s[`s_${c.status}`]}`}>{ENGAGEMENT_STATUS_LABELS[c.status]}</span></td>
+                          <td className={admin.nowrap}>{formatMoney(c.monthlyValueCents, c.currency)}</td>
+                          <td className={admin.nowrap}>{c.renewalDate ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
             <section className={s.card}>
               <div className={s.cardHead}>
                 <h2 className={s.cardTitle}>Deals</h2>
@@ -153,7 +179,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
               <div className={s.cardBody}>
                 <div className={s.statRow}>
                   <span className={s.kvLabel}>Account</span>
-                  <span className={`${s.badge} ${lifecycle === 'Customer' ? s.p_low : s.p_medium}`}>{lifecycle}</span>
+                  <span className={`${s.badge} ${company.lifecycle === 'customer' ? s.p_low : s.p_medium}`}>{lifecycle}</span>
                 </div>
                 <KV label="Won (monthly)">{wonValue > 0 ? `${formatMoney(wonValue)}/mo` : 'Nothing won yet'}</KV>
                 <KV label="Open pipeline">{open.length > 0 ? `${formatMoney(openValue)}/mo · ${open.length} ${open.length === 1 ? 'deal' : 'deals'}` : 'No open deals'}</KV>

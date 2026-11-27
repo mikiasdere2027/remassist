@@ -30,15 +30,19 @@ function useRefreshOnOk(state: ActionResult | null) {
   }, [state, router]);
 }
 
-/** Owner of a lead, deal or company; priority of a lead. */
+/** Owner of a lead, deal, company or customer; priority of a lead. */
 function saveInline(record: RecordRef, field: 'owner' | 'priority', v: string): Promise<ActionResult> {
   if (record.kind === 'lead') {
     return field === 'owner' ? setLeadOwner(record.id, v) : setLeadPriority(record.id, v);
   }
-  if (record.kind === 'deal') {
-    return run('Could not change the owner.', () => crmApi.setDealOwner(record.id, v || null));
+  switch (record.kind) {
+    case 'deal':
+      return run('Could not change the owner.', () => crmApi.setDealOwner(record.id, v || null));
+    case 'engagement':
+      return run('Could not change the account manager.', () => crmApi.setEngagementOwner(record.id, v || null));
+    case 'company':
+      return run('Could not change the owner.', () => crmApi.updateCompany(record.id, { ownerId: v || null }));
   }
-  return run('Could not change the owner.', () => crmApi.updateCompany(record.id, { ownerId: v || null }));
 }
 
 /** A date in the viewer's own time zone. Server render shows UTC until hydration. */

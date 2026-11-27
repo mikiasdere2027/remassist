@@ -11,10 +11,10 @@ import s from '../crm.module.css';
 /** Companies — every organisation in the CRM, prospects and customers. */
 export const dynamic = 'force-dynamic';
 
-const LIFECYCLE: Record<string, string> = { prospect: 'Prospect', customer: 'Customer' };
+const LIFECYCLE: Record<string, string> = { prospect: 'Prospect', customer: 'Customer', former: 'Former customer' };
 
-/** A Customer is a company with something won (GLOSSARY.md). */
-const lifecycleOf = (c: CompanyListItem) => (c.wonValueCents > 0 ? 'customer' : 'prospect');
+/** Derived by the backend from the company's engagements (GLOSSARY.md: Customer). */
+const lifecycleOf = (c: CompanyListItem) => c.lifecycle;
 
 export default async function CompaniesPage({ searchParams }: { searchParams: Promise<{ q?: string; type?: string }> }) {
   const sp = await searchParams;
