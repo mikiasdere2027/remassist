@@ -21,6 +21,18 @@ async function body() {
 }
 const settle = () => p.waitForTimeout(1200);
 
+// 0. A run that crashed before its clean-up (section 9) leaves its test stage and loss reason active,
+// where they would show up in the reports. Clear any such leftovers first.
+await p.goto(`${BASE}/admin/settings/crm`, { waitUntil: 'networkidle' });
+await p.evaluate(async () => {
+  const { stages, lossReasons } = await (await fetch('/api/v1/admin/crm/settings')).json();
+  const stale = [
+    ...stages.filter((x) => x.name.startsWith('Pilot ')).map((x) => `stages/${x.id}`),
+    ...lossReasons.filter((x) => x.label.startsWith('E2E reason ')).map((x) => `loss-reasons/${x.id}`),
+  ];
+  for (const path of stale) await fetch(`/api/v1/admin/crm/${path}/archive`, { method: 'POST' });
+});
+
 // 1. Pipeline settings (admins)
 const stageName = `Pilot ${stamp}`;
 const reason = `E2E reason ${stamp}`;
