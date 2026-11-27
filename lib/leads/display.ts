@@ -21,6 +21,7 @@ export const SOURCE_LABELS: Record<string, string> = {
   referral: 'Referral',
   outbound: 'Outbound',
   event: 'Event',
+  booking: 'Calendly booking',
 };
 
 /**

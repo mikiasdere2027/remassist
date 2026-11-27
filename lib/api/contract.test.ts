@@ -118,13 +118,14 @@ describe.skipIf(!existsSync(SRC))('frontend ↔ backend contract', () => {
     const schema = B('src/database/schema/leads.ts');
     expect(list('lib/api/leads.ts', 'PUBLIC_LEAD_SOURCES')).toEqual(list(schema, 'PUBLIC_LEAD_SOURCES'));
     expect(list('lib/api/leads.ts', 'TEAM_LEAD_SOURCES')).toEqual(list(schema, 'TEAM_LEAD_SOURCES'));
+    expect(list('lib/api/leads.ts', 'SYSTEM_LEAD_SOURCES')).toEqual(list(schema, 'SYSTEM_LEAD_SOURCES'));
     expect(list('lib/api/leads.ts', 'LEAD_STATUSES')).toEqual(list(schema, 'LEAD_STATUSES'));
     expect(list('lib/api/leads.ts', 'SELECTABLE_STATUSES')).toEqual(list(schema, 'SELECTABLE_LEAD_STATUSES'));
     expect(list('lib/api/leads.ts', 'PRIORITIES')).toEqual(list(schema, 'CRM_PRIORITIES'));
     // Every status has a label; every source has a label.
     expect(list('lib/crm/display.ts', 'STATUS_LABELS').sort()).toEqual([...list(schema, 'LEAD_STATUSES')].sort());
     expect(list('lib/leads/display.ts', 'SOURCE_LABELS').sort()).toEqual(
-      [...list(schema, 'PUBLIC_LEAD_SOURCES'), ...list(schema, 'TEAM_LEAD_SOURCES')].sort(),
+      [...list(schema, 'PUBLIC_LEAD_SOURCES'), ...list(schema, 'TEAM_LEAD_SOURCES'), ...list(schema, 'SYSTEM_LEAD_SOURCES')].sort(),
     );
   });
 

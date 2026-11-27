@@ -149,14 +149,22 @@ slice lands:
   through the signed-in `/api/v1/admin/files/<id>`. Removing archives the row;
   the bytes are kept. His `app/admin/(protected)/files/[id]` route and
   `lib/crm/files.ts` are not needed (the backend does both).
+- **Wired (slice 7):** lead automation on CRM settings (leave unassigned /
+  take turns / always one person, "service | email" rules first, the
+  first-contact task in Addis business hours) and the daily digest card
+  (preview, "Send to Slack now", Slack and Calendly status). The backend runs
+  it all: assignment inside lead capture, the Calendly webhook at
+  `/api/v1/public/webhooks/calendly`, the digest on its own schedule — his
+  `app/api/cron`, `app/api/webhooks/calendly`, `deploy/run-digest.sh` and
+  `tools/calendly-webhook.mts` are not needed. New lead source `booking`.
 - **Not on this branch yet** (restored from `mikias/crm-phases-2-6` with their
-  slice): Reports and his dashboard numbers, lead automation and the daily
-  digest, the Calendly webhook.
+  slice): Reports and his dashboard numbers.
 
 ### Browser tests
 
-`tests/e2e/` has seven scripts — public pages, sign-in/users, every admin page
-and flow, the lead CRM screens, deals/companies/settings, proposals, customers — run against a local stack (README there). All
+`tests/e2e/` has eight scripts — public pages, sign-in/users, every admin page
+and flow, the lead CRM screens, deals/companies/settings, proposals, customers,
+lead automation — run against a local stack (README there). All
 pass as of 2026-11-14.
 
 ## 4. Hardcoded content that should come from the CMS

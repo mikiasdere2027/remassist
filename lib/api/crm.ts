@@ -27,13 +27,29 @@ export interface LossReason {
 export const ASSIGN_MODES = ['off', 'round_robin', 'single'] as const;
 export type AssignMode = (typeof ASSIGN_MODES)[number];
 
+/** "Leads whose service interest contains this go to this person." */
+export interface AssignmentRule {
+  service: string;
+  ownerId: string;
+}
+
 export interface AutomationSettings {
   assignMode: AssignMode;
   pool: string[];
   defaultOwnerId: string | null;
-  rules: Array<{ service: string; ownerId: string }>;
+  rules: AssignmentRule[];
   firstContactTask: boolean;
   firstContactHours: number;
+}
+
+/** GET /v1/admin/crm/digest — today's digest, and what is connected. */
+export interface DigestPreview {
+  /** null when there is nothing to report. */
+  text: string | null;
+  /** A Slack channel is set on the server. */
+  configured: boolean;
+  /** The Calendly webhook has its signing key. */
+  calendly: boolean;
 }
 
 /** GET /v1/admin/crm/settings */
@@ -506,4 +522,5 @@ export const crmApi = {
   updateLossReason: (id: string, label: string) => api.patch(`/admin/crm/loss-reasons/${id}`, { label }),
   archiveLossReason: (id: string) => api.post(`/admin/crm/loss-reasons/${id}/archive`),
   saveAutomation: (settings: AutomationSettings) => api.put('/admin/crm/automation', settings),
+  sendDigest: () => api.post('/admin/crm/digest/send'),
 };

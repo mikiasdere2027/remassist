@@ -13,7 +13,9 @@ export const PUBLIC_LEAD_SOURCES = [
 ] as const;
 /** Sources for leads the team adds by hand or imports. */
 export const TEAM_LEAD_SOURCES = ['manual', 'import', 'referral', 'outbound', 'event'] as const;
-export const LEAD_SOURCES = [...PUBLIC_LEAD_SOURCES, ...TEAM_LEAD_SOURCES] as const;
+/** Set by the system: `booking` = created from a Calendly booking. Never chosen by hand. */
+export const SYSTEM_LEAD_SOURCES = ['booking'] as const;
+export const LEAD_SOURCES = [...PUBLIC_LEAD_SOURCES, ...TEAM_LEAD_SOURCES, ...SYSTEM_LEAD_SOURCES] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 
 /** Every status a lead can hold. won/lost are legacy (shown, not offered). */
@@ -88,6 +90,7 @@ export interface Assignee {
   id: string;
   name: string;
   username: string;
+  email: string;
 }
 
 /** A paged list: `total` counts the whole filter, not the page. */
