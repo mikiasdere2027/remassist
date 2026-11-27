@@ -6,10 +6,16 @@ import { LocalTime } from '../leads/[id]/LeadClient';
 import AdminTopbar from '../AdminTopbar';
 import { acknowledgeIncidentAction, resolveIncidentAction } from './actions';
 import admin from '../../admin.module.css';
-import s from '../crm.module.css';
+import s from './sla-incidents.module.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'SLA Incidents', robots: { index: false, follow: false } };
+
+function SeverityBadge({ severity }: { severity: string }) {
+  if (severity === 'critical') return <span className={s.badgeCritical}>Critical</span>;
+  if (severity === 'high') return <span className={s.badgeHigh}>High</span>;
+  return <span className={s.badgeStandard}>Standard</span>;
+}
 
 export default async function SlaIncidentsPage() {
   await requireUser();
@@ -38,36 +44,71 @@ export default async function SlaIncidentsPage() {
               Coverage gaps over 15 minutes detected by the SLA watchdog appear here.
             </p>
           ) : (
-            <ul className={s.leadList}>
+            <ul className={s.incidentList}>
               {rows.map((inc) => (
-                <li key={inc.id} className={s.taskRow} style={{ alignItems: 'flex-start', gap: '12px' }}>
-                  <div className={s.leadWhoText} style={{ flex: 1 }}>
-                    <span className={s.taskTitle}>
-                      [{inc.severity.toUpperCase()}] {inc.title}
-                    </span>
-                    {inc.summary ? <span className={s.leadSub}>{inc.summary}</span> : null}
-                    <span className={s.leadSub}>
-                      Detected: <LocalTime iso={inc.detectedAt.toISOString()} />
-                      {inc.acknowledgedAt ? <> · Ack: <LocalTime iso={inc.acknowledgedAt.toISOString()} /></> : null}
-                      {inc.resolvedAt ? <> · Resolved: <LocalTime iso={inc.resolvedAt.toISOString()} /></> : null}
-                    </span>
-                    {inc.rootCause ? <span className={s.leadSub}>Root cause: {inc.rootCause}</span> : null}
-                    {inc.correctiveAction ? <span className={s.leadSub}>Corrective action: {inc.correctiveAction}</span> : null}
+                <li
+                  key={inc.id}
+                  className={`${s.incidentRow}${inc.resolvedAt ? ` ${s.resolved}` : ''}`}
+                >
+                  {/* ── Info block ── */}
+                  <div className={s.incidentInfo}>
+                    <div className={s.incidentTitle}>
+                      <SeverityBadge severity={inc.severity} />
+                      {inc.title}
+                      {inc.resolvedAt ? <span className={s.resolvedTag}>Resolved</span> : null}
+                    </div>
+
+                    {inc.summary ? (
+                      <p className={s.incidentDetail}>{inc.summary}</p>
+                    ) : null}
+
+                    <div className={s.incidentMeta}>
+                      <span>Detected: <LocalTime iso={inc.detectedAt.toISOString()} /></span>
+                      {inc.acknowledgedAt ? (
+                        <span>Ack: <LocalTime iso={inc.acknowledgedAt.toISOString()} /></span>
+                      ) : null}
+                      {inc.resolvedAt ? (
+                        <span>Resolved: <LocalTime iso={inc.resolvedAt.toISOString()} /></span>
+                      ) : null}
+                    </div>
+
+                    {inc.rootCause ? (
+                      <p className={s.incidentDetail}><strong>Root cause:</strong> {inc.rootCause}</p>
+                    ) : null}
+                    {inc.correctiveAction ? (
+                      <p className={s.incidentDetail}><strong>Corrective action:</strong> {inc.correctiveAction}</p>
+                    ) : null}
                   </div>
 
+                  {/* ── Action buttons (only when unresolved) ── */}
                   {!inc.resolvedAt ? (
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <div className={s.incidentActions}>
                       {!inc.acknowledgedAt ? (
                         <form action={acknowledgeIncidentAction}>
                           <input type="hidden" name="id" value={inc.id} />
-                          <button type="submit" className={`${admin.btn} ${admin.btnGhost}`}>Acknowledge</button>
+                          <button type="submit" className={`${admin.btn} ${admin.btnGhost}`}>
+                            Acknowledge
+                          </button>
                         </form>
                       ) : null}
-                      <form action={resolveIncidentAction} style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+
+                      <form action={resolveIncidentAction} className={s.resolveForm}>
                         <input type="hidden" name="id" value={inc.id} />
-                        <input name="rootCause" placeholder="Root cause" className={admin.input} style={{ width: '160px' }} />
-                        <input name="correctiveAction" placeholder="Corrective action" className={admin.input} style={{ width: '180px' }} />
-                        <button type="submit" className={`${admin.btn} ${admin.btnPrimary}`}>Resolve</button>
+                        <input
+                          name="rootCause"
+                          placeholder="Root cause"
+                          className={admin.control}
+                          style={{ width: '160px' }}
+                        />
+                        <input
+                          name="correctiveAction"
+                          placeholder="Corrective action"
+                          className={admin.control}
+                          style={{ width: '180px' }}
+                        />
+                        <button type="submit" className={`${admin.btn} ${admin.btnPrimary}`}>
+                          Resolve
+                        </button>
                       </form>
                     </div>
                   ) : null}
