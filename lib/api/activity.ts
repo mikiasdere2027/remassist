@@ -35,6 +35,7 @@ export const ACTIVITY_ENTITIES: Array<{ value: string; label: string; adminOnly?
   { value: 'pipeline_stage', label: 'Pipeline stages' },
   { value: 'loss_reason', label: 'Loss reasons' },
   { value: 'crm_settings', label: 'CRM settings' },
+  { value: 'site_settings', label: 'Site details' },
   { value: 'post', label: 'Posts' },
   { value: 'faq_item', label: 'FAQ items' },
   { value: 'faq_group', label: 'FAQ groups' },

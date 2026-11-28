@@ -4,6 +4,7 @@ import styles from './page.module.css';
 import { SeatTiers } from '@/components/services/SeatTiers';
 import { getPublishedTiers } from '@/lib/rates/getPublishedTiers';
 import { BOOK_URL } from '@/lib/nav';
+import { getSiteSettings } from '@/lib/site/get-settings';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  const site = await getSiteSettings();
   const tiers = await getPublishedTiers();
   const proRate    = tiers.find((t) => t.key === 'pro')?.priceDisplay    ?? '$8';
   const expertRate = tiers.find((t) => t.key === 'expert')?.priceDisplay ?? '$11';
@@ -63,7 +65,7 @@ export default async function Page() {
             <h3>Customer Service Agents</h3>
             <span className={styles['pr-plan-price']}>From {proRate}</span>
             <span className={styles['pr-plan-unit']}>Per agent per hour,<br />customized in consultation</span>
-            <a className={styles['pr-btn']} href='mailto:support@remassistance.com'>Get started</a>
+            <a className={styles['pr-btn']} href={site.mailto}>Get started</a>
             <ul>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Voice, chat &amp; email coverage</li>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>24/7 or business-hours shifts</li>
@@ -78,7 +80,7 @@ export default async function Page() {
             <h3>GTM Team</h3>
             <span className={styles['pr-plan-price']}>Custom</span>
             <span className={styles['pr-plan-unit']}>Per pod of 2–6 seats,<br />scoped to your motion</span>
-            <a className={styles['pr-btn']} href='mailto:support@remassistance.com'>Get started</a>
+            <a className={styles['pr-btn']} href={site.mailto}>Get started</a>
             <ul>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Lead + SDRs + marketing + RevOps</li>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>GHL / HubSpot builds included</li>
@@ -92,7 +94,7 @@ export default async function Page() {
             <h3>SDR as a Service</h3>
             <span className={styles['pr-plan-price']}>From {proRate}</span>
             <span className={styles['pr-plan-unit']}>Per SDR per hour,<br />customized in consultation</span>
-            <a className={styles['pr-btn']} href='mailto:support@remassistance.com'>Get started</a>
+            <a className={styles['pr-btn']} href={site.mailto}>Get started</a>
             <ul>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Lists, sequences &amp; booking</li>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>Sales Navigator + RevenueBase data</li>
@@ -106,7 +108,7 @@ export default async function Page() {
             <h3>Extra Services</h3>
             <span className={styles['pr-plan-price']}>Custom</span>
             <span className={styles['pr-plan-unit']}>Per seat or per project,<br />mix into any plan</span>
-            <a className={styles['pr-btn']} href='mailto:support@remassistance.com'>Get started</a>
+            <a className={styles['pr-btn']} href={site.mailto}>Get started</a>
             <ul>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>IT helpdesk, marketing, AI, research</li>
               <li><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m5 13 4 4L19 7' /></svg>One VA can cover several tasks</li>

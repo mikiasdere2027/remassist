@@ -14,6 +14,7 @@ export const TAGS = {
   team: 'team',
   popups: 'popups',
   pricing: 'pricing',
+  site: 'site',
 } as const;
 export type Tag = (typeof TAGS)[keyof typeof TAGS];
 

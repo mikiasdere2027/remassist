@@ -15,6 +15,7 @@ node tests/e2e/customers.mjs # customers: won deal → onboarding → active, co
 node tests/e2e/automation.mjs # lead assignment settings, a website lead arriving assigned with its first-contact task, the digest card (restores the settings)
 node tests/e2e/reports.mjs # reports: ranges, funnel, calendar, every table, CSV matches the table; dashboard CRM numbers
 node tests/e2e/devices.mjs # signed-in devices: list, sign one out, sign all others out (uses a throwaway account)
+node tests/e2e/site-settings.mjs # Site details: edit phone/email/booking link; the public site, /book and the booking window follow; restores the originals
 ```
 
 They create test data in the database they run against (leads, users,

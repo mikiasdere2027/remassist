@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { track } from '@/lib/analytics/events';
+import { isBookingLink } from '@/lib/booking/link';
 
 /**
  * "Book a Call" modal — ported from RemAssist-Html/assets/booking-modal.js (Phase 02).
- * Intercepts any click on a calendly.com link and opens a branded in-page
+ * Intercepts any click on a booking link (the site's /book, or a calendly.com address) and opens a branded in-page
  * scheduler dialog instead of navigating away. Progressive enhancement: the
  * anchors keep their real href + target="_blank", so without JS (or on a
  * modified click) they open Calendly natively. The legacy script is untouched.
@@ -24,18 +25,7 @@ import { track } from '@/lib/analytics/events';
  */
 const BookingModalDialog = dynamic(() => import('./BookingModalDialog'), { ssr: false });
 
-/** Route the site uses for its Calendly links (the one we intercept). */
-function isCalendly(href: string | null | undefined): boolean {
-  if (!href) return false;
-  try {
-    const host = new URL(href, window.location.origin).hostname;
-    return /(^|\.)calendly\.com$/i.test(host);
-  } catch {
-    return false;
-  }
-}
-
-export default function BookingModal() {
+export default function BookingModal({ bookingUrl }: { bookingUrl: string }) {
   const [open, setOpen] = useState(false);
   const lastFocus = useRef<HTMLElement | null>(null);
 
@@ -44,7 +34,7 @@ export default function BookingModal() {
       if (e.defaultPrevented) return;
       const target = e.target as HTMLElement | null;
       const a = target?.closest?.('a[href]') as HTMLAnchorElement | null;
-      if (!a || !isCalendly(a.href)) return;
+      if (!a || !isBookingLink(a.href, window.location.origin)) return;
 
       /* Emitted above the modifier check, not below it. A ctrl- or middle-
          click opens Calendly in a new tab — the visitor reaches the scheduler
@@ -72,5 +62,5 @@ export default function BookingModal() {
   }
 
   if (!open) return null;
-  return <BookingModalDialog onClose={onClose} />;
+  return <BookingModalDialog bookingUrl={bookingUrl} onClose={onClose} />;
 }

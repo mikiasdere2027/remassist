@@ -1,4 +1,4 @@
-import { BOOK_URL } from '@/lib/nav';
+import { getSiteSettings } from '@/lib/site/get-settings';
 import type { OpenTime } from './slots';
 
 /**
@@ -21,8 +21,10 @@ import type { OpenTime } from './slots';
 
 const API = 'https://api.calendly.com';
 
-/** Which booking link Maya books into. Defaults to the site's own "Book a call" link. */
-const EVENT_URL = (process.env.CALENDLY_EVENT_URL || BOOK_URL).replace(/\/$/, '');
+/** Which booking link Maya books into: CALENDLY_EVENT_URL, else the booking link in the admin's Site details. */
+async function eventUrl(): Promise<string> {
+  return (process.env.CALENDLY_EVENT_URL || (await getSiteSettings()).bookingUrl).replace(/\/$/, '');
+}
 
 export function calendlyConfigured(): boolean {
   return !!process.env.CALENDLY_TOKEN;
@@ -99,6 +101,7 @@ const CACHE_MS = 10 * 60_000;
 export async function eventType(): Promise<EventType> {
   if (cached && Date.now() - cached.at < CACHE_MS) return cached.value;
 
+  const EVENT_URL = await eventUrl();
   const me = await call<{ resource: { uri: string } }>('/users/me');
   let next: string | null = `/event_types?user=${encodeURIComponent(me.resource.uri)}&active=true&count=100`;
   while (next) {

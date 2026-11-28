@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 import { PRIMARY_LINKS, RESOURCE_LINKS, SERVICE_LINKS, BOOK_URL } from './nav';
+import { SITE_DEFAULTS } from './site/settings';
 import { ROUTES } from './site';
 
 /** Every .tsx under a directory, recursively. */
@@ -75,18 +76,24 @@ describe('navigation data', () => {
     expect(orphans).toEqual([]);
   });
 
-  it('books through the same external URL the header uses', () => {
+  it('books through the same link the header uses', () => {
     expect(headerSource).toContain('href={BOOK_URL}');
   });
 
-  it('keeps the booking URL in one place (lib/nav.ts)', () => {
+  it('points every booking button at the site\'s own /book, which redirects to the configured link', () => {
+    expect(BOOK_URL).toBe('/book');
+  });
+
+  it('keeps the real booking address in one place (the fallback in lib/site/settings.ts)', () => {
     /* It was copied into 28 files once; a change of booking link meant a hunt.
-       Every page and component imports BOOK_URL instead. */
+       The address is now edited in the admin (Site details); the only copy in
+       code is the fallback used when the backend can't be reached. */
+    const real = SITE_DEFAULTS.bookingUrl;
     const copies: string[] = [];
     for (const dir of ['app', 'components', 'lib']) {
       for (const file of walk(join(process.cwd(), dir), [], /\.tsx?$/)) {
-        if (file.endsWith(join('lib', 'nav.ts')) || file.endsWith('.test.ts')) continue;
-        if (readFileSync(file, 'utf8').includes(BOOK_URL)) copies.push(file);
+        if (file.endsWith(join('lib', 'site', 'settings.ts')) || file.endsWith('.test.ts')) continue;
+        if (readFileSync(file, 'utf8').includes(real)) copies.push(file);
       }
     }
     expect(copies).toEqual([]);

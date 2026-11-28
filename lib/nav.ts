@@ -44,4 +44,10 @@ export const PRIMARY_LINKS: NavLink[] = [
   { href: '/qualify', label: 'Qualify' },
 ];
 
-export const BOOK_URL = 'https://calendly.com/j-zemene-remassistance/new-meeting';
+/**
+ * Where every "Book a call" button points: the site's own /book, which
+ * redirects to the booking link set in the admin (Site details) and which the
+ * booking modal opens instead of navigating. The real address is no longer in
+ * code (lib/site/settings.ts holds the fallback).
+ */
+export const BOOK_URL = '/book';

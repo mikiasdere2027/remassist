@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { useSiteSettings } from '@/components/layout/SiteSettingsProvider';
 import styles from './ContactRail.module.css';
 import { attributionForSubmit } from '@/lib/analytics/attribution';
 import { submitLead } from '@/lib/api/leads';
@@ -32,7 +33,6 @@ const SERVICES = [
   'A custom mix — scope in consultation',
 ];
 
-const CONTACT_EMAIL = 'support@remassistance.com';
 const CALENDLY = BOOK_URL;
 
 interface Brief {
@@ -46,7 +46,7 @@ interface Brief {
   message: string;
 }
 
-function mailtoFallback(b: Brief) {
+function mailtoFallback(b: Brief, email: string) {
   const body = [
     'I tried to send this through the website form and it did not go through.',
     '',
@@ -59,10 +59,11 @@ function mailtoFallback(b: Brief) {
     b.message,
   ].filter(Boolean).join('\n');
   const subject = 'Back office enquiry';
-  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 export default function ContactRailForm() {
+  const { email: contactEmail } = useSiteSettings();
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState<'idle' | 'sent' | 'fallback'>('idle');
   const [brief, setBrief] = useState<Brief | null>(null);
@@ -252,14 +253,14 @@ export default function ContactRailForm() {
           </svg>
         </button>
         <span className={styles.formNote}>
-          Prefer to talk? Email us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          Prefer to talk? Email us at <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
         </span>
       </div>
 
       {status === 'fallback' && brief && (
         <p className={styles.error} role="alert">
           That did not go through — our fault, not yours.{' '}
-          <a href={mailtoFallback(brief)}>Send it as an email instead</a> and everything you typed
+          <a href={mailtoFallback(brief, contactEmail)}>Send it as an email instead</a> and everything you typed
           comes with it.
         </p>
       )}

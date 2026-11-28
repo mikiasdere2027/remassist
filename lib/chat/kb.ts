@@ -1,4 +1,5 @@
 import { BOOK_URL } from '../nav';
+import { SITE_DEFAULTS } from '../site/settings';
 /**
  * Ask RemAssist — knowledge base (single source of truth).
  *
@@ -12,18 +13,18 @@ import { BOOK_URL } from '../nav';
 
 /* ---- Contact / external constants --------------------------------------- */
 export const CONTACT = {
-  phone: '(832) 230-2194',
-  tel: 'tel:+18322302194',
-  email: 'support@remassistance.com',
-  mailto: 'mailto:support@remassistance.com',
+  phone: SITE_DEFAULTS.phone,
+  tel: SITE_DEFAULTS.tel,
+  email: SITE_DEFAULTS.email,
+  mailto: SITE_DEFAULTS.mailto,
   book: BOOK_URL,
-  linkedin: 'https://www.linkedin.com/company/rem-assistance/',
-  instagram: 'https://www.instagram.com/remassist',
-  youtube: 'https://www.youtube.com/@RemAssistant',
-  trustpilot: 'https://www.trustpilot.com/review/remassistance.com',
+  linkedin: SITE_DEFAULTS.linkedin,
+  instagram: SITE_DEFAULTS.instagram,
+  youtube: SITE_DEFAULTS.youtube,
+  trustpilot: SITE_DEFAULTS.trustpilot,
   /* The Google Business Profile by CID — the place itself, not the /maps/place/…
      URL a browser shows, which carries coordinates and a session token. */
-  google: 'https://www.google.com/maps?cid=10709335694294039363',
+  google: SITE_DEFAULTS.google,
 };
 
 /* ---- Link targets (current Next.js routes + external) ------------------- */

@@ -5,6 +5,8 @@ import Footer from '@/components/layout/Footer';
 import AskRemAssist from '@/components/widgets/AskRemAssist';
 import BookingModal from '@/components/widgets/BookingModal';
 import JsonLd from '@/components/layout/JsonLd';
+import { SiteSettingsProvider } from '@/components/layout/SiteSettingsProvider';
+import { getSiteSettings } from '@/lib/site/get-settings';
 import AttributionCapture from '@/components/analytics/AttributionCapture';
 import GoogleTagManager from '@/components/analytics/GoogleTagManager';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
@@ -17,7 +19,8 @@ import PopupManager from '@/components/popups/PopupManager';
  * admin neither renders nor ships any of this (it used to be hidden at render
  * time by a pathname check in SiteChrome, while its code still downloaded).
  */
-export default function SiteLayout({ children }: { children: ReactNode }) {
+export default async function SiteLayout({ children }: { children: ReactNode }) {
+  const site = await getSiteSettings();
   /*
     Origins the public site always ends up talking to, none discoverable from
     the HTML until something has run: googletagmanager.com (GTM or GA4, injected
@@ -33,7 +36,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   prefetchDNS('https://calendly.com');
 
   return (
-    <>
+    <SiteSettingsProvider value={site}>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
@@ -45,7 +48,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
       </div>
       <Footer />
       <AskRemAssist />
-      <BookingModal />
+      <BookingModal bookingUrl={site.bookingUrl} />
       <JsonLd />
       <AttributionCapture />
       {/* Two loaders, at most one of which renders: GoogleAnalytics is null
@@ -56,6 +59,6 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
       {/* Renders nothing until there is a live, published popup for the page —
           see components/popups/PopupManager.tsx. */}
       <PopupManager />
-    </>
+    </SiteSettingsProvider>
   );
 }

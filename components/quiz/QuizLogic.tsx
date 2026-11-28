@@ -16,6 +16,7 @@ import { attributionForSubmit } from '@/lib/analytics/attribution';
 import { submitLead, submitQuiz } from '@/lib/api/leads';
 import { track } from '@/lib/analytics/events';
 import { BOOK_URL } from '@/lib/nav';
+import { useSiteSettings } from '@/components/layout/SiteSettingsProvider';
 
 /**
  * QuizLogic — interactive qualification quiz, shared by /qualify and the home
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export default function QuizLogic({ quizId = 'qualify' }: Props) {
+  const site = useSiteSettings();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<Answers>>({});
   const [copied, setCopied] = useState(false);
@@ -208,7 +210,7 @@ export default function QuizLogic({ quizId = 'qualify' }: Props) {
       name ? `Name: ${name}` : '',
       `Please get in touch.`,
     ].filter(Boolean).join('\n');
-    return `mailto:support@remassistance.com?subject=${encodeURIComponent('Fit finder estimate — ' + r.service)}&body=${encodeURIComponent(body)}`;
+    return `mailto:${site.email}?subject=${encodeURIComponent('Fit finder estimate — ' + r.service)}&body=${encodeURIComponent(body)}`;
   }
 
   async function sendEstimate(e: React.FormEvent) {

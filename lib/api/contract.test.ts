@@ -142,6 +142,22 @@ describe.skipIf(!existsSync(SRC))('frontend ↔ backend contract', () => {
     expect(recorded.size).toBeGreaterThan(15);
   });
 
+  it('keeps the site-details defaults and cache tags in step with the backend', () => {
+    const backend = readFileSync(B('src/modules/site-settings/site-settings.ts'), 'utf8');
+    const front = readFileSync(join(ROOT, 'lib/site/settings.ts'), 'utf8');
+    /* The eight stored fields; `tel` and `mailto` are derived by the backend, not stored. */
+    const values = [...front.slice(front.indexOf('SITE_DEFAULTS')).matchAll(/(\w+):\s*'([^']+)'/g)]
+      .filter((m) => m[1] !== 'tel' && m[1] !== 'mailto')
+      .map((m) => m[2]);
+    expect(values.length).toBe(8);
+    expect(values.filter((v) => !backend.includes(`'${v}'`))).toEqual([]);
+    const tagsOf = (src: string, name: string) =>
+      [...(new RegExp(`${name}\\s*=\\s*\\{([^}]*)\\}`).exec(src)?.[1] ?? '').matchAll(/(\w+):\s*'(\w+)'/g)].map((m) => `${m[1]}=${m[2]}`);
+    expect(tagsOf(readFileSync(join(ROOT, 'lib/api/public.ts'), 'utf8'), 'TAGS')).toEqual(
+      tagsOf(readFileSync(B('src/common/revalidation/revalidation.service.ts'), 'utf8'), 'CACHE_TAGS'),
+    );
+  });
+
   it('shares the CRM lists with the backend', () => {
     const dto = B('src/modules/leads/dto/lead.dto.ts');
     const crm = B('src/database/schema/crm.ts');

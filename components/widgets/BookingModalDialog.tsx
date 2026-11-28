@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import styles from './BookingModal.module.css';
-import { BOOK_URL } from '@/lib/nav';
 
 /**
  * The booking dialog itself — the branded panel and the Calendly iframe.
@@ -19,7 +18,6 @@ import { BOOK_URL } from '@/lib/nav';
  * the close animation can finish before the parent unmounts us — `onClose` is
  * called at the end of the fade, not the start.
  */
-const CALENDLY_URL = BOOK_URL;
 const HOST_NAME = 'Johnathan Zemene (ASSIST)';
 const EVENT_NAME = 'Rem - Outsourced teams (review & plan)';
 const HIDE_DETAILS = true;
@@ -34,12 +32,14 @@ const MARK_PATHS = [
   'M280.6,183c0.3-168-232.1-148.7-218.9-1.6c1.6,18.3,7.7,36,17.5,51.6c13.2,21,27.5,40.1,13.6,69.6 c-3.1,6.6-16.3,19.3-3.9,24.6c6.9,3,11.7-4.5,14.9-9.5c10.3-17,12.2-38.1,7.5-57.6c-2.5-10.4-7.2-20.1-13.2-28.9 c-28.8-42-26.6-78.7,2.1-119.5c44.6-53.5,133.9-36.6,156.7,28.5c6.9,19.7,3.8,37.2,11.2,56.8c2.2,5.8,15.6,30.7,14.4,34.4 c-0.8,2.3-12.2,2.9-15.6,4.4c-16.9,7.4-5.4,41.2-15.3,54.7c-5.9,8-18,4.7-26.5,5.5c-26.6,2.7-46.2,34.5-52.5,58 c-1.9,4.7-2.8,13.6,4,15.3c12.6,1.6,12.4-15.8,16.8-24c27-51.4,39.3-20.9,66.7-39.3c16.5-12.3,11.9-45.8,14.6-54.9 c29.3-3,27.8-18.4,20.8-35.3C291.4,206,280.7,183.2,280.6,183L280.6,183z',
 ];
 
-const EMBED = `${CALENDLY_URL}?hide_event_type_details=${HIDE_DETAILS ? '1' : '0'}`;
+/** The booking page to embed, from the admin's Site details. */
+const embedUrl = (bookingUrl: string) => `${bookingUrl}?hide_event_type_details=${HIDE_DETAILS ? '1' : '0'}`;
 
 /** Matches the fade-out in BookingModal.module.css. */
 const FADE_MS = 280;
 
-export default function BookingModalDialog({ onClose }: { onClose: () => void }) {
+export default function BookingModalDialog({ bookingUrl, onClose }: { bookingUrl: string; onClose: () => void }) {
+  const EMBED = embedUrl(bookingUrl);
   const [visible, setVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);

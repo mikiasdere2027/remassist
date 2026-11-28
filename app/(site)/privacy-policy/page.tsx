@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { pageOg } from '@/lib/site';
 import styles from './page.module.css';
+import { getSiteSettings } from '@/lib/site/get-settings';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
   openGraph: pageOg('/privacy-policy'),
 };
 
-export default function Page() {
+export default async function Page() {
+  const site = await getSiteSettings();
   return (
     <main>
   
@@ -294,8 +296,8 @@ export default function Page() {
               </div>
               <div style={{ background: "#fff", border: "1px solid var(--border-default)", borderRadius: "10px", padding: "22px 24px", minWidth: 0, overflowWrap: "anywhere" }}>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "11.5px", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--brand-blue)", marginBottom: "8px" }}>General support</div>
-                <a href='mailto:support@remassistance.com' style={{ fontSize: "15.5px", fontWeight: 600, textDecoration: "none" }}>support@remassistance.com</a>
-                <div style={{ marginTop: "8px" }}><a href='tel:+18322302194' style={{ fontSize: "15.5px", fontWeight: 600, textDecoration: "none" }}>(832) 230-2194</a></div>
+                <a href={site.mailto} style={{ fontSize: "15.5px", fontWeight: 600, textDecoration: "none" }}>{site.email}</a>
+                <div style={{ marginTop: "8px" }}><a href={site.tel} style={{ fontSize: "15.5px", fontWeight: 600, textDecoration: "none" }}>{site.phone}</a></div>
               </div>
               <div style={{ background: "#fff", border: "1px solid var(--border-default)", borderRadius: "10px", padding: "22px 24px", minWidth: 0, overflowWrap: "anywhere" }}>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "11.5px", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--brand-blue)", marginBottom: "8px" }}>By post</div>

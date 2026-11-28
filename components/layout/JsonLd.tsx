@@ -1,5 +1,7 @@
 import { safeJsonForScript } from '@/lib/json-script';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
+import { getSiteSettings } from '@/lib/site/get-settings';
+import type { SiteSettingsWithLinks } from '@/lib/site/settings';
 import { serviceByPath } from '@/lib/services';
 import type { Post } from '@/lib/blog/posts';
 
@@ -12,26 +14,24 @@ import type { Post } from '@/lib/blog/posts';
  * structured data asserting more than the site does is exactly what earns a
  * manual action.
  */
-const ORGANIZATION = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  '@id': `${SITE_URL}/#organization`,
-  name: 'Rem Assistance Inc.',
-  alternateName: SITE_NAME,
-  url: SITE_URL,
-  logo: `${SITE_URL}/images/rem-logo.svg`,
-  contactPoint: {
-    '@type': 'ContactPoint',
-    contactType: 'customer support',
-    email: 'support@remassistance.com',
-    telephone: '+1-832-230-2194',
-  },
-  sameAs: [
-    'https://www.linkedin.com/company/rem-assistance/',
-    'https://www.instagram.com/remassist',
-    'https://www.youtube.com/@RemAssistant',
-  ],
-};
+function organization(site: SiteSettingsWithLinks) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${SITE_URL}/#organization`,
+    name: 'Rem Assistance Inc.',
+    alternateName: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/images/rem-logo.svg`,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: site.email,
+      telephone: site.tel.replace('tel:', ''),
+    },
+    sameAs: [site.linkedin, site.instagram, site.youtube],
+  };
+}
 
 const WEBSITE = {
   '@context': 'https://schema.org',
@@ -161,10 +161,11 @@ export function BlogPostingJsonLd({ post }: { post: Post }) {
   );
 }
 
-export default function JsonLd() {
+export default async function JsonLd() {
+  const site = await getSiteSettings();
   return (
     <>
-      <Graph data={ORGANIZATION} />
+      <Graph data={organization(site)} />
       <Graph data={WEBSITE} />
     </>
   );
