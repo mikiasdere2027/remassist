@@ -88,6 +88,7 @@ export default async function EditPostPage({
             body: p.body ?? '',
             articleLayout: JSON.stringify(p.articleLayout ?? {}),
             published: p.published,
+            publishAt: p.publishAt,
           }}
         />
       </div>

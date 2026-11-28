@@ -36,6 +36,8 @@ export interface AdminPostRow {
   authorName: string;
   authorAvatar: string;
   published: boolean;
+  /** When a finished draft goes live by itself, or null. */
+  publishAt: string | null;
   createdAt: string;
   updatedAt: string;
   /** What still blocks publishing. Absent on backends older than this field. */

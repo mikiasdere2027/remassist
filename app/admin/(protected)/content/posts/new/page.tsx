@@ -73,6 +73,7 @@ export default async function NewPostPage() {
             body: '',
             articleLayout: '',
             published: false,
+            publishAt: null,
           }}
         />
       </div>

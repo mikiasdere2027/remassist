@@ -121,7 +121,7 @@ export default function PostsTable({
                         <span
                           className={`${styles.pill} ${p.published ? styles.pillLow : styles.pillMed}`}
                         >
-                          {p.published ? 'Published' : 'Draft'}
+                          {p.published ? 'Published' : p.publishAt ? 'Scheduled' : 'Draft'}
                         </span>
                       </td>
                       <td className={styles.nowrap}>

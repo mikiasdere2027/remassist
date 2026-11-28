@@ -39,7 +39,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-const STATUSES = ['all', 'published', 'draft'] as const;
+const STATUSES = ['all', 'published', 'scheduled', 'draft'] as const;
 type Status = (typeof STATUSES)[number];
 
 /** Enough rows to fill the panel without turning the page into a scroll. */
@@ -73,11 +73,13 @@ export default async function PostsListPage({
 
   const total = matching.length;
   const publishedCount = matching.filter((p) => p.published).length;
-  const draftCount = total - publishedCount;
+  const scheduledCount = matching.filter((p) => !p.published && p.publishAt).length;
+  const draftCount = total - publishedCount - scheduledCount;
 
   const rows = matching.filter((p) => {
     if (status === 'published') return p.published;
-    if (status === 'draft') return !p.published;
+    if (status === 'scheduled') return !p.published && p.publishAt;
+    if (status === 'draft') return !p.published && !p.publishAt;
     return true;
   });
 
@@ -115,6 +117,12 @@ export default async function PostsListPage({
               on={status === 'published'}
               label="Published"
               count={publishedCount}
+            />
+            <Tab
+              href={href({ status: 'scheduled' })}
+              on={status === 'scheduled'}
+              label="Scheduled"
+              count={scheduledCount}
             />
             <Tab
               href={href({ status: 'draft' })}

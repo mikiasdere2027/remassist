@@ -16,6 +16,7 @@ import { listFields, missingForPublish } from '@/lib/blog/completeness';
 import { slugify } from '@/lib/blog/slug';
 import ImageUploadField from '@/components/admin/ImageUploadField';
 import PreviewModal from './PreviewModal';
+import SchedulePost from './SchedulePost';
 import RichEditor from './RichEditor';
 import DatePicker from './DatePicker';
 import ConfirmDialog from '../../ConfirmDialog';
@@ -66,6 +67,8 @@ export type PostFormValues = {
   body: string;
   articleLayout: string;
   published: boolean;
+  /** ISO time a finished draft goes live by itself, or null. */
+  publishAt: string | null;
 };
 
 const MAX = {
@@ -411,8 +414,29 @@ export default function PostForm({
                       : undefined
                   }
                 >
-                  {values.published ? 'Unpublish' : 'Publish'}
+                  {values.published ? 'Unpublish' : values.publishAt ? 'Publish now' : 'Publish'}
                 </button>
+            )}
+
+            {mode === 'edit' && !values.published && (
+              <SchedulePost
+                publishAt={values.publishAt}
+                ready={ready}
+                missingText={listFields(missing)}
+                busy={busy}
+                onSchedule={(iso) =>
+                  run(async () => {
+                    await api.patch<AdminPost>(`/admin/posts/${values.id}`, { ...input(), publishAt: iso });
+                    return 'Scheduled: that post goes live by itself at the time you picked.';
+                  })
+                }
+                onCancel={() =>
+                  run(async () => {
+                    await api.patch<AdminPost>(`/admin/posts/${values.id}`, { publishAt: null });
+                    return 'Schedule cancelled. The post is a draft again.';
+                  })
+                }
+              />
             )}
           </div>
         )}

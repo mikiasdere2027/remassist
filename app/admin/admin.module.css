@@ -5036,3 +5036,7 @@ a.glanceRow:hover { color: var(--blue-700); }
   .teamToolsGroup { flex-wrap: wrap; max-width: 100%; min-width: 0; }
   .memberCardInsp { max-width: 100%; min-width: 0; }
 }
+
+/* Schedule control beside Publish on a post. */
+.schedule { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.schedule input[type='datetime-local'] { width: auto; min-width: 0; }
