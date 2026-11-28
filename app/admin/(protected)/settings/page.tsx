@@ -1,6 +1,9 @@
+import { apiServer } from '@/lib/api/server';
+import type { DeviceSession } from '@/lib/auth/devices';
 import { requireUser } from '@/lib/auth/require';
 import AdminTopbar from '../AdminTopbar';
 import ChangePasswordForm from './ChangePasswordForm';
+import DevicesPanel from './DevicesPanel';
 import styles from '../../admin.module.css';
 
 export const metadata = { title: 'Settings' };
@@ -8,11 +11,14 @@ export const dynamic = 'force-dynamic';
 
 /** Your own account: who you're signed in as, and your password. */
 export default async function SettingsPage() {
-  const user = await requireUser();
+  const [user, devices] = await Promise.all([
+    requireUser(),
+    apiServer<DeviceSession[]>('/admin/auth/sessions'),
+  ]);
 
   return (
     <>
-      <AdminTopbar title="Settings" subtitle="Your account and password." />
+      <AdminTopbar title="Settings" subtitle="Your account, password and signed-in devices." />
       <div className={styles.view}>
         <div className={styles.teamTopGrid}>
           <section className={`${styles.panel} ${styles.section}`}>
@@ -43,6 +49,16 @@ export default async function SettingsPage() {
             <ChangePasswordForm username={user.username} />
           </section>
         </div>
+
+        <section className={`${styles.panel} ${styles.section}`}>
+          <div className={styles.panelHead}>
+            <div>
+              <h2 className={styles.panelTitle}>Signed-in devices</h2>
+              <p className={styles.panelSub}>Where your account is signed in right now. Sign out any you don&rsquo;t recognise.</p>
+            </div>
+          </div>
+          <DevicesPanel initial={devices} />
+        </section>
       </div>
     </>
   );
